@@ -1,0 +1,11 @@
+{
+  "main_repo_url": "https://github.com/prushidhar/SIH260117.git",
+  "katty_repo_url": "https://github.com/undrajavarapukatherine-crypto/katty.git",
+  "github_token": "",
+  "auto_sync_interval_sec": 60,
+  "backend_port": 8000,
+  "frontend_port": 3000,
+  "auto_open_browser": true,
+  "main_last_sha": "",
+  "katty_last_sha": "540a7761"
+}

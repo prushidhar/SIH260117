@@ -1,0 +1,14 @@
+
+ASME B31.3 PROCESS PIPING SPECIFICATION
+Section 304.1.2: Straight Pipe Under Internal Pressure
+For t < D/6, the internal design gage pressure shall not exceed that calculated
+by the straight pipe formula:
+tm = (P * D) / (2 * (S * E * W + P * Y)) + c
+Where:
+- P = internal design gage pressure (psig)
+- D = outside diameter of pipe (inches)
+- S = allowable stress value for material from Table A-1 (psi)
+- E = quality factor from Table A-1A or A-1B
+- W = weld joint strength reduction factor
+- Y = coefficient from Table 304.1.1
+- c = sum of mechanical allowances plus corrosion allowance (inches)

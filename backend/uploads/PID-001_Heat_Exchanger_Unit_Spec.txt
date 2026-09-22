@@ -1,0 +1,83 @@
+DRAWING NUMBER: P&ID-001
+PROJECT: Process Cooling System
+UNIT: Heat Exchanger Unit
+REVISION: Rev A
+DATE: 2025-05-06
+GOVERNING STANDARD: ANSI/ISA-5.1-2009, ASME B31.3, API 600, ASME B16.34
+
+1. DRAWING OVERVIEW & PROCESS DESCRIPTION:
+This P&ID depicts the Feed Storage, Pumping, and Heat Exchanger Unit for the Process Cooling System.
+Raw feed from storage (L-101) enters through a DN50 process line (L-001) regulated by control valve FV-101.
+Feed is accumulated in storage tank TK-101.
+Feed liquid is pumped by centrifugal pump P-101 via bottom suction line L-002 (DN50) and discharge line L-003 (DN50) into shell-and-tube heat exchanger E-101.
+Hot utility / steam enters through line L-004 (DN25) modulated by temperature control valve TV-101 based on temperature sensing from TIC-101.
+Final cooled/conditioned product exits E-101 via DN50 line L-005 regulated by control valve TV-102 to product storage (L-006).
+Cooling water loop is supplied from cooling tower via line L-009 to cooling water pump P-102, boosted through L-007 (DN25) into E-101, and returned to cooling tower via line L-008 through manual isolation valve XV-101.
+
+2. VALVE INVENTORY & SPECIFICATIONS:
+- FV-101: Feed Flow Control Valve
+  * Tag: FV-101
+  * Type: Globe / Diaphragm Control Valve (Air-to-Open, Fail-Closed)
+  * Location: Line L-001 (Feed Inlet from Storage L-101)
+  * Size: DN50 (2 inch)
+  * Actuation: Pneumatic actuator with electro-pneumatic positioner
+  * Associated Loop: Controlled by Flow Indicating Controller FIC-101, receiving signal from Flow Transmitter FT-101
+  * Standard: ASME B16.34, ANSI/ISA-5.1
+
+- TV-101: Hot Utility / Steam Temperature Control Valve
+  * Tag: TV-101
+  * Type: Globe Control Valve (Air-to-Open, Fail-Closed)
+  * Location: Line L-004 (Hot Utility / Steam Supply to E-101)
+  * Size: DN25 (1 inch)
+  * Actuation: Pneumatic actuator
+  * Associated Loop: Controlled by Temperature Indicating Controller TIC-101, sensing steam temperature TT-101
+  * Standard: ASME B16.34, API 600
+
+- TV-102: Product Temperature Control Valve
+  * Tag: TV-102
+  * Type: Angle / Globe Control Valve (Air-to-Open, Fail-Closed)
+  * Location: Line L-005 (Product Outlet from E-101 to Storage L-006)
+  * Size: DN50 (2 inch)
+  * Actuation: Pneumatic actuator
+  * Associated Loop: Controlled by Temperature Indicating Controller TIC-102, responding to product outlet temperature TT-102
+  * Standard: ASME B16.34, ANSI/ISA-5.1
+
+- XV-101: Cooling Water Return Manual Isolation Valve
+  * Tag: XV-101
+  * Type: Manual Ball / Gate Isolation Valve
+  * Location: Line L-008 (Cooling Water Return to Cooling Tower)
+  * Size: DN25 (1 inch)
+  * Actuation: Handwheel / Manual Lever
+  * Standard: API 600 / ASME B16.34
+
+3. PROCESS EQUIPMENT INVENTORY:
+- TK-101: Feed Storage Tank (Atmospheric accumulation vessel)
+- P-101: Feed Pump (Centrifugal process pump, DN50 suction L-002, DN50 discharge L-003)
+- E-101: Heat Exchanger (Shell-and-tube type, thermal energy transfer between L-003/L-005 and utility L-004/L-007)
+- P-102: Cooling Water Pump (Centrifugal utility pump, suction L-009, discharge L-007 DN25)
+
+4. INSTRUMENTATION & CONTROL LOOPS (ISA-5.1):
+- Flow Control Loop 101: FT-101 (Flow Transmitter) -> FIC-101 (Flow Controller) -> FV-101 (Control Valve, Line L-001)
+- Level Indication Loop 101: LT-101 (Level Transmitter) -> LIC-101 (Level Controller on TK-101)
+- Pressure Indication Loop 101: PT-101 (Pressure Transmitter on discharge line L-003)
+- Steam Temperature Control Loop 101: TT-101 (Temp Transmitter) -> TIC-101 (Temp Controller) -> TV-101 (Valve, Line L-004)
+- Product Temperature Control Loop 102: TT-102 (Temp Transmitter on L-005) -> TIC-102 (Temp Controller) -> TV-102 (Valve, Line L-005)
+
+5. PIPING LINES & DESIGNATIONS:
+- L-001: DN50 Process Feed Inlet from Storage (L-101) to TK-101
+- L-002: DN50 Process Suction line from TK-101 to P-101
+- L-003: DN50 Process Discharge line from P-101 to E-101
+- L-004: DN25 Steam / Hot Utility supply line to E-101
+- L-005: DN50 Product outlet line from E-101 to storage
+- L-006: Final product line to storage
+- L-007: DN25 Cooling water supply line from P-102 to E-101
+- L-008: Cooling water return line to cooling tower via XV-101
+- L-009: Cooling water inlet line from cooling tower to P-102
+- L-010: Hot utility (steam) supply inlet
+
+6. GENERAL NOTES:
+1. All dimensions are in mm unless otherwise noted.
+2. Pipe sizes are nominal (DN).
+3. Instrument tags follow ISA 5.1 standard.
+4. Control valves are air-to-open, fail-closed (unless otherwise specified).
+5. Refer to equipment datasheets for detailed specifications.

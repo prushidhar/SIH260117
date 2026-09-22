@@ -1,0 +1,32 @@
+# Dependencies & Environments
+node_modules/
+venv*/
+env*/
+.env
+
+# Next.js & Build Artifacts
+.next/
+dist/
+build/
+*.tsbuildinfo
+
+# Python & Temporary Databases
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+chroma_db/
+brain/
+*.log
+
+# Temporary sync & test files
+.temp_katty_sync/
+backend/test_import.py
+backend/test_task.py
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
