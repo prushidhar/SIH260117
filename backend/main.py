@@ -1083,11 +1083,16 @@ async def websocket_task(websocket: WebSocket, taskId: str):
             if msg.get("role") == "assistant" and msg.get("content"):
                 await websocket.send_json({"type": "token", "text": msg["content"], "content": msg["content"]})
         for deliv in task_record.get("deliverables", []):
+            d_kind = deliv.get("kind") or deliv.get("file_type") or ("pptx" if str(deliv.get("filename", "")).endswith(".pptx") else "xlsx" if str(deliv.get("filename", "")).endswith(".xlsx") else "docx")
             await websocket.send_json({
                 "type": "deliverable",
                 "filename": deliv.get("filename", "Artifact"),
+                "name": deliv.get("name", deliv.get("filename", "Artifact")),
                 "url": deliv.get("url", ""),
-                "kind": deliv.get("kind", "docx")
+                "download_url": deliv.get("url", ""),
+                "kind": d_kind,
+                "file_type": d_kind,
+                "description": "Executive Board Review Deck" if d_kind == "pptx" else "Deterministic Equipment Health Workbook" if d_kind == "xlsx" else "Statutory Plant Approval Note"
             })
         await websocket.send_json({"type": "done"})
         return
@@ -1104,7 +1109,8 @@ async def websocket_task(websocket: WebSocket, taskId: str):
                 "filename": os.path.basename(p),
                 "name": os.path.basename(p).replace("_", " ").replace(".docx", "").replace(".xlsx", "").replace(".pptx", ""),
                 "url": f"/files/{taskId}/artifacts/{os.path.basename(p)}",
-                "kind": os.path.splitext(p)[1].lstrip('.') or "docx"
+                "kind": os.path.splitext(p)[1].lstrip('.') or "docx",
+                "file_type": os.path.splitext(p)[1].lstrip('.') or "docx"
             }
             for p in agent.state.deliverables
         ]

@@ -1382,6 +1382,34 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
             get().addDeliverable(newDeliverable);
           }
 
+          // Event 6.5: Generative UI Micro-Frontends
+          else if (type === 'generative_ui' || type === 'ui_component' || type === 'ui') {
+            const componentName = ev.component || ev.name || ev.ui_type || 'IndustrialGauge';
+            const componentProps = ev.props || ev.data || ev.arguments || {};
+            const title = ev.title;
+            const spec: GenerativeUISpec = {
+              id: ev.id || `genui-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              component: componentName,
+              title,
+              props: componentProps,
+              status: 'ready',
+            };
+
+            set((state) => ({
+              messages: state.messages.map((m) => {
+                if (m.id !== agentMessageId) return m;
+                const existing = m.generativeUI || [];
+                if (existing.some((g) => g.component === componentName && g.title === title)) {
+                  return m;
+                }
+                return {
+                  ...m,
+                  generativeUI: [...existing, spec],
+                };
+              }),
+            }));
+          }
+
           // Event 7: {"type": "done"}
           else if (type === 'done') {
             set((state) => ({
