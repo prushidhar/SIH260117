@@ -1,17 +1,15 @@
-' INDRA — Sovereign AI Workbench Launcher
-' Double-click this file to launch the full workbench control panel.
-' No console window. No popups. Just the GUI.
-
+' INDRA — Sovereign AI Workbench Silent Launcher
 Dim WshShell
 Set WshShell = CreateObject("WScript.Shell")
 
-Dim pythonExe
-pythonExe = "C:\Users\booya\AppData\Local\Programs\Python\Python314\pythonw.exe"
+' 1. Ensure virtual drive D: is mapped for local model access
+WshShell.Run "subst D: C:\", 0, True
 
-Dim launcherScript
+' 2. Launch master desktop supervisor via pythonw (zero console flash)
+Dim pythonExe, launcherScript
+pythonExe = "C:\Users\booya\AppData\Local\Programs\Python\Python314\pythonw.exe"
 launcherScript = "C:\Users\booya\OneDrive\Desktop\SIH260117-main\desktop_launcher.py"
 
-' Run pythonw (no console) — window style 0 = hidden, bWaitOnReturn = False
-WshShell.Run Chr(34) & pythonExe & Chr(34) & " " & Chr(34) & launcherScript & Chr(34), 1, False
+WshShell.Run Chr(34) & pythonExe & Chr(34) & " " & Chr(34) & launcherScript & Chr(34), 0, False
 
 Set WshShell = Nothing

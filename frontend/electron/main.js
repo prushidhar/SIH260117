@@ -2,16 +2,58 @@ const { app, BrowserWindow, ipcMain, dialog, Notification, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
+const http = require('http');
+
 let mainWindow = null;
 
+function waitForServerAndLoad(win, targetUrl) {
+  let isLoaded = false;
+  const splashPath = path.join(__dirname, 'splash.html');
+
+  if (fs.existsSync(splashPath)) {
+    win.loadFile(splashPath);
+  }
+
+  const poll = () => {
+    if (isLoaded || win.isDestroyed()) return;
+
+    const req = http.get(targetUrl, (res) => {
+      if ((res.statusCode >= 200 && res.statusCode < 400) || res.statusCode === 307 || res.statusCode === 308) {
+        isLoaded = true;
+        if (!win.isDestroyed()) {
+          win.loadURL(targetUrl);
+        }
+      } else {
+        setTimeout(poll, 400);
+      }
+    });
+
+    req.on('error', () => {
+      setTimeout(poll, 400);
+    });
+
+    req.setTimeout(800, () => {
+      req.abort();
+      setTimeout(poll, 400);
+    });
+  };
+
+  // Start polling Next.js server
+  setTimeout(poll, 600);
+}
+
 function createWindow() {
+  const iconPath = path.join(__dirname, '../public/logo.png');
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 920,
     minWidth: 1024,
     minHeight: 700,
     title: 'INDRA — Sovereign AI Workbench',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#080c14',
+    autoHideMenuBar: true,
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -21,8 +63,8 @@ function createWindow() {
     },
   });
 
-  const appUrl = process.env.APP_URL || 'http://localhost:3000';
-  mainWindow.loadURL(appUrl);
+  const appUrl = process.env.APP_URL || 'http://localhost:3000/workbench';
+  waitForServerAndLoad(mainWindow, appUrl);
 
   // Prevent navigation to non-localhost URLs (Air-Gap loopback guarantee)
   mainWindow.webContents.on('will-navigate', (event, url) => {
@@ -35,6 +77,7 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    app.quit();
   });
 }
 
