@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { Calculator, Activity } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -10,18 +10,32 @@ import ChatInput from './ChatInput';
 
 const verifiedWorkflows = [
   {
-    title: 'ASME B31.3 Pipe Thickness Calculation',
-    desc: 'Deterministic calculation for minimum required wall thickness under design pressure & temperature',
-    query: 'Calculate minimum required pipe wall thickness under ASME B31.3 for design pressure 24.0 bar, temperature 180°C, and ASTM A106 Grade B pipe',
-    icon: Calculator,
-    badge: 'Calculation',
+    title: 'Statutory Approval Note & ASME B31.3 Inspection',
+    desc: 'Review crude line CDU-Pipe-104 ultrasonic report, calculate t_min, and draft executive Word (.docx) approval note',
+    query: 'Review the ultrasonic thickness inspection report for crude distillation unit CDU-Pipe-104: nominal thickness 12.7mm, measured thickness 7.2mm, corrosion rate 0.45 mm/yr, design pressure 3.2 MPa. Perform ASME B31.3 minimum thickness calculation and draft a statutory plant approval note for executive sign-off.',
+    icon: FileText,
+    badge: 'SIH Deliverable (.docx)',
   },
   {
-    title: 'Pump P-101 Live Telemetry & Control',
-    desc: 'Interactive telemetry gauge, vibration analysis line chart, and PLC setpoint controls',
-    query: 'What is the status of pump P-101? Stream live telemetry gauge, vibration chart, and DCS setpoint control deck',
+    title: 'Fluid Dynamics Darcy-Weisbach Sandbox',
+    desc: 'Synthesize & verify Python hydraulic solver for friction factor and pressure drop using Colebrook-White equation',
+    query: 'Write a Python script to calculate the Darcy-Weisbach friction factor and pressure drop in a 100m carbon steel pipe with flow rate 0.05 m3/s and diameter 0.15m.',
+    icon: Terminal,
+    badge: 'Code Sandbox',
+  },
+  {
+    title: 'P&ID Schematic & ISA-5.1 Tag Localization',
+    desc: 'Multimodal vision extraction of instrument tags, control valves, and line numbers from engineering drawings',
+    query: 'Analyze the high-pressure feed P&ID schematic for crude distillation unit CDU-104. Extract all ISA-5.1 tags, valve designations, and line numbers, and verify safety relief valve isolation standards.',
+    icon: ScanEye,
+    badge: 'Multimodal Vision',
+  },
+  {
+    title: 'ISO 10816 Vibration Triage & Telemetry Deck',
+    desc: 'Triage slurry pump P-101 FFT harmonics (1X unbalance vs 2X misalignment), live telemetry gauge, and health score',
+    query: 'Perform ISO 10816-3 vibration triage on slurry feed pump P-101: 1X harmonic 7.2 mm/s RMS, 2X harmonic 1.8 mm/s RMS. Identify root cause and stream telemetry and equipment health card.',
     icon: Activity,
-    badge: 'Telemetry',
+    badge: 'Autonomous Diagnostics',
   },
 ];
 
