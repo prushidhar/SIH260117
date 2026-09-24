@@ -1280,6 +1280,31 @@ async def get_uploaded_file_api(file_id: str):
                 return FileResponse(os.path.join(upload_dir, f), filename=f)
     raise HTTPException(status_code=404, detail="File not found")
 
+class SandboxExecutionRequest(BaseModel):
+    code: str
+
+@app.post("/api/sandbox/execute")
+async def execute_code_in_sandbox(req: SandboxExecutionRequest):
+    """Executes Python code in the local air-gapped sandbox with safety checks."""
+    import time
+    start = time.perf_counter()
+    raw_code = req.code.strip()
+    if "```python" in raw_code:
+        raw_code = raw_code.split("```python")[1].split("```")[0].strip()
+    elif "```" in raw_code:
+        raw_code = raw_code.split("```")[1].split("```")[0].strip()
+
+    res = tool_registry._run_sandbox(raw_code)
+    elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+    res["elapsed_ms"] = elapsed_ms
+
+    audit_ledger.log_event("sandbox_executed", {
+        "exit_code": res.get("exit_code", -1),
+        "elapsed_ms": elapsed_ms,
+        "stdout_bytes": len(res.get("stdout", ""))
+    })
+    return res
+
 @app.get("/api/metrics")
 async def get_system_metrics():
     """Real-time system health, memory, and operational throughput metrics."""

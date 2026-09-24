@@ -339,10 +339,26 @@ class AgentDAG:
         """Node 3: Declarative multi-tool execution with Smart NLP Extractor & Equipment Registry."""
         intent = state.get("intent") or getattr(self.state, "intent", "conceptual")
         
+        # Check for P&ID / Drawing queries
+        is_pid_query = any(kw in state["prompt"].lower() for kw in ["p&id", "pid", "drawing", "schematic", "blueprint", "isa-5.1"])
+        if is_pid_query:
+            try:
+                await self.websocket.send_json({
+                    "type": "generative_ui",
+                    "component": "InteractivePIDWidget",
+                    "title": f"Interactive P&ID Schematic — {tag}",
+                    "props": {
+                        "tag": tag,
+                        "title": f"{tag} High-Pressure Feed P&ID Schematic"
+                    }
+                })
+            except Exception as e:
+                print(f"[Planner] Generative UI P&ID error: {e}")
+
         # Only execute deterministic calculation sandbox tools if intent is 'calculation'
         if intent != "calculation":
             return {
-                "active_tools": [],
+                "active_tools": ["extract_pid_components"] if is_pid_query else [],
                 "status": "TOOLS_EXECUTED"
             }
 
