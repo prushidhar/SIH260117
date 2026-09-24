@@ -30,6 +30,7 @@ backend_proc = None
 frontend_proc = None
 app_proc = None
 backend_log_file = None
+frontend_log_file = None
 
 
 def kill_tree(pid: int):
@@ -75,7 +76,7 @@ def cleanup_ports(ports):
 
 def cleanup_all():
     """Shuts down all backend and frontend services cleanly."""
-    global backend_proc, frontend_proc, app_proc, backend_log_file
+    global backend_proc, frontend_proc, app_proc, backend_log_file, frontend_log_file
     if backend_proc:
         try:
             kill_tree(backend_proc.pid)
@@ -103,6 +104,13 @@ def cleanup_all():
         except Exception:
             pass
         backend_log_file = None
+
+    if frontend_log_file:
+        try:
+            frontend_log_file.close()
+        except Exception:
+            pass
+        frontend_log_file = None
 
     cleanup_ports([BACKEND_PORT, FRONTEND_PORT])
 
@@ -177,12 +185,18 @@ def main():
     )
 
     # 4. Start Frontend (Next.js) in background
+    npm_path = r"C:\Program Files\nodejs\npm.cmd"
+    npm_cmd = f'"{npm_path}" run dev' if os.path.exists(npm_path) else "npm run dev"
+
+    frontend_log_path = BASE_DIR / "frontend_launcher.log"
+    frontend_log_file = open(frontend_log_path, "w", encoding="utf-8")
+
     frontend_proc = subprocess.Popen(
-        "npm.cmd run dev",
+        npm_cmd,
         cwd=str(FRONTEND_DIR),
         shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=frontend_log_file,
+        stderr=subprocess.STDOUT,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
     )
 

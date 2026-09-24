@@ -2,44 +2,63 @@ const { app, BrowserWindow, ipcMain, dialog, Notification, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
-const http = require('http');
+const net = require('net');
 
 let mainWindow = null;
 
 function waitForServerAndLoad(win, targetUrl) {
-  let isLoaded = false;
+  let isNavigated = false;
   const splashPath = path.join(__dirname, 'splash.html');
 
   if (fs.existsSync(splashPath)) {
     win.loadFile(splashPath);
   }
 
-  const poll = () => {
-    if (isLoaded || win.isDestroyed()) return;
+  const checkPort = () => {
+    if (isNavigated || win.isDestroyed()) return;
 
-    const req = http.get(targetUrl, (res) => {
-      if ((res.statusCode >= 200 && res.statusCode < 400) || res.statusCode === 307 || res.statusCode === 308) {
-        isLoaded = true;
-        if (!win.isDestroyed()) {
-          win.loadURL(targetUrl);
-        }
-      } else {
-        setTimeout(poll, 400);
+    const socket = new net.Socket();
+    socket.setTimeout(1200);
+
+    socket.on('connect', () => {
+      socket.destroy();
+      if (!isNavigated && !win.isDestroyed()) {
+        isNavigated = true;
+        // Port is open! Give Next.js a short moment and load
+        setTimeout(() => {
+          if (!win.isDestroyed()) {
+            win.loadURL(targetUrl);
+          }
+        }, 500);
       }
     });
 
-    req.on('error', () => {
-      setTimeout(poll, 400);
+    socket.on('error', () => {
+      socket.destroy();
+      setTimeout(checkPort, 600);
     });
 
-    req.setTimeout(800, () => {
-      req.abort();
-      setTimeout(poll, 400);
+    socket.on('timeout', () => {
+      socket.destroy();
+      setTimeout(checkPort, 600);
     });
+
+    socket.connect(3000, '127.0.0.1');
   };
 
-  // Start polling Next.js server
-  setTimeout(poll, 600);
+  // If loading fails while compiling, retry gracefully
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    if (errorCode === -3) return; // ERR_ABORTED - navigation cancelled
+    console.warn(`[INDRA Navigation] Port open but page compilation in progress (${errorCode}: ${errorDescription}). Retrying...`);
+    setTimeout(() => {
+      if (!win.isDestroyed()) {
+        win.loadURL(targetUrl);
+      }
+    }, 1500);
+  });
+
+  // Start polling after 500ms
+  setTimeout(checkPort, 500);
 }
 
 function createWindow() {
