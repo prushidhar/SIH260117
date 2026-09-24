@@ -8,6 +8,7 @@ import EquipmentHealthCard from './components/EquipmentHealthCard';
 import ASMEComplianceCard from './components/ASMEComplianceCard';
 import DynamicSandboxWidget from './components/DynamicSandboxWidget';
 import InteractivePIDWidget from './components/InteractivePIDWidget';
+import ExecutivePresentationWidget from './components/ExecutivePresentationWidget';
 
 interface RegistryProps {
   component: string;
@@ -50,6 +51,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 7. Dynamic Sandbox Widget (AI on-the-fly code)
   if (compKey.includes('sandbox') || compKey.includes('widget') || compKey.includes('code') || compKey === 'dynamicsandboxwidget' || props.code || props.html) {
     return <DynamicSandboxWidget {...props} />;
+  }
+
+  // 8. Executive Board Review Presentation Deck
+  if (compKey.includes('presentation') || compKey.includes('board') || compKey.includes('slide') || compKey === 'executivepresentationwidget') {
+    return <ExecutivePresentationWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

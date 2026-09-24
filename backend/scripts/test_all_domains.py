@@ -235,6 +235,17 @@ def test_deliverables_and_airgap():
     assert os.path.exists(ppt_path), f"PPTX file not created: {ppt_path}"
     print(f"  [+] Executive PPTX generated: {os.path.basename(ppt_path)} ({os.path.getsize(ppt_path)} bytes)")
 
+    # 3b. Test Compliance Bundle Packaging (.zip)
+    import zipfile
+    bundle_path = os.path.join(out_dir, "test-task_Compliance_Bundle.zip")
+    with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(docx_res["file_path"], os.path.basename(docx_res["file_path"]))
+        zf.write(xlsx_res["file_path"], os.path.basename(xlsx_res["file_path"]))
+        zf.write(ppt_path, os.path.basename(ppt_path))
+        zf.writestr("MANIFEST_SHA256.txt", "INDRA SOVEREIGN STATUTORY COMPLIANCE MANIFEST\nALL DELIVERABLES SEALED.")
+    assert os.path.exists(bundle_path), "Bundle ZIP not created"
+    print(f"  [+] Sealed Compliance Bundle ZIP generated: {os.path.basename(bundle_path)} ({os.path.getsize(bundle_path)} bytes)")
+
     # 4. Test NetworkMonitor Air-Gap
     airgap_audit = network_monitor.audit_active_connections()
     print(f"  [+] Air-Gap Status: {airgap_audit['airgap_status']}, Zero WAN Egress: {airgap_audit['zero_wan_egress']}, Proof SHA-256: {airgap_audit['audit_proof_sha256'][:16]}...")

@@ -1006,6 +1006,21 @@ class AgentDAG:
                     }
                     await self.websocket.send_json(ppt_meta)
                     self.state.deliverables.append(ppt_path)
+
+                    # Emit Interactive 16:9 Presentation Preview Widget
+                    await self.websocket.send_json({
+                        "type": "generative_ui",
+                        "component": "ExecutivePresentationWidget",
+                        "title": f"Board Review Deck Preview — {tag}",
+                        "props": {
+                            "tag": tag,
+                            "title": f"Executive Board Review — {tag}",
+                            "domain": primary_domain,
+                            "filename": ppt_filename,
+                            "downloadUrl": f"/files/{self.state.task_id}/artifacts/{ppt_filename}",
+                            "hash": b_hash
+                        }
+                    })
             except Exception as e:
                 print(f"[Planner] PPT generation error: {e}")
 

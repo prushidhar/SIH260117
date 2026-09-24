@@ -1,12 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash, Presentation } from 'lucide-react';
+import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash, Presentation, Archive } from 'lucide-react';
 import useIndraStore, { type Deliverable } from '@/store/indra-store';
 
 export default function Deliverables() {
-  const { deliverables } = useIndraStore();
+  const { deliverables, currentTaskId } = useIndraStore();
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
+
+  const handleDownloadBundle = () => {
+    const taskId = currentTaskId || 'current';
+    window.open(`http://localhost:8000/api/deliverables/${taskId}/bundle`, '_blank');
+  };
 
   const getFileIcon = (type: string = '') => {
     switch (type.toLowerCase()) {
@@ -68,6 +73,17 @@ export default function Deliverables() {
           {deliverables.length}
         </span>
       </div>
+
+      {deliverables.length > 1 && (
+        <button
+          onClick={handleDownloadBundle}
+          className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-violet-50 dark:bg-violet-950/50 hover:bg-violet-100 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+          title="Download all generated deliverables as a cryptographically sealed ZIP bundle"
+        >
+          <Archive className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+          <span>Download Compliance Bundle (.zip)</span>
+        </button>
+      )}
 
       {deliverables.length === 0 ? (
         <div className="text-slate-400 dark:text-zinc-500 text-xs italic text-center py-6 px-3 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-900/30 leading-relaxed">
