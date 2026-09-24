@@ -15,28 +15,99 @@ export default function DynamicSandboxWidget({
   const widgetId = useId();
 
   // If raw code was provided but no html wrapper, build a safe sandboxed HTML document
+  // NOTE: No external CDN — fully offline/air-gapped compatible
   const renderedContent = html || `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="https://cdn.tailwindcss.com"></script>
         <style>
+          /* Offline-safe utility classes (replaces Tailwind CDN) */
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             margin: 0;
             padding: 16px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: transparent;
             color: #1e293b;
+            font-size: 14px;
+            line-height: 1.6;
           }
-          @media (prefers-color-scheme: dark) {
-            body { color: #f1f5f9; }
-          }
+          @media (prefers-color-scheme: dark) { body { color: #f1f5f9; } }
+          .p-4 { padding: 1rem; }
+          .p-2 { padding: 0.5rem; }
+          .p-3 { padding: 0.75rem; }
+          .px-4 { padding-left: 1rem; padding-right: 1rem; }
+          .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+          .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+          .m-0 { margin: 0; }
+          .mb-2 { margin-bottom: 0.5rem; }
+          .mb-4 { margin-bottom: 1rem; }
+          .mt-2 { margin-top: 0.5rem; }
+          .mt-4 { margin-top: 1rem; }
+          .text-sm { font-size: 0.875rem; }
+          .text-xs { font-size: 0.75rem; }
+          .text-lg { font-size: 1.125rem; }
+          .text-xl { font-size: 1.25rem; }
+          .text-2xl { font-size: 1.5rem; }
+          .text-center { text-align: center; }
+          .text-left { text-align: left; }
+          .font-bold { font-weight: 700; }
+          .font-semibold { font-weight: 600; }
+          .font-mono { font-family: monospace; }
+          .flex { display: flex; }
+          .flex-col { flex-direction: column; }
+          .flex-row { flex-direction: row; }
+          .items-center { align-items: center; }
+          .justify-between { justify-content: space-between; }
+          .justify-center { justify-content: center; }
+          .gap-2 { gap: 0.5rem; }
+          .gap-4 { gap: 1rem; }
+          .w-full { width: 100%; }
+          .h-full { height: 100%; }
+          .max-w-xl { max-width: 36rem; }
+          .rounded { border-radius: 0.25rem; }
+          .rounded-lg { border-radius: 0.5rem; }
+          .rounded-xl { border-radius: 0.75rem; }
+          .border { border: 1px solid #e2e8f0; }
+          .border-2 { border: 2px solid #e2e8f0; }
+          .bg-white { background: #ffffff; }
+          .bg-gray-50 { background: #f8fafc; }
+          .bg-gray-100 { background: #f1f5f9; }
+          .bg-blue-500 { background: #3b82f6; }
+          .bg-green-500 { background: #22c55e; }
+          .bg-red-500 { background: #ef4444; }
+          .bg-yellow-500 { background: #eab308; }
+          .text-white { color: #ffffff; }
+          .text-gray-500 { color: #64748b; }
+          .text-gray-700 { color: #334155; }
+          .text-blue-600 { color: #2563eb; }
+          .text-green-600 { color: #16a34a; }
+          .text-red-600 { color: #dc2626; }
+          .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+          .overflow-hidden { overflow: hidden; }
+          .overflow-auto { overflow: auto; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; text-align: left; }
+          th { background: #f1f5f9; font-weight: 600; }
+          tr:hover { background: #f8fafc; }
+          input, select, textarea { border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.4rem 0.75rem; font-size: 0.875rem; width: 100%; }
+          button { cursor: pointer; border: none; border-radius: 0.375rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; transition: opacity 0.15s; }
+          button:hover { opacity: 0.85; }
+          .btn-primary { background: #3b82f6; color: white; }
+          .btn-success { background: #22c55e; color: white; }
+          .btn-danger { background: #ef4444; color: white; }
+          canvas { max-width: 100%; }
+          pre, code { font-family: monospace; font-size: 0.8rem; }
+          pre { background: #1e293b; color: #f1f5f9; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+          progress { width: 100%; height: 0.75rem; border-radius: 9999px; }
+          .gauge-container { text-align: center; }
         </style>
       </head>
       <body>
-        ${code || '<div class="p-4 text-center text-sm text-slate-500">No dynamic widget code provided</div>'}
+        ${code || '<div class="p-4 text-center text-sm text-gray-500">No dynamic widget code provided</div>'}
       </body>
     </html>
   `;
