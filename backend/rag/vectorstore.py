@@ -137,8 +137,15 @@ class KnowledgeBase:
                 "created_at": None,
             }
 
-        self._rebuild_index()
-        self._save()
+    def ingest_document(self, doc_id: str, title: str, text: str, extra_meta: dict = None, chunk_size: int = 400, overlap: int = 50) -> int:
+        """Ingests and chunks a document into the Knowledge Base, returning chunk count."""
+        self.add_document(doc_id=doc_id, title=title, text=text, chunk_size=chunk_size, overlap=overlap)
+        if extra_meta and self._docs:
+            for d in self._docs.values():
+                if d.get("doc_id") == doc_id:
+                    d.update(extra_meta)
+            self._save()
+        return sum(1 for d in self._docs.values() if d.get("doc_id") == doc_id) or 1
 
     def search(self, query: str, top_k: int = 5) -> List[Dict]:
         """BM25 search with synonym expansion and top_k results."""

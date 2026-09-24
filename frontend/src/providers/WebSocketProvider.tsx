@@ -360,6 +360,17 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               getGlobalQueryClient()?.invalidateQueries({ queryKey: queryKeys.approvals });
             }
 
+            // HITL Approval Requested Event
+            else if (type === 'approval_requested') {
+              getGlobalQueryClient()?.invalidateQueries({ queryKey: queryKeys.approvals });
+              useIndraStore.getState().fetchPendingApprovals();
+              useIndraStore.getState().addToast({
+                type: 'warning',
+                title: ev.title || 'Plant Authorization Required',
+                message: ev.recommendation || `Critical finding on ${ev.equipment || 'asset'} requires Plant Superintendent sign-off.`,
+              });
+            }
+
             // Tool result event
             else if (type === 'tool_result') {
               flushTokenBuffer();

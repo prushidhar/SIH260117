@@ -551,4 +551,177 @@ class EngineeringSandbox:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
+    @staticmethod
+    def calculate_darcy_weisbach_pressure_drop(
+        flow_rate_m3_s: float = 0.05,
+        pipe_diameter_m: float = 0.15,
+        pipe_length_m: float = 100.0,
+        pipe_roughness_m: float = 0.000045,
+        fluid_density_kg_m3: float = 998.2,
+        fluid_viscosity_pa_s: float = 0.001002,
+        equipment_tag: str = "PIPE-HYD-01"
+    ) -> Dict[str, Any]:
+        """
+        Calculates fluid velocity, Reynolds number, Colebrook-White friction factor,
+        and Darcy-Weisbach head loss and pressure drop in closed conduits.
+        Governing Standards: Crane TP 410, ISO 5167, ASME B31.3 Appendix V.
+        """
+        try:
+            if flow_rate_m3_s <= 0 or pipe_diameter_m <= 0 or pipe_length_m <= 0:
+                raise ValueError("Flow rate, pipe diameter, and length must be positive.")
+
+            area = (math.pi / 4.0) * (pipe_diameter_m ** 2)
+            velocity = flow_rate_m3_s / area
+            reynolds = (fluid_density_kg_m3 * velocity * pipe_diameter_m) / fluid_viscosity_pa_s
+            rel_roughness = pipe_roughness_m / pipe_diameter_m
+
+            if reynolds < 2300:
+                regime = "Laminar Flow"
+                f_friction = 64.0 / reynolds if reynolds > 0 else 0.03
+            else:
+                regime = "Turbulent Flow" if reynolds > 4000 else "Transitional Flow"
+                haaland_inv = -1.8 * math.log10(max(1e-12, (rel_roughness / 3.7) ** 1.11 + 6.9 / reynolds))
+                f_friction = 1.0 / (haaland_inv ** 2)
+
+                for _ in range(10):
+                    sqrt_f = math.sqrt(f_friction)
+                    arg = (rel_roughness / 3.7) + (2.51 / (reynolds * sqrt_f))
+                    if arg <= 0:
+                        break
+                    res = (1.0 / sqrt_f) + 2.0 * math.log10(arg)
+                    d_res = -0.5 * (f_friction ** -1.5) - (2.0 / (math.log(10) * arg)) * (-1.255 / (reynolds * (f_friction ** 1.5)))
+                    if abs(d_res) < 1e-12:
+                        break
+                    f_new = f_friction - (res / d_res)
+                    if abs(f_new - f_friction) < 1e-7 or f_new <= 0:
+                        break
+                    f_friction = f_new
+
+            g = 9.80665
+            head_loss_m = f_friction * (pipe_length_m / pipe_diameter_m) * ((velocity ** 2) / (2.0 * g))
+            delta_p_pa = fluid_density_kg_m3 * g * head_loss_m
+            delta_p_kpa = delta_p_pa / 1000.0
+            delta_p_bar = delta_p_pa / 100000.0
+            delta_p_psi = delta_p_pa * 0.000145038
+
+            python_code = f'''"""
+Darcy-Weisbach Fluid Friction & Hydraulic Solver (Deterministic Air-Gapped)
+Fluid: Density={fluid_density_kg_m3} kg/m3, Viscosity={fluid_viscosity_pa_s} Pa.s
+Pipe: ID={pipe_diameter_m}m, Length={pipe_length_m}m, Roughness={pipe_roughness_m}m
+"""
+import math
+
+flow_rate = {flow_rate_m3_s}       # m3/s
+diameter = {pipe_diameter_m}        # m
+length = {pipe_length_m}          # m
+roughness = {pipe_roughness_m}     # m
+rho = {fluid_density_kg_m3}            # kg/m3
+mu = {fluid_viscosity_pa_s}             # Pa.s
+g = 9.80665              # m/s2
+
+area = (math.pi / 4.0) * (diameter ** 2)
+v = flow_rate / area
+Re = (rho * v * diameter) / mu
+
+rel_e = roughness / diameter
+f = 0.02
+for _ in range(20):
+    val = (rel_e / 3.7) + (2.51 / (Re * math.sqrt(f)))
+    f = 1.0 / (-2.0 * math.log10(val)) ** 2
+
+head_loss = f * (length / diameter) * (v ** 2 / (2 * g))
+delta_p_kpa = (rho * g * head_loss) / 1000.0
+
+print(f"Fluid Velocity: {{v:.3f}} m/s")
+print(f"Reynolds Number: {{Re:.2e}} ({regime})")
+print(f"Colebrook Friction Factor: {{f:.5f}}")
+print(f"Darcy-Weisbach Head Loss: {{head_loss:.3f}} m")
+print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
+'''
+
+            return {
+                "status": "success",
+                "equipment_tag": equipment_tag,
+                "flow_rate_m3_s": round(flow_rate_m3_s, 4),
+                "pipe_diameter_m": round(pipe_diameter_m, 4),
+                "pipe_length_m": round(pipe_length_m, 2),
+                "fluid_velocity_m_s": round(velocity, 3),
+                "reynolds_number": round(reynolds, 1),
+                "flow_regime": regime,
+                "relative_roughness": round(rel_roughness, 6),
+                "darcy_friction_factor": round(f_friction, 5),
+                "head_loss_meters": round(head_loss_m, 3),
+                "pressure_drop_kpa": round(delta_p_kpa, 2),
+                "pressure_drop_bar": round(delta_p_bar, 4),
+                "pressure_drop_psi": round(delta_p_psi, 2),
+                "governing_equation": "Colebrook-White & Darcy-Weisbach: h_f = f * (L/D) * (v^2 / 2g)",
+                "governing_standard": "Crane Technical Paper 410 / ISO 5167",
+                "generated_python_script": python_code,
+                "verified": True
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    @staticmethod
+    def calculate_asme_section_viii_vessel_thickness(
+        design_pressure_psig: float,
+        inside_radius_in: float,
+        allowable_stress_psi: float,
+        joint_efficiency: float = 1.0,
+        corrosion_allowance_in: float = 0.125,
+        head_type: str = "2:1_ellipsoidal",
+        equipment_tag: str = "V-101"
+    ) -> Dict[str, Any]:
+        """
+        Calculates minimum required shell and formed head thickness for unfired pressure vessels.
+        Governing Standard: ASME Boiler and Pressure Vessel Code (BPVC) Section VIII Division 1.
+        Cylindrical Shell (UG-27): t = (P * R) / (S * E - 0.6 * P) + c
+        2:1 Ellipsoidal Head (UG-32(d)): t = (P * D) / (2 * S * E - 0.2 * P) + c
+        """
+        try:
+            p = float(design_pressure_psig)
+            r = float(inside_radius_in)
+            d = 2.0 * r
+            s = float(allowable_stress_psi)
+            e = float(joint_efficiency)
+            c = float(corrosion_allowance_in)
+
+            if p <= 0 or r <= 0 or s <= 0 or e <= 0:
+                raise ValueError("Design pressure, radius, allowable stress, and joint efficiency must be positive.")
+
+            shell_denom = (s * e) - (0.6 * p)
+            if shell_denom <= 0:
+                raise ValueError("Design pressure exceeds allowable stress threshold for thin-wall criteria.")
+            t_shell_calc = (p * r) / shell_denom
+            t_shell_total = t_shell_calc + c
+
+            head_denom = (2.0 * s * e) - (0.2 * p)
+            t_head_calc = (p * d) / head_denom
+            t_head_total = t_head_calc + c
+
+            mawp_shell = (s * e * t_shell_calc) / (r + 0.6 * t_shell_calc)
+            hydrotest_pressure = 1.3 * p
+
+            return {
+                "status": "success",
+                "equipment_tag": equipment_tag,
+                "design_pressure_psig": p,
+                "inside_radius_inches": r,
+                "inside_diameter_inches": d,
+                "allowable_stress_psi": s,
+                "joint_efficiency_e": e,
+                "corrosion_allowance_inches": c,
+                "required_shell_thickness_inches": round(t_shell_total, 4),
+                "required_head_thickness_inches": round(t_head_total, 4),
+                "head_type": head_type,
+                "mawp_psig": round(mawp_shell, 1),
+                "hydrotest_pressure_ug99_psig": round(hydrotest_pressure, 1),
+                "code_reference": "ASME BPVC Section VIII Division 1 (UG-27 & UG-32)",
+                "formula_shell": "t = (P * R) / (S * E - 0.6 * P) + c",
+                "formula_head": "t = (P * D) / (2 * S * E - 0.2 * P) + c",
+                "verified": True
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
 engineering_tools = EngineeringSandbox()

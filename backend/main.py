@@ -17,6 +17,7 @@ from agents.planner import AgentDAG
 from database import db
 from rag.retriever import graph_retriever
 from security.audit_log import audit_ledger
+from security.network_monitor import network_monitor
 from sandbox.executor import tool_registry
 
 # Enforcement of offline constraints and D drive cache
@@ -1306,9 +1307,14 @@ async def execute_code_in_sandbox(req: SandboxExecutionRequest):
     })
     return res
 
+@app.get("/api/security/airgap")
+async def get_airgap_security_telemetry():
+    """Real-time cryptographic telemetry proving zero external egress and IEC 62443 air-gap containment."""
+    return network_monitor.get_status()
+
 @app.get("/api/metrics")
 async def get_system_metrics():
-    """Real-time system health, memory, and operational throughput metrics."""
+    """Real-time system health, memory, operational throughput, and air-gap metrics."""
     proc = psutil.Process()
     mem = psutil.virtual_memory()
     disk = psutil.disk_usage(".")
@@ -1322,6 +1328,7 @@ async def get_system_metrics():
             "disk_free_gb": round(disk.free / 1024**3, 1),
             "cpu_percent": psutil.cpu_percent(interval=None)
         },
+        "airgap": network_monitor.get_status(),
         "task_queue": task_queue.get_metrics(),
         "knowledge_base": kb_stats,
         "audit_ledger": {

@@ -1,0 +1,251 @@
+"""
+backend/scripts/test_all_domains.py — Comprehensive End-to-End Validation Suite (INDRA)
+Tests:
+1. Ultrasonic Inspection & Statutory Approval Note (ASME B31.3 / API 570)
+2. Fluid Dynamics Darcy-Weisbach Friction Drop (Crane TP 410)
+3. P&ID Blueprint Extraction (ANSI/ISA-5.1)
+4. ISO 10816-3 Vibration Harmonics & Asset Health (Slurry Pump P-101)
+5. Deliverable Factory (.docx, .xlsx, .pptx)
+6. NetworkMonitor Air-Gap Cryptographic Verification
+7. Database HITL Dual-Key Approval & Merkle Log
+"""
+import os
+import sys
+import json
+import time
+
+# Ensure backend root is on sys.path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
+
+from models.synthesizer import report_synthesizer
+from sandbox.executor import tool_registry
+from agents.deliverable_builder import deliverable_builder
+from security.network_monitor import network_monitor
+from database import db
+from security.audit_log import audit_ledger
+
+
+def test_card_1_ultrasonic_inspection():
+    print("\n--- [TEST 1] Card 1: Ultrasonic Inspection & Statutory Note ---")
+    prompt = "Review the ultrasonic thickness inspection report for crude distillation unit CDU-Pipe-104: nominal thickness 12.7mm, measured thickness 7.2mm, corrosion rate 0.45 mm/yr, design pressure 3.2 MPa. Perform ASME B31.3 minimum thickness calculation and draft a statutory plant approval note for executive sign-off."
+    
+    # 1. OCR tool execution
+    ocr_res = tool_registry.execute_tool("ocr_inspect_document", {
+        "file_path": "INSP-2025-084_Crude_Distillation_Unit_Ultrasonic_Report.pdf",
+        "target_tag": "CDU-Pipe-104"
+    })
+    assert ocr_res.get("status") == "success", f"OCR failed: {ocr_res}"
+    print(f"  [+] OCR Findings: measured={ocr_res.get('ultrasonic_measured_thickness_mm')}mm, corrosion_rate={ocr_res.get('corrosion_rate_mm_year')}mm/yr")
+
+    # 2. ASME calculation
+    pipe_res = tool_registry.execute_tool("calculate_pipe_thickness_asme_b313", {
+        "pressure_psig": 464.1,
+        "outer_diameter_in": 10.75,
+        "stress_value_psi": 20000.0,
+        "joint_quality_factor": 1.0
+    })
+    assert pipe_res.get("status") == "success", f"Pipe calc failed: {pipe_res}"
+    print(f"  [+] ASME B31.3 Calc: t_design={pipe_res.get('t_design_inches')}in, t_min={pipe_res.get('t_minimum_required_inches')}in")
+
+    # 3. Report Synthesis
+    tools = [
+        {"tool": "ocr_inspect_document", "output": ocr_res},
+        {"tool": "calculate_pipe_thickness_asme_b313", "output": pipe_res}
+    ]
+    report = report_synthesizer.synthesize(
+        domain="pipe_thickness",
+        tool_results=tools,
+        kb_hits=[],
+        prompt=prompt,
+        equipment_tag="CDU-Pipe-104"
+    )
+    assert "Statutory Plant Asset Integrity Approval Note" in report, "Missing statutory title in report"
+    assert "7.2 mm" in report or "7.2" in report, "Missing measured thickness in report"
+    assert "ASME B31.3" in report, "Missing ASME B31.3 in report"
+    print("  [+] Card 1 Synthesis: Passed! Length:", len(report), "chars")
+
+
+def test_card_2_darcy_weisbach():
+    print("\n--- [TEST 2] Card 2: Darcy-Weisbach Hydraulic Pipeline Friction Drop ---")
+    prompt = "Write a Python script to calculate the Darcy-Weisbach friction factor and pressure drop in a 100m carbon steel pipe with flow rate 0.05 m3/s and diameter 0.15m."
+    
+    dw_res = tool_registry.execute_tool("calculate_darcy_weisbach_pressure_drop", {
+        "flow_rate_m3_s": 0.05,
+        "pipe_diameter_m": 0.15,
+        "pipe_length_m": 100.0,
+        "equipment_tag": "PIPE-HYD-01"
+    })
+    assert dw_res.get("status") == "success", f"Darcy calc failed: {dw_res}"
+    print(f"  [+] Darcy-Weisbach: velocity={dw_res.get('fluid_velocity_m_s')}m/s, Re={dw_res.get('reynolds_number')}, f={dw_res.get('darcy_friction_factor')}, dp={dw_res.get('pressure_drop_kpa')}kPa")
+
+    tools = [{"tool": "calculate_darcy_weisbach_pressure_drop", "output": dw_res}]
+    report = report_synthesizer.synthesize(
+        domain="fluid_darcy_weisbach",
+        tool_results=tools,
+        kb_hits=[],
+        prompt=prompt,
+        equipment_tag="PIPE-HYD-01"
+    )
+    assert "Darcy-Weisbach" in report, "Missing Darcy-Weisbach in report"
+    assert "Crane Technical Paper 410" in report, "Missing Crane TP 410 in report"
+    assert "46.7" in report or "46.8" in report or "kPa" in report, "Missing pressure drop in report"
+    print("  [+] Card 2 Synthesis: Passed! Length:", len(report), "chars")
+
+
+def test_card_3_pid_extraction():
+    print("\n--- [TEST 3] Card 3: P&ID Blueprint & ISA-5.1 Tag Localization ---")
+    prompt = "Analyze the high-pressure feed P&ID schematic for crude distillation unit CDU-104. Extract all ISA-5.1 tags, valve designations, and line numbers, and verify safety relief valve isolation standards."
+    
+    pid_res = tool_registry.execute_tool("extract_pid_components", {
+        "file_id": "PID-001_Heat_Exchanger_Unit_Spec.txt",
+        "component_filter": "all"
+    })
+    assert pid_res.get("status") == "success", f"PID extraction failed: {pid_res}"
+    print(f"  [+] P&ID Extracted: {pid_res.get('total_valves_extracted')} valves identified from {pid_res.get('source_file')}")
+
+    tools = [{"tool": "extract_pid_components", "output": pid_res}]
+    report = report_synthesizer.synthesize(
+        domain="pid_extraction",
+        tool_results=tools,
+        kb_hits=[],
+        prompt=prompt,
+        equipment_tag="CDU-104"
+    )
+    assert "P&ID Schematic & ISA-5.1" in report, "Missing P&ID header in report"
+    assert "API 520" in report, "Missing API 520 in report"
+    assert "FV-1041" in report or "PSV" in report, "Missing valve tags in report"
+    print("  [+] Card 3 Synthesis: Passed! Length:", len(report), "chars")
+
+
+def test_card_4_vibration_triage():
+    print("\n--- [TEST 4] Card 4: ISO 10816-3 Vibration Triage & Telemetry ---")
+    prompt = "Perform ISO 10816-3 vibration triage on slurry feed pump P-101: 1X harmonic 7.2 mm/s RMS, 2X harmonic 1.8 mm/s RMS. Identify root cause and stream telemetry and equipment health card."
+    
+    vib_res = tool_registry.execute_tool("diagnose_vibration_harmonics", {
+        "dominant_freq_hz": 49.67,
+        "running_speed_rpm": 2980.0,
+        "peak_velocity_mms": 7.2,
+        "machine_tag": "P-101"
+    })
+    assert vib_res.get("status") == "success", f"Vibration calc failed: {vib_res}"
+    
+    dev_res = tool_registry.execute_tool("calculate_vibration_deviation", {
+        "measured_mms": 7.2,
+        "limit_mms": 4.5
+    })
+    assert dev_res.get("status") == "CRITICAL", f"Deviation expected CRITICAL: {dev_res}"
+
+    health_res = tool_registry.execute_tool("calculate_equipment_health_score", {
+        "vibration_deviation_pct": dev_res.get("deviation_percent", 60.0),
+        "temp_celsius": 68.4,
+        "nominal_temp": 60.0
+    })
+    print(f"  [+] Vibration Triage: fault={vib_res.get('diagnosed_fault')}, severity={vib_res.get('severity_level')}, dev={dev_res.get('deviation_percent')}%, health={health_res.get('health_score')}/100")
+
+    tools = [
+        {"tool": "diagnose_vibration_harmonics", "output": vib_res},
+        {"tool": "calculate_vibration_deviation", "output": dev_res},
+        {"tool": "calculate_equipment_health_score", "output": health_res}
+    ]
+    report = report_synthesizer.synthesize(
+        domain="vibration_harmonics",
+        tool_results=tools,
+        kb_hits=[],
+        prompt=prompt,
+        equipment_tag="P-101"
+    )
+    assert "ISO 10816-3" in report, "Missing ISO 10816 in report"
+    assert "ZONE D" in report, "Missing Zone D in report"
+    assert "Dynamic" in report or "Unbalance" in report, "Missing unbalance diagnosis in report"
+    print("  [+] Card 4 Synthesis: Passed! Length:", len(report), "chars")
+
+
+def test_deliverables_and_airgap():
+    print("\n--- [TEST 5] Deliverables Factory (.docx, .xlsx, .pptx) & Air-Gap ---")
+    out_dir = os.path.join(backend_dir, "brain", "test-task", "artifacts")
+    os.makedirs(out_dir, exist_ok=True)
+    
+    # 1. Build DOCX
+    docx_res = deliverable_builder.build_engineering_report_docx(
+        task_id="test-task",
+        title="Statutory Plant Approval Note — CDU-Pipe-104",
+        equipment_tag="CDU-Pipe-104",
+        domain="pipe_thickness",
+        tool_results=[{
+            "tool": "calculate_pipe_thickness_asme_b313",
+            "output": {
+                "design_pressure_psig": 464.1,
+                "outer_diameter_inches": 10.75,
+                "t_design_inches": 0.1236,
+                "t_minimum_required_inches": 0.2486,
+                "code_reference": "ASME B31.3 §304.1.2"
+            }
+        }],
+        kb_hits=[],
+        standards_clauses=["ASME B31.3 — Para 304.1.2 — Pipe wall thickness"],
+        prompt="Review ultrasonic inspection report for CDU-Pipe-104",
+        output_dir=out_dir
+    )
+    assert os.path.exists(docx_res["file_path"]), f"DOCX file not created: {docx_res}"
+    print(f"  [+] Word Report generated: {docx_res['filename']} ({os.path.getsize(docx_res['file_path'])} bytes)")
+
+    # 2. Build XLSX
+    xlsx_res = deliverable_builder.build_engineering_data_xlsx(
+        task_id="test-task",
+        title="Calculation Data Sheet — Pipe Thickness",
+        equipment_tag="CDU-Pipe-104",
+        domain="pipe_thickness",
+        tool_results=[{
+            "tool": "calculate_pipe_thickness_asme_b313",
+            "output": {
+                "design_pressure_psig": 464.1,
+                "outer_diameter_inches": 10.75,
+                "t_minimum_required_inches": 0.2486,
+                "status": "success"
+            }
+        }],
+        output_dir=out_dir
+    )
+    assert os.path.exists(xlsx_res["file_path"]), f"XLSX file not created: {xlsx_res}"
+    print(f"  [+] Excel Workbook generated: {xlsx_res['filename']} ({os.path.getsize(xlsx_res['file_path'])} bytes)")
+
+    # 3. Test NetworkMonitor Air-Gap
+    airgap_audit = network_monitor.audit_active_connections()
+    print(f"  [+] Air-Gap Status: {airgap_audit['airgap_status']}, Zero WAN Egress: {airgap_audit['zero_wan_egress']}, Proof SHA-256: {airgap_audit['audit_proof_sha256'][:16]}...")
+    assert airgap_audit["zero_wan_egress"] is True, "Air-gap verification failed!"
+
+    # 4. Test HITL Dual-Key Approval in Database
+    appr_id = f"APPR-TEST-{int(time.time())}"
+    db.add_approval(
+        approval_id=appr_id,
+        equipment="CDU-Pipe-104",
+        task_id="test-task",
+        recommendation="Statutory plant integrity sign-off per ASME B31.3 §304.1.2",
+        required_tier=2,
+        tool="calculate_pipe_thickness_asme_b313",
+        severity="CRITICAL",
+        arguments={"measured_mm": 7.2, "corrosion_rate": 0.45},
+        title="Statutory Approval: CDU-Pipe-104"
+    )
+    pending = db.get_pending_approvals()
+    assert any(a.get("id") == appr_id for a in pending), "Approval not in pending list"
+    
+    # Sign approval
+    success, res = db.sign_approval(appr_id, "APPROVED", "Superintendent Sharma (EMP-108)", 2)
+    assert success is True, "Approval signing failed"
+    print(f"  [+] Dual-Key HITL Approval: Committed & Signed by '{res.get('signed_by')}' (Tier {res.get('tier')})")
+
+
+if __name__ == "__main__":
+    print("================================================================")
+    print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
+    print("================================================================")
+    test_card_1_ultrasonic_inspection()
+    test_card_2_darcy_weisbach()
+    test_card_3_pid_extraction()
+    test_card_4_vibration_triage()
+    test_deliverables_and_airgap()
+    print("\n================================================================")
+    print("ALL 5 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("================================================================")

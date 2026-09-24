@@ -44,6 +44,18 @@ class Database:
                     signed_at TEXT
                 )
             """)
+            cursor.execute("PRAGMA table_info(approvals)")
+            appr_cols = [c[1] for c in cursor.fetchall()]
+            for col, col_type in [
+                ("tool", "TEXT"),
+                ("title", "TEXT"),
+                ("description", "TEXT"),
+                ("severity", "TEXT"),
+                ("arguments", "TEXT"),
+                ("step_index", "INTEGER")
+            ]:
+                if col not in appr_cols:
+                    cursor.execute(f"ALTER TABLE approvals ADD COLUMN {col} {col_type}")
             conn.commit()
 
     def create_task(self, task_id: str, title: str, task_type: str, timestamp: str, prompt: str = "", file_ids: list = None, model: str = None):
@@ -111,23 +123,43 @@ class Database:
                 "model": row[10] if len(row) > 10 and row[10] else ""
             }
 
-    def add_approval(self, approval_id: str, equipment: str, task_id: str, recommendation: str, required_tier: int = 2):
+    def add_approval(self, approval_id: str, equipment: str, task_id: str, recommendation: str, 
+                     required_tier: int = 2, tool: str = "", severity: str = "CRITICAL", 
+                     arguments: dict = None, step_index: int = 0, title: str = ""):
         import time
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
+            now = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+            args_json = json.dumps(arguments or {})
+            desc = recommendation
+            t_name = tool or "industrial_engine"
+            t_title = title or f"Plant Sign-Off: {equipment}"
             cursor.execute(
-                "INSERT OR REPLACE INTO approvals (id, equipment, task_id, recommendation, required_tier, status, created_at, signed_by, signed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (approval_id, equipment, task_id, recommendation, required_tier, "pending", time.strftime("%Y-%m-%dT%H:%M:%SZ"), "", "")
+                """INSERT OR REPLACE INTO approvals 
+                   (id, equipment, task_id, recommendation, required_tier, status, created_at, signed_by, signed_at, tool, title, description, severity, arguments, step_index) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (approval_id, equipment, task_id, recommendation, required_tier, "pending", now, "", "", t_name, t_title, desc, severity, args_json, step_index)
             )
             conn.commit()
 
     def get_pending_approvals(self):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, equipment, task_id, recommendation, required_tier, status, created_at, signed_by, signed_at FROM approvals WHERE status = 'pending' ORDER BY created_at DESC")
+            cursor.execute("""
+                SELECT id, equipment, task_id, recommendation, required_tier, status, created_at, signed_by, signed_at,
+                       tool, title, description, severity, arguments, step_index
+                FROM approvals WHERE status = 'pending' ORDER BY created_at DESC
+            """)
             rows = cursor.fetchall()
-            return [
-                {
+            approvals = []
+            for r in rows:
+                args = {}
+                if r[13]:
+                    try:
+                        args = json.loads(r[13])
+                    except Exception:
+                        args = {}
+                approvals.append({
                     "id": r[0],
                     "equipment": r[1],
                     "task_id": r[2],
@@ -136,16 +168,26 @@ class Database:
                     "status": r[5],
                     "created_at": r[6],
                     "signed_by": r[7],
-                    "signed_at": r[8]
-                }
-                for r in rows
-            ]
+                    "signed_at": r[8],
+                    "tool": r[9] or "tool_authorization",
+                    "tool_name": r[9] or "tool_authorization",
+                    "title": r[10] or f"Plant Authorization — {r[1]}",
+                    "description": r[11] or r[3],
+                    "severity": r[12] or "CRITICAL",
+                    "arguments": args,
+                    "args": args,
+                    "step_index": r[14] if r[14] is not None else 0
+                })
+            return approvals
 
     def sign_approval(self, approval_id: str, decision: str, signed_by: str, tier: int):
         import time
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT required_tier, equipment, id FROM approvals WHERE id = ? OR task_id = ?", (approval_id, approval_id))
+            cursor.execute(
+                "SELECT required_tier, equipment, id FROM approvals WHERE id = ? OR task_id = ? OR id LIKE ? ORDER BY created_at DESC", 
+                (approval_id, approval_id, f"%{approval_id}%")
+            )
             row = cursor.fetchone()
             if not row:
                 return False, "Approval request not found"

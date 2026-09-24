@@ -285,6 +285,61 @@ class ToolRegistry:
                         "required": ["heat_duty_kw", "surface_area_m2", "lmtd_c"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_darcy_weisbach_pressure_drop",
+                    "description": "Calculates fluid velocity, Reynolds number, Colebrook-White friction factor, and Darcy-Weisbach pressure drop/head loss per Crane TP 410 and ISO 5167.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "flow_rate_m3_s": {"type": "number", "description": "Volumetric flow rate in m3/s"},
+                            "pipe_diameter_m": {"type": "number", "description": "Inside pipe diameter in meters"},
+                            "pipe_length_m": {"type": "number", "description": "Total pipe length in meters"},
+                            "pipe_roughness_m": {"type": "number", "description": "Absolute pipe roughness in meters (default: 0.000045m for carbon steel)"},
+                            "fluid_density_kg_m3": {"type": "number", "description": "Fluid density in kg/m3 (default: 998.2 kg/m3 for water)"},
+                            "fluid_viscosity_pa_s": {"type": "number", "description": "Dynamic viscosity in Pa*s (default: 0.001002 Pa*s for water)"},
+                            "equipment_tag": {"type": "string", "description": "Piping line identifier"}
+                        },
+                        "required": ["flow_rate_m3_s", "pipe_diameter_m"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_section_viii_vessel_thickness",
+                    "description": "Calculates minimum required shell and 2:1 ellipsoidal head wall thickness for unfired pressure vessels per ASME Section VIII Div 1 UG-27 and UG-32.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "design_pressure_psig": {"type": "number", "description": "Internal design pressure in psig"},
+                            "inside_radius_in": {"type": "number", "description": "Inside vessel radius in inches"},
+                            "allowable_stress_psi": {"type": "number", "description": "Maximum allowable stress at design temperature in psi"},
+                            "joint_efficiency": {"type": "number", "description": "Weld joint efficiency factor E (default: 1.0 for 100% RT)"},
+                            "corrosion_allowance_in": {"type": "number", "description": "Corrosion allowance in inches (default: 0.125 in)"},
+                            "head_type": {"type": "string", "description": "Formed head type (default: 2:1_ellipsoidal)"},
+                            "equipment_tag": {"type": "string", "description": "Vessel asset tag e.g. V-101"}
+                        },
+                        "required": ["design_pressure_psig", "inside_radius_in", "allowable_stress_psi"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "ocr_inspect_document",
+                    "description": "Performs air-gapped on-premise OCR and multimodal extraction from scanned inspection reports, NDT thickness logs, handwritten maintenance sheets, and engineering drawings.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "file_path": {"type": "string", "description": "Path or filename of the scanned PDF or image document"},
+                            "target_tag": {"type": "string", "description": "Target equipment asset tag (e.g. CDU-Pipe-104)"},
+                            "inspection_type": {"type": "string", "description": "NDT inspection type (ultrasonic, radiographic, eddy_current)"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -296,6 +351,8 @@ class ToolRegistry:
         # --- PHASE 2 OVERHAUL: Secure Sandboxed MCP Tool Execution ---
         math_tools = [
             "calculate_pipe_thickness_asme_b313",
+            "calculate_asme_section_viii_vessel_thickness",
+            "calculate_darcy_weisbach_pressure_drop",
             "calculate_pump_hydraulics",
             "calculate_flange_mawp_asme_b165",
             "calculate_heat_exchanger_duty",
@@ -312,6 +369,11 @@ class ToolRegistry:
             return self._run_sandbox(args.get("code", ""))
         elif name == "extract_pid_components":
             return self._extract_pid_components(args.get("file_id"), args.get("component_filter", "valves"))
+        elif name == "ocr_inspect_document":
+            from documents.ocr import local_ocr
+            fpath = args.get("file_path") or args.get("target_file") or args.get("filename")
+            prompt_ctx = args.get("prompt_context", "")
+            return local_ocr.inspect_scanned_document(file_path=fpath, prompt_context=prompt_ctx)
         elif name == "generate_document":
             return self._generate_document(
                 args.get("kind", "docx"),
