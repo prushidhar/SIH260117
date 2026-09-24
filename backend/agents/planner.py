@@ -531,7 +531,10 @@ class AgentDAG:
             tc for tc in self.state.recorded_tool_calls 
             if tc.get("tool") not in ("kb_search", "equipment_lookup", "generate_document")
         ]
-        wants_doc = any(kw in prompt.lower() for kw in ["report", "deliverable", "document", "docx", "xlsx", "sheet", "download"])
+        wants_doc = any(kw in prompt.lower() for kw in [
+            "report", "deliverable", "document", "docx", "xlsx", "sheet", "download",
+            "approval note", "approval", "note", "word file", "word", "excel", "presentation", "ppt", "pptx", "sign-off", "inspection report"
+        ])
         if not calc_tools and not wants_doc:
             return {
                 "deliverables": [],
@@ -546,9 +549,12 @@ class AgentDAG:
         standards_clauses = v_report.get("evidence_sources", [])
 
         # 1. Build Word Report (.docx)
+        is_approval = any(kw in prompt.lower() for kw in ["approval note", "approval", "sign-off", "inspection report"])
+        doc_title = f"Statutory Plant Approval Note — {tag}" if is_approval else f"Industrial Engineering Report — {primary_domain.replace('_', ' ').title()}"
+
         docx_meta = deliverable_builder.build_engineering_report_docx(
             task_id=self.state.task_id,
-            title=f"Industrial Engineering Report — {primary_domain.replace('_', ' ').title()}",
+            title=doc_title,
             equipment_tag=tag,
             domain=primary_domain,
             tool_results=self.state.recorded_tool_calls,

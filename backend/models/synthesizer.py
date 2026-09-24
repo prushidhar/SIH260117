@@ -54,7 +54,7 @@ class ReportSynthesizer:
 
         # 4. Calculation Intent Check
         is_calc_inquiry = bool(re.search(r'\b(how\s+to\s+calculate|how\s+do\s+you\s+calculate|what\s+is\s+the\s+formula|explain\s+how\s+to\s+calculate|formula\s+for)\b', p_lower))
-        has_calc_keywords = bool(re.search(r'\b(calculate|compute|size\b|sizing|determine\s+(wall\s+)?thickness|find\s+(head|power|mawp|flow|deflection|slip|efficiency)|check\s+(schedule|wall|mawp|flange|margin)|evaluate\s+(head|thickness|mawp|rating|npsh\s+margin))\b', p_lower))
+        has_calc_keywords = bool(re.search(r'\b(calculate|calculation|calculations|compute|computing|size\b|sizing|determine\s+(wall\s+)?thickness|find\s+(head|power|mawp|flow|deflection|slip|efficiency)|check\s+(schedule|wall|mawp|flange|margin)|evaluate\s+(head|thickness|mawp|rating|npsh\s+margin))\b', p_lower))
         
         params = parameter_extractor.extract_all(prompt)
         has_numbers = any(v is not None for k, v in params.items() if k != 'tag')
