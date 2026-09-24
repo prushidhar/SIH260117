@@ -30,7 +30,9 @@ except Exception:
 
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
-FRONTEND_DIR = BASE_DIR / "frontend"
+# Live frontend with node_modules (katty/indra). Falls back to repo copy if missing.
+_KATTY_FRONTEND = Path(r"C:\Users\booya\OneDrive\Desktop\SIH frontend 1\SIH frontend 1\katty\indra")
+FRONTEND_DIR = _KATTY_FRONTEND if (_KATTY_FRONTEND / "node_modules").exists() else BASE_DIR / "frontend"
 CONFIG_FILE = BASE_DIR / "launcher_config.json"
 MODELS_DIR = Path(r"D:\models")
 PHYSICAL_MODELS_DIR = Path(r"C:\models")
