@@ -428,9 +428,9 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             else if (type === 'deliverable') {
               flushTokenBuffer();
               const filename = ev.filename || ev.name || 'deliverable.docx';
-              const fileType = (ev.file_type || ev.type || (filename.endsWith('.xlsx') ? 'xlsx' : 'docx')).toLowerCase() as any;
+              const fileType = (ev.file_type || ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : filename.endsWith('.pptx') ? 'pptx' : 'docx')).toLowerCase() as any;
               const title = ev.title || ev.name || filename.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
-              const desc = ev.description || (fileType === 'xlsx' ? 'Deterministic Equipment Health Workbook' : 'Statutory Plant Approval Note');
+              const desc = ev.description || (fileType === 'xlsx' ? 'Deterministic Equipment Health Workbook' : fileType === 'pptx' ? 'Executive Board Review Deck' : 'Statutory Plant Approval Note');
               const now = new Date().toLocaleTimeString();
 
               const newDeliverable: Deliverable = {

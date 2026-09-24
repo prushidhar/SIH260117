@@ -933,9 +933,12 @@ class AgentDAG:
             docx_meta["hash"] = b_hash
             docx_meta["type"] = "deliverable"
             docx_meta["kind"] = "docx"
+            docx_meta["file_type"] = "docx"
             docx_meta["name"] = doc_title
             docx_meta["title"] = doc_title
+            docx_meta["download_url"] = docx_meta.get("url", f"/files/{self.state.task_id}/artifacts/{docx_meta.get('filename')}")
             docx_meta["size"] = f"{len(f_bytes) / 1024:.1f} KB"
+            docx_meta["description"] = f"Statutory Word Report with ASME/API compliance matrices and digital sign-off blocks"
             await self.websocket.send_json(docx_meta)
             self.state.deliverables.append(docx_meta["file_path"])
 
@@ -956,39 +959,33 @@ class AgentDAG:
             xlsx_meta["hash"] = b_hash
             xlsx_meta["type"] = "deliverable"
             xlsx_meta["kind"] = "xlsx"
+            xlsx_meta["file_type"] = "xlsx"
             xlsx_meta["name"] = xlsx_title
             xlsx_meta["title"] = xlsx_title
+            xlsx_meta["download_url"] = xlsx_meta.get("url", f"/files/{self.state.task_id}/artifacts/{xlsx_meta.get('filename')}")
             xlsx_meta["size"] = f"{len(f_bytes) / 1024:.1f} KB"
+            xlsx_meta["description"] = f"Deterministic Engineering Workbook with verified telemetry, calculations, and formulas"
             await self.websocket.send_json(xlsx_meta)
             self.state.deliverables.append(xlsx_meta["file_path"])
 
-        # 3. Build PowerPoint Presentation (.pptx) if requested
+        # 3. Build Executive PowerPoint Presentation (.pptx)
         wants_ppt = any(kw in prompt.lower() for kw in ["presentation", "ppt", "pptx", "slide", "slides", "board review", "board presentation"])
-        if wants_ppt:
+        # Generate executive deck whenever deliverables or reports are requested, or explicitly requested
+        if wants_doc or wants_ppt or bool(calc_tools):
             try:
-                from deliverables.ppt import PPTGenerator
-                ppt_gen = PPTGenerator()
+                from deliverables.ppt import ppt_generator
                 ppt_filename = f"{tag}_Board_Review.pptx"
                 ppt_path = os.path.join(artifacts_dir, ppt_filename)
-                slides_data = [
-                    {"title": f"Executive Engineering Review — {tag}", "content": "Statutory Plant Asset Integrity & Reliability Briefing"},
-                    {"title": "1. Operational Parameters & Scope", "content": [
-                        f"Asset Reference: {tag}",
-                        f"Governing Standard: {primary_domain.replace('_', ' ').title()}",
-                        f"Inspection Protocol: On-Premise Air-Gapped Verification"
-                    ]},
-                    {"title": "2. Deterministic Technical Findings", "content": [
-                        f"Mathematical Model: {primary_domain.replace('_', ' ').title()}",
-                        f"Evidence Lock: Verified Sovereign (100% Deterministic)",
-                        "Integrity Assessment: Safe for continued operation under monitored parameters"
-                    ]},
-                    {"title": "3. Executive Recommendation & Action Plan", "content": [
-                        "Authorize statutory plant approval note for executive sign-off",
-                        "Maintain operational telemetry within calibrated envelopes",
-                        "Archive immutable audit record in local Merkle ledger"
-                    ]}
-                ]
-                ppt_gen.create_engineering_review(slides_data, ppt_path)
+                ppt_generator.create_executive_deck(
+                    task_id=self.state.task_id,
+                    title=f"Executive Board Review — {tag}",
+                    equipment_tag=tag,
+                    primary_domain=primary_domain,
+                    tool_results=self.state.recorded_tool_calls,
+                    kb_hits=self.state.kb_hits,
+                    prompt=self.state.prompt,
+                    output_path=ppt_path
+                )
                 if os.path.exists(ppt_path):
                     with open(ppt_path, "rb") as f:
                         f_bytes = f.read()
@@ -996,13 +993,16 @@ class AgentDAG:
                     ppt_meta = {
                         "type": "deliverable",
                         "kind": "pptx",
-                        "name": f"Board Review Presentation — {tag}",
+                        "file_type": "pptx",
+                        "name": f"Executive Board Review — {tag}",
+                        "title": f"Executive Board Review — {tag}",
                         "filename": ppt_filename,
                         "file_path": ppt_path,
                         "url": f"/files/{self.state.task_id}/artifacts/{ppt_filename}",
                         "download_url": f"/files/{self.state.task_id}/artifacts/{ppt_filename}",
                         "size": f"{len(f_bytes) / 1024:.1f} KB",
-                        "hash": b_hash
+                        "hash": b_hash,
+                        "description": "Executive 16:9 Widescreen Deck with KPI Dashboard and Dual-Key Sign-Off Certificate"
                     }
                     await self.websocket.send_json(ppt_meta)
                     self.state.deliverables.append(ppt_path)

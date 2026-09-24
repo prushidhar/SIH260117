@@ -1,19 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash } from 'lucide-react';
+import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash, Presentation } from 'lucide-react';
 import useIndraStore, { type Deliverable } from '@/store/indra-store';
 
 export default function Deliverables() {
   const { deliverables } = useIndraStore();
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
 
-  const getFileIcon = (type: string) => {
+  const getFileIcon = (type: string = '') => {
     switch (type.toLowerCase()) {
       case 'xlsx':
       case 'excel':
       case 'sheet':
         return <Sheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'pptx':
+      case 'ppt':
+      case 'presentation':
+        return <Presentation className="w-4 h-4 text-amber-500 dark:text-amber-400" />;
       case 'pdf':
         return <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400" />;
       case 'docx':
@@ -24,11 +28,15 @@ export default function Deliverables() {
     }
   };
 
-  const getBadgeLabel = (type: string) => {
+  const getBadgeLabel = (type: string = '') => {
     switch (type.toLowerCase()) {
       case 'xlsx':
       case 'excel':
         return 'ASME B31.3 HEALTH WORKBOOK';
+      case 'pptx':
+      case 'ppt':
+      case 'presentation':
+        return 'EXECUTIVE BOARD DECK';
       case 'docx':
       case 'word':
         return 'MAINTENANCE APPROVAL NOTE';
@@ -69,7 +77,11 @@ export default function Deliverables() {
         <div className="flex flex-col gap-2.5">
           {deliverables.map((item, index) => {
             const isDownloaded = downloadedId === (item.id || item.filename);
-            const isExcel = item.type?.toLowerCase() === 'xlsx' || item.filename.endsWith('.xlsx');
+            const typeStr = (item.type || '').toLowerCase();
+            const fn = (item.filename || item.name || '').toLowerCase();
+            const isExcel = typeStr === 'xlsx' || typeStr === 'excel' || fn.endsWith('.xlsx');
+            const isPpt = typeStr === 'pptx' || typeStr === 'ppt' || typeStr === 'presentation' || fn.endsWith('.pptx');
+            const fileTypeForDisplay = isPpt ? 'pptx' : isExcel ? 'xlsx' : (typeStr || 'docx');
             
             return (
               <div
@@ -78,7 +90,7 @@ export default function Deliverables() {
               >
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
-                    {getFileIcon(item.type)}
+                    {getFileIcon(fileTypeForDisplay)}
                     <span className="text-xs text-slate-900 dark:text-zinc-100 font-bold truncate">
                       {item.filename || item.name}
                     </span>
@@ -86,9 +98,11 @@ export default function Deliverables() {
                   <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                     isExcel 
                       ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
+                      : isPpt
+                      ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                       : 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800'
                   }`}>
-                    {getBadgeLabel(item.type)}
+                    {getBadgeLabel(fileTypeForDisplay)}
                   </span>
                 </div>
 

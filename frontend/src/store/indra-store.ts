@@ -1359,7 +1359,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
             const downloadUrl = rawUrl.startsWith('http')
               ? rawUrl
               : `${API_BASE}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
-            const kind = ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : 'docx');
+            const kind = ev.file_type || ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : filename.endsWith('.pptx') ? 'pptx' : 'docx');
             const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
             
             const fallbackDescription = filename && filename !== 'Deliverable.docx'
@@ -1371,7 +1371,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
               name: filename,
               filename,
               type: kind,
-              size: ev.size || (kind === 'xlsx' ? '1.4 MB' : '2.1 MB'),
+              size: ev.size || (kind === 'xlsx' ? '1.4 MB' : kind === 'pptx' ? '3.2 MB' : '2.1 MB'),
               generatedAt: nowTime,
               timestamp: nowTime,
               description: ev.description || ev.desc || fallbackDescription,

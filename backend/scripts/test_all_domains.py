@@ -210,7 +210,32 @@ def test_deliverables_and_airgap():
     assert os.path.exists(xlsx_res["file_path"]), f"XLSX file not created: {xlsx_res}"
     print(f"  [+] Excel Workbook generated: {xlsx_res['filename']} ({os.path.getsize(xlsx_res['file_path'])} bytes)")
 
-    # 3. Test NetworkMonitor Air-Gap
+    # 3. Build Executive PPTX
+    from deliverables.ppt import ppt_generator
+    ppt_path = os.path.join(out_dir, "CDU-Pipe-104_Board_Review.pptx")
+    ppt_generator.create_executive_deck(
+        task_id="test-task",
+        title="Executive Board Review — CDU-Pipe-104",
+        equipment_tag="CDU-Pipe-104",
+        primary_domain="pipe_thickness",
+        tool_results=[{
+            "tool": "calculate_pipe_thickness_asme_b313",
+            "output": {
+                "design_pressure_psig": 464.1,
+                "outer_diameter_inches": 10.75,
+                "t_design_inches": 0.1236,
+                "t_minimum_required_inches": 0.2486,
+                "status": "success"
+            }
+        }],
+        kb_hits=[],
+        prompt="Review ultrasonic inspection report for CDU-Pipe-104",
+        output_path=ppt_path
+    )
+    assert os.path.exists(ppt_path), f"PPTX file not created: {ppt_path}"
+    print(f"  [+] Executive PPTX generated: {os.path.basename(ppt_path)} ({os.path.getsize(ppt_path)} bytes)")
+
+    # 4. Test NetworkMonitor Air-Gap
     airgap_audit = network_monitor.audit_active_connections()
     print(f"  [+] Air-Gap Status: {airgap_audit['airgap_status']}, Zero WAN Egress: {airgap_audit['zero_wan_egress']}, Proof SHA-256: {airgap_audit['audit_proof_sha256'][:16]}...")
     assert airgap_audit["zero_wan_egress"] is True, "Air-gap verification failed!"
