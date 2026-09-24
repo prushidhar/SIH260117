@@ -1338,6 +1338,22 @@ async def download_deliverables_bundle(taskId: str):
         headers={"Content-Disposition": f"attachment; filename={bundle_filename}"}
     )
 
+@app.get("/api/sih/pitch-deck")
+async def get_sih_winning_pitch_deck():
+    """Serves the official 6-slide Smart India Hackathon (SIH 2026) Winning Presentation Deck."""
+    deck_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "INDRA_SIH_Winning_Deck_6_Slides.pptx")
+    deck_path = os.path.abspath(deck_path)
+    if not os.path.exists(deck_path):
+        from scripts.generate_sih_winning_deck import build_deck
+        build_deck(deck_path)
+    if os.path.exists(deck_path):
+        return FileResponse(
+            deck_path,
+            filename="INDRA_SIH_Winning_Deck_6_Slides.pptx",
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+    raise HTTPException(status_code=404, detail="Pitch deck could not be compiled.")
+
 @app.get("/api/files/{file_id}")
 async def get_uploaded_file_api(file_id: str):
     """Serve uploaded file by file_id."""

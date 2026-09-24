@@ -15,7 +15,8 @@ import {
   Lock, 
   ShieldCheck, 
   Sun, 
-  Moon
+  Moon,
+  Presentation
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-slate-700 dark:text-zinc-200 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 font-mono">
             {navLabels[activeNav] || 'Agent Workbench'}
           </span>
+        </div>
+
+        {/* Right: Quick Pitch Deck Download */}
+        <div className="flex items-center gap-2">
+          <a
+            href="http://localhost:8000/api/sih/pitch-deck"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+            title="Export official 6-slide Smart India Hackathon 2026 Presentation (.pptx)"
+          >
+            <Presentation className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>Export SIH Pitch Deck (6 Slides)</span>
+          </a>
         </div>
       </div>
 
