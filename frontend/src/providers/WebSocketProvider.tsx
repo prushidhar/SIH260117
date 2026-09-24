@@ -248,7 +248,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch(`${API_BASE}/api/tasks`, {
           method: 'POST',

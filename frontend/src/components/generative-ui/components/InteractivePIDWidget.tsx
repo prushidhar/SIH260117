@@ -87,7 +87,11 @@ export default function InteractivePIDWidget({
 
   const handleDetach = () => {
     window.open('/detach/pid', 'INDRA_PID_WINDOW', 'width=1280,height=850');
-    addToast('P&ID Schematic detached to secondary monitor.', 'info');
+    addToast({
+      type: 'info',
+      title: 'P&ID Detached',
+      message: 'P&ID Schematic detached to secondary monitor.',
+    });
   };
 
   return (

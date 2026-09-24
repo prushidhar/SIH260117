@@ -1101,6 +1101,7 @@ async def websocket_task(websocket: WebSocket, taskId: str):
         deliverables_payload = [
             {
                 "filename": os.path.basename(p),
+                "name": os.path.basename(p).replace("_", " ").replace(".docx", "").replace(".xlsx", "").replace(".pptx", ""),
                 "url": f"/files/{taskId}/artifacts/{os.path.basename(p)}",
                 "kind": os.path.splitext(p)[1].lstrip('.') or "docx"
             }

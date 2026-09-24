@@ -114,8 +114,11 @@ class DeliverableBuilder:
         recommendation: str = "",
     ) -> Dict[str, str]:
         os.makedirs(output_dir, exist_ok=True)
-        safe_tag = equipment_tag.replace('-', '').replace('/', '_')
-        filename = f"INDRA_{domain.upper()}_{safe_tag}.docx"
+        safe_tag = equipment_tag.replace('-', '_').replace('/', '_')
+        if "approval" in title.lower() or "statutory" in title.lower():
+            filename = f"Statutory_Plant_Approval_Note_{safe_tag}.docx"
+        else:
+            filename = f"INDRA_{domain.upper()}_{safe_tag}.docx"
         filepath = os.path.join(output_dir, filename)
 
         if not HAS_DOCX:

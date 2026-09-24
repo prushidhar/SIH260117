@@ -2,6 +2,7 @@
 
 import React, { useState, useId } from 'react';
 import { Code, Eye, Sparkles, Check, Copy, Play, Terminal, ShieldCheck, Loader2 } from 'lucide-react';
+import { API_BASE } from '@/store/indra-store';
 import type { DynamicSandboxWidgetProps } from '../types';
 
 export default function DynamicSandboxWidget({
@@ -27,7 +28,7 @@ export default function DynamicSandboxWidget({
     setActiveTab('terminal');
     setIsRunning(true);
     try {
-      const res = await fetch('http://localhost:8000/api/sandbox/execute', {
+      const res = await fetch(`${API_BASE}/api/sandbox/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: code || html }),

@@ -569,6 +569,11 @@ class ToolRegistry:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         uploads_dir = os.path.join(base_dir, "uploads")
         
+        if not target_file or target_file in ("drawing-cdu2-pid", "CDU-104", "CDU-Pipe-104", "all"):
+            default_spec = os.path.join(uploads_dir, "PID-001_Heat_Exchanger_Unit_Spec.txt")
+            if os.path.exists(default_spec):
+                target_file = "PID-001_Heat_Exchanger_Unit_Spec.txt"
+
         if not target_file:
             return {
                 "status": "awaiting_upload",
