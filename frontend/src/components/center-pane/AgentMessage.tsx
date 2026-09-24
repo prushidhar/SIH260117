@@ -64,14 +64,32 @@ export default function AgentMessage({ message }: { message: Message }) {
 
         {/* Content or Error Card */}
         {message.isError ? (
-          <div className="p-3.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-between gap-3">
-            <span>⚠️ Backend not connected. Please try again later.</span>
-            <button
-              onClick={() => retryMessage(message.id)}
-              className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-medium transition-colors cursor-pointer"
-            >
-              Retry
-            </button>
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs font-medium space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>Backend offline or busy (127.0.0.1:8000)</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => runOfflineSimulation(message.id)}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-medium transition-colors cursor-pointer flex items-center gap-1"
+                  title="Run autonomous offline simulation engine"
+                >
+                  <Play className="w-3 h-3" />
+                  <span>Run Air-Gapped Engine</span>
+                </button>
+                <button
+                  onClick={() => retryMessage(message.id)}
+                  className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+            <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 font-mono">
+              Launch backend via <code>python desktop_launcher.py</code>, or click &quot;Run Air-Gapped Engine&quot; for instant on-premise execution.
+            </p>
           </div>
         ) : (
           <div className="group/msg relative px-4 py-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200">

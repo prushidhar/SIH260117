@@ -865,21 +865,53 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // Step 5: Deliverables & synthesis
-        await new Promise((r) => setTimeout(r, 600));
-        const certDeliverable: Deliverable = {
-          id: `del-cert-${Date.now()}`,
-          name: 'Inspection_Approval_HX4201.docx',
-          filename: 'Inspection_Approval_HX4201.docx',
+        // 1. Word Report
+        const docxDeliverable: Deliverable = {
+          id: `del-docx-${Date.now()}`,
+          name: 'Statutory_Plant_Approval_Note_HX4201.docx',
+          filename: 'Statutory_Plant_Approval_Note_HX4201.docx',
           type: 'docx',
-          size: '1.8 MB',
+          size: '37.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: 'Air-Gapped ASME Section VIII & API-570 Statutory Plant Fitness Certification',
-          url: '#',
+          description: 'Air-Gapped ASME B31.3 & API-570 Statutory Plant Fitness Certification',
+          url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
+          download_url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
           hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         };
-        get().addDeliverable(certDeliverable);
+        get().addDeliverable(docxDeliverable);
+
+        // 2. Excel Calculation Sheet
+        const xlsxDeliverable: Deliverable = {
+          id: `del-xlsx-${Date.now() + 1}`,
+          name: 'HX4201_ASME_B313_Calculations.xlsx',
+          filename: 'HX4201_ASME_B313_Calculations.xlsx',
+          type: 'xlsx',
+          size: '7.2 KB',
+          generatedAt: nowTime,
+          timestamp: nowTime,
+          description: 'Deterministic Engineering Workbook with verified telemetry, calculations, and formulas',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          hash: '7a91b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1',
+        };
+        get().addDeliverable(xlsxDeliverable);
+
+        // 3. Executive PowerPoint Presentation
+        const pptxDeliverable: Deliverable = {
+          id: `del-pptx-${Date.now() + 2}`,
+          name: 'HX4201_Executive_Board_Review.pptx',
+          filename: 'HX4201_Executive_Board_Review.pptx',
+          type: 'pptx',
+          size: '38.6 KB',
+          generatedAt: nowTime,
+          timestamp: nowTime,
+          description: 'Executive 16:9 Widescreen Deck with KPI Dashboard and Dual-Key Sign-Off Certificate',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          hash: 'c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1',
+        };
+        get().addDeliverable(pptxDeliverable);
 
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
@@ -997,8 +1029,23 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 \`\`\`
 
 #### 4. Statutory Decision
-- **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: \`+0.3268 in\`)
-- **Deliverable Generated:** [Inspection_Approval_HX4201.docx](#) compiled and cryptographically verified in the Sovereign Inspector pane.`;
+- **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: `+0.3268 in`)
+- **Deliverables Generated:** Complete Trinity compiled (Word Report, Excel Sheet, Board Deck) in Sovereign Inspector.
+
+#### 5. Executive Board Review Deck (16:9 Interactive Preview)
+```gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "HX-4201",
+    "title": "Executive Asset Integrity Review: HX-4201",
+    "domain": "pipe_thickness",
+    "filename": "HX4201_Executive_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx",
+    "hash": "SHA256:c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1"
+  }
+}
+```;
         }
 
         set((s) => ({
