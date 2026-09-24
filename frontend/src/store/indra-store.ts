@@ -91,6 +91,7 @@ export interface Deliverable {
   timestamp: string;
   description: string;
   url: string;
+  download_url?: string;
   hash?: string;
 }
 
@@ -1029,11 +1030,11 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 \`\`\`
 
 #### 4. Statutory Decision
-- **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: `+0.3268 in`)
+- **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: \`+0.3268 in\`)
 - **Deliverables Generated:** Complete Trinity compiled (Word Report, Excel Sheet, Board Deck) in Sovereign Inspector.
 
 #### 5. Executive Board Review Deck (16:9 Interactive Preview)
-```gen-ui
+\`\`\`gen-ui
 {
   "component": "ExecutivePresentationWidget",
   "props": {
@@ -1045,7 +1046,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
     "hash": "SHA256:c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1"
   }
 }
-```;
+\`\`\``;
         }
 
         set((s) => ({

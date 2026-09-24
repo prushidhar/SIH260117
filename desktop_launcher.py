@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
 
 _KATTY_FRONTEND = Path(r"C:\Users\booya\OneDrive\Desktop\SIH frontend 1\SIH frontend 1\katty\indra")
-FRONTEND_DIR = _KATTY_FRONTEND if (_KATTY_FRONTEND / "node_modules").exists() else BASE_DIR / "frontend"
+FRONTEND_DIR = (BASE_DIR / "frontend") if (BASE_DIR / "frontend" / "node_modules").exists() else _KATTY_FRONTEND
 
 MODELS_DIR = Path(r"D:\models")
 PHYSICAL_MODELS_DIR = Path(r"C:\models")
