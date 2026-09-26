@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -36,6 +36,20 @@ const verifiedWorkflows = [
     query: 'Perform ISO 10816-3 vibration triage on slurry feed pump P-101: 1X harmonic 7.2 mm/s RMS, 2X harmonic 1.8 mm/s RMS. Identify root cause and stream telemetry and equipment health card.',
     icon: Activity,
     badge: 'Autonomous Diagnostics',
+  },
+  {
+    title: 'API 610 Pump Hydraulics & NPSH Cavitation',
+    desc: 'Evaluate slurry pump P-101 operating head, brake horsepower, and NPSH available vs NPSH required margin',
+    query: 'Evaluate slurry pump P-101 for cavitation risk: operating flow 450 GPM, suction pressure 14.5 psig, discharge pressure 78.4 psig, specific gravity 0.88. Verify NPSH margin per API 610 12th Ed.',
+    icon: Gauge,
+    badge: 'API 610 Rotating',
+  },
+  {
+    title: 'TEMA Exchanger Rating & Fouling Resistance',
+    desc: 'Thermal duty, log mean temperature difference (LMTD), and fouling resistance factor on crude preheater E-101',
+    query: 'Perform thermal rating and fouling resistance calculation on crude pre-heat exchanger E-101: crude flow 220,000 kg/h, inlet 140 C, outlet 185 C. Calculate duty in MW and compare against TEMA Class R.',
+    icon: Flame,
+    badge: 'TEMA Thermal',
   },
 ];
 

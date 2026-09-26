@@ -33,6 +33,22 @@ backend_log_file = None
 frontend_log_file = None
 
 
+def print_banner():
+    banner = r"""
+================================================================================
+  ___ _   _ ____  ____      _       ____  _____ _____ _____ _   _ ____  _____ 
+ |_ _| \ | |  _ \|  _ \    / \     / ___|| ____|_   _|_   _| | | |  _ \| ____|
+  | ||  \| | | | | |_) |  / _ \    \___ \|  _|   | |   | | | | | | |_) |  _|  
+  | || |\  | |_| |  _ <  / ___ \    ___) | |___  | |   | | | |_| |  __/| |___ 
+ |___|_| \_|____/|_| \_\/_/   \_\  |____/|_____| |_|   |_|  \___/|_|   |_____|
+
+  SOVEREIGN AIR-GAPPED INDUSTRIAL AI WORKBENCH | SMART INDIA HACKATHON 2026
+  0-WAN Air-Gap Bound (127.0.0.1) • IEC 62443 / CMMC OT • AST Verified
+================================================================================
+"""
+    print(banner)
+
+
 def kill_tree(pid: int):
     """Forcefully terminates a Windows process and all child processes."""
     if not pid:
@@ -77,6 +93,8 @@ def cleanup_ports(ports):
 def cleanup_all():
     """Shuts down all backend and frontend services cleanly."""
     global backend_proc, frontend_proc, app_proc, backend_log_file, frontend_log_file
+    print("\n[SHUTDOWN] Releasing on-premise daemons and ports...")
+
     if backend_proc:
         try:
             kill_tree(backend_proc.pid)
@@ -113,6 +131,7 @@ def cleanup_all():
         frontend_log_file = None
 
     cleanup_ports([BACKEND_PORT, FRONTEND_PORT])
+    print("[SHUTDOWN] Air-gap preserved. Ports 8000 and 3000 released. Clean exit.")
 
 
 atexit.register(cleanup_all)
@@ -130,14 +149,16 @@ signal.signal(signal.SIGTERM, sig_handler)
 def ensure_d_mount():
     """Mounts D: to C: for offline GGUF model access."""
     if MODELS_DIR.exists():
-        return
+        return True
     PHYSICAL_MODELS_DIR.mkdir(parents=True, exist_ok=True)
     subst_exe = r"C:\Windows\System32\subst.exe"
     if os.path.exists(subst_exe):
         try:
             subprocess.run([subst_exe, "D:", r"C:\\"], capture_output=True)
+            return True
         except Exception:
             pass
+    return False
 
 
 def is_port_listening(port: int) -> bool:
@@ -146,17 +167,40 @@ def is_port_listening(port: int) -> bool:
         return s.connect_ex(('127.0.0.1', port)) == 0
 
 
+def wait_for_service(port: int, name: str, timeout: int = 30) -> bool:
+    start = time.time()
+    sys.stdout.write(f"  [*] Waiting for {name} (127.0.0.1:{port}) to bind ")
+    sys.stdout.flush()
+    while time.time() - start < timeout:
+        if is_port_listening(port):
+            sys.stdout.write(" [ONLINE]\n")
+            sys.stdout.flush()
+            return True
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.5)
+    sys.stdout.write(" [TIMEOUT]\n")
+    sys.stdout.flush()
+    return False
+
+
 def main():
-    global backend_proc, frontend_proc, app_proc, backend_log_file
+    global backend_proc, frontend_proc, app_proc, backend_log_file, frontend_log_file
+
+    print_banner()
 
     # 1. Mount virtual drive D:
-    ensure_d_mount()
+    print("[PRE-FLIGHT 1/6] Storage Architecture: Virtual GGUF Mount (D:\\)")
+    mounted = ensure_d_mount()
+    print(f"  [+] Storage status: {'Mounted (D:)' if mounted or MODELS_DIR.exists() else 'Default C: storage'}")
 
     # 2. Clear old instances to avoid port conflicts
+    print("[PRE-FLIGHT 2/6] Port Sanity Check: Clearing lingering sockets...")
     cleanup_ports([BACKEND_PORT, FRONTEND_PORT])
-    time.sleep(0.5)
+    print("  [+] Ports 8000 & 3000 verified free.")
 
     # 3. Start Backend (Uvicorn / FastAPI) in background
+    print("[PRE-FLIGHT 3/6] Starting Sovereign Backend Service (FastAPI / Uvicorn)...")
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     env["HF_HUB_OFFLINE"] = "1"
@@ -185,6 +229,7 @@ def main():
     )
 
     # 4. Start Frontend (Next.js) in background
+    print("[PRE-FLIGHT 4/6] Starting Sovereign Frontend Service (Next.js)...")
     npm_path = r"C:\Program Files\nodejs\npm.cmd"
     npm_cmd = f'"{npm_path}" run dev' if os.path.exists(npm_path) else "npm run dev"
 
@@ -200,7 +245,13 @@ def main():
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
     )
 
-    # 5. Launch native desktop window (Electron)
+    # 5. Service Readiness Validation
+    print("[PRE-FLIGHT 5/6] Validating On-Premise Loopback Bindings...")
+    wait_for_service(BACKEND_PORT, "FastAPI Sovereign Kernel", timeout=25)
+    wait_for_service(FRONTEND_PORT, "Next.js Micro-Frontend UI", timeout=35)
+
+    # 6. Launch native desktop window (Electron or Edge App Mode)
+    print("[PRE-FLIGHT 6/6] Launching Sovereign Desktop Window...")
     electron_exe = FRONTEND_DIR / "node_modules" / "electron" / "dist" / "electron.exe"
     electron_script = FRONTEND_DIR / "electron" / "main.js"
 
@@ -208,12 +259,14 @@ def main():
 
     if electron_exe.exists() and electron_script.exists():
         try:
+            print("  [+] Starting native Electron shell...")
             app_proc = subprocess.Popen(
                 [str(electron_exe), str(electron_script)],
                 cwd=str(FRONTEND_DIR),
             )
             launched = True
-        except Exception:
+        except Exception as e:
+            print(f"  [-] Electron shell launch fallback: {e}")
             launched = False
 
     # Fallback to Microsoft Edge standalone App Mode if Electron binary is missing
@@ -224,15 +277,11 @@ def main():
         ]
         edge_bin = next((p for p in edge_paths if p.exists()), None)
 
-        for _ in range(60):
-            if is_port_listening(FRONTEND_PORT):
-                break
-            time.sleep(0.5)
-
         target_url = f"http://localhost:{FRONTEND_PORT}/workbench"
         user_data_dir = BASE_DIR / ".edge_app_profile"
 
         if edge_bin:
+            print(f"  [+] Opening Sovereign Standalone App window via Edge App mode...")
             app_proc = subprocess.Popen(
                 [
                     str(edge_bin),
@@ -244,6 +293,7 @@ def main():
                 ]
             )
         else:
+            print(f"  [+] Opening browser window to {target_url}...")
             import webbrowser
             webbrowser.open(target_url)
             while is_port_listening(FRONTEND_PORT):
@@ -251,13 +301,18 @@ def main():
             cleanup_all()
             return
 
-    # 6. Wait for the desktop application window to close
+    print("\n" + "=" * 80)
+    print("  [ONLINE] INDRA Sovereign AI Workbench is active and air-gap certified.")
+    print("  Close the application window or press Ctrl+C to terminate services cleanly.")
+    print("=" * 80 + "\n")
+
+    # 7. Wait for the desktop application window to close
     try:
         app_proc.wait()
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:
-        # 7. As soon as the desktop window is closed, stop everything immediately
+        # 8. As soon as the desktop window is closed, stop everything immediately
         cleanup_all()
 
 

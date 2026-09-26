@@ -1378,6 +1378,47 @@ async def regenerate_deliverable(deliverableId: str):
     return FileResponse(doc_path, filename=f"ASME_B31.3_Report_Regenerated_{deliverableId}.docx")
 
 
+@app.get("/api/deliverables/sample/docx")
+async def get_sample_docx(equipment_tag: str = "P-101"):
+    """Generates and serves an on-demand statutory plant maintenance approval note (.docx)."""
+    from deliverables.word import word_generator
+    import time
+    task_id = f"statutory-{int(time.time())}"
+    doc_path = word_generator.create_maintenance_approval_note(
+        task_id=task_id,
+        equipment_tag=equipment_tag,
+        issue_summary=f"Automated statutory compliance evaluation for {equipment_tag}",
+        root_cause="Vibration deviation and accelerated pipe wall thinning under operating stresses",
+        recommended_action="Execute statutory requalification per ASME B31.3 / ISO 10816-3",
+        approver_name="Plant Operations Superintendent (EMP-108)"
+    )
+    clean_tag = equipment_tag.replace("/", "_").replace("\\", "_")
+    return FileResponse(
+        doc_path, 
+        filename=f"ASME_B31.3_Statutory_Approval_{clean_tag}.docx",
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
+@app.get("/api/deliverables/sample/xlsx")
+async def get_sample_xlsx(equipment_tag: str = "CDU-Pipe-104", domain: str = "pipe_thickness"):
+    """Generates and serves an executive 4-tab calculation workbook (.xlsx) with live Excel formulas."""
+    from deliverables.excel import excel_generator
+    import time
+    task_id = f"calc-{int(time.time())}"
+    sheet_path = excel_generator.create_statutory_calculation_workbook(
+        task_id=task_id,
+        equipment_tag=equipment_tag,
+        domain=domain
+    )
+    clean_tag = equipment_tag.replace("/", "_").replace("\\", "_")
+    return FileResponse(
+        sheet_path,
+        filename=f"INDRA_Engineering_Calculations_{clean_tag}.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
 @app.get("/api/sih/pitch-deck")
 async def get_sih_winning_pitch_deck():
     """Serves the official 6-slide Smart India Hackathon (SIH 2026) Winning Presentation Deck."""
