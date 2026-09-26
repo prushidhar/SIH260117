@@ -22,8 +22,10 @@ import {
   FolderOpen,
   Zap,
   Cpu,
-  HardDrive
+  HardDrive,
+  Network
 } from 'lucide-react';
+import NeuralVectorGraph from './NeuralVectorGraph';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -114,6 +116,7 @@ export default function KnowledgeBaseView() {
   const [zoom, setZoom] = useState(1);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeKbTab, setActiveKbTab] = useState<'documents' | 'graph'>('documents');
 
   // Preload local embedding model on mount
   useEffect(() => {
@@ -343,7 +346,52 @@ export default function KnowledgeBaseView() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-6 scrollbar-thin dark:scrollbar-thumb-zinc-700 pr-1">
+      {/* View Mode Selector: Document Table vs Neural Vector Graph */}
+      <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-zinc-800/80">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-mono">
+          <button
+            onClick={() => setActiveKbTab('documents')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              activeKbTab === 'documents'
+                ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-bold shadow-2xs'
+                : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Document Repository</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300">
+              {displayedDocs.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveKbTab('graph')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              activeKbTab === 'graph'
+                ? 'bg-violet-600 text-white font-bold shadow-xs'
+                : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5 text-violet-300" />
+            <span>Neural Vector Graph (768-Dim)</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-violet-900/60 text-violet-200 font-bold border border-violet-700">
+              15 NODES
+            </span>
+          </button>
+        </div>
+
+        <div className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 hidden sm:flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span>Local Latency: ~12ms (all-MiniLM-L6-v2)</span>
+        </div>
+      </div>
+
+      {activeKbTab === 'graph' ? (
+        <div className="flex-1 min-h-0 pt-2 pb-1 overflow-hidden">
+          <NeuralVectorGraph />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto space-y-6 scrollbar-thin dark:scrollbar-thumb-zinc-700 pr-1">
         {/* Real-time WASM Vector Ingestion Progress */}
         {ingestion && (
           <div className="p-4 rounded-2xl bg-violet-950/40 border border-violet-800/60 shadow-lg text-xs font-mono animate-in fade-in duration-200">
@@ -625,6 +673,7 @@ export default function KnowledgeBaseView() {
           )}
         </div>
       </div>
+    )}
 
       {/* Error Message Toast */}
       {errorMessage && (

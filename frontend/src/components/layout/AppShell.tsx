@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import LeftPane from '@/components/left-pane/LeftPane';
 import ToastContainer from '@/components/common/ToastContainer';
@@ -16,8 +16,11 @@ import {
   ShieldCheck, 
   Sun, 
   Moon,
-  Presentation
+  Presentation,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { isSoundEnabled, toggleSound, playSuccessChirp } from '@/lib/sound/sovereign-audio';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +61,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     syncHistoryWithBackend,
     initLocalDB,
   } = useIndraStore();
+
+  const [soundOn, setSoundOn] = useState(true);
+
+  useEffect(() => {
+    setSoundOn(isSoundEnabled());
+  }, []);
 
   const { isNative, appInfo } = useNativeBridge();
   const voiceCommand = useVoiceCommandContext();
@@ -142,6 +151,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <>
                 <Moon className="w-3.5 h-3.5 text-indigo-600" />
                 <span className="text-xs text-indigo-700">Dark Mode</span>
+              </>
+            )}
+          </button>
+
+          {/* Sovereign Audio Annunciator Toggle */}
+          <button
+            onClick={() => {
+              const next = toggleSound();
+              setSoundOn(next);
+              if (next) playSuccessChirp();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer font-medium text-xs shadow-2xs"
+            title={soundOn ? 'Sovereign Audio Annunciator: ON (Click to Mute)' : 'Sovereign Audio Annunciator: MUTED (Click to Enable)'}
+          >
+            {soundOn ? (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline text-xs text-emerald-700 dark:text-emerald-400 font-mono">Audio ON</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                <span className="hidden sm:inline text-xs text-slate-400 dark:text-zinc-500 font-mono">Muted</span>
               </>
             )}
           </button>

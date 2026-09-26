@@ -13,10 +13,12 @@ import {
   RefreshCw,
   Copy,
   Check,
-  Server
+  Server,
+  ShieldAlert
 } from 'lucide-react';
 import useIndraStore, { API_BASE } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
+import { playTripKlaxon, speakSovereignAlert } from '@/lib/sound/sovereign-audio';
 
 interface SystemMetrics {
   cpu_percent: number;
@@ -29,7 +31,13 @@ interface SystemMetrics {
 }
 
 export default function SovereignMonitor() {
-  const { blockedCount, networkEvents, addToast } = useIndraStore();
+  const { 
+    blockedCount, 
+    networkEvents, 
+    addToast,
+    incrementBlockedCount,
+    addNetworkEvent 
+  } = useIndraStore();
   const { networkStatus } = useWebSocket();
 
   const [metrics, setMetrics] = useState<SystemMetrics>({
@@ -109,6 +117,36 @@ export default function SovereignMonitor() {
     navigator.clipboard.writeText(sampleMerkleHash);
     setCopiedHash(true);
     setTimeout(() => setCopiedHash(false), 2000);
+  };
+
+  const handleSimulatePenTest = () => {
+    const destinations = [
+      'api.external-cloud-telemetry.org:443',
+      'dns.google:53 (UDP)',
+      'telemetry.huggingface.co:443',
+      'ntp.pool.org:123',
+    ];
+    const target = destinations[Math.floor(Math.random() * destinations.length)];
+    const timeStr = new Date().toLocaleTimeString();
+
+    addNetworkEvent({
+      destination: target,
+      action: 'BLOCKED_EGRESS',
+      status: 'blocked',
+      timestamp: timeStr,
+      protocol: target.includes('53') ? 'UDP' : 'TCP',
+      source: '127.0.0.1:sandbox',
+    });
+
+    incrementBlockedCount();
+    playTripKlaxon();
+    speakSovereignAlert('Alert: Unauthorized outbound network request intercepted and dropped.');
+
+    addToast({
+      type: 'error',
+      title: '0-WAN Intrusion Prevented',
+      message: `Outbound request to ${target} neutralized at local loopback boundary. 0 bytes transmitted.`,
+    });
   };
 
   return (
@@ -258,6 +296,16 @@ export default function SovereignMonitor() {
       >
         <RefreshCw className={`w-3.5 h-3.5 ${isAuditing ? 'animate-spin' : ''}`} />
         <span>{isAuditing ? 'Auditing Kernel Sockets...' : 'Audit Network Sockets'}</span>
+      </button>
+
+      {/* 0-WAN Pen-Test Simulation Button */}
+      <button
+        onClick={handleSimulatePenTest}
+        className="w-full mt-2 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/80 hover:bg-rose-100/90 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[11px] font-mono font-bold transition-all shadow-xs cursor-pointer"
+        title="Simulate unauthorized WAN egress attempt to verify strict kernel-level containment"
+      >
+        <ShieldAlert className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+        <span>Inject 0-WAN Penetration Probe</span>
       </button>
 
       {/* Live Intercept Stream */}
