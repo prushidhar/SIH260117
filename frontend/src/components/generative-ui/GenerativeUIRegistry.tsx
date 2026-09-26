@@ -16,6 +16,8 @@ import { PlantDigitalTwinWidget } from './components/PlantDigitalTwinWidget';
 import { HazopLopaWorkbench } from './components/HazopLopaWorkbench';
 import { FlareNetworkEmissionWidget } from './components/FlareNetworkEmissionWidget';
 import { TurnaroundSchedulerWidget } from './components/TurnaroundSchedulerWidget';
+import { CompressorAntiSurgeWidget } from './components/CompressorAntiSurgeWidget';
+import { SteamTurbineCogenWidget } from './components/SteamTurbineCogenWidget';
 
 interface RegistryProps {
   component: string;
@@ -98,6 +100,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 15. Refinery Turnaround (TAR) & CPM Schedule Optimization
   if (compKey.includes('turnaround') || compKey.includes('cpm') || compKey.includes('shutdown') || compKey.includes('gantt') || compKey === 'turnaroundschedulerwidget') {
     return <TurnaroundSchedulerWidget {...props} />;
+  }
+
+  // 16. API 617 / ASME PTC 10 Compressor Anti-Surge & Aerodynamic Performance
+  if (compKey.includes('compressor') || compKey.includes('surge') || compKey.includes('antisurge') || compKey === 'compressorantisurgewidget') {
+    return <CompressorAntiSurgeWidget {...props} />;
+  }
+
+  // 17. ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Enthalpy-Entropy Engine
+  if (compKey.includes('steamturbine') || compKey.includes('turbine') || compKey.includes('cogen') || compKey.includes('mollier') || compKey === 'steamturbinecogenwidget') {
+    return <SteamTurbineCogenWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

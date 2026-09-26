@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar, RotateCw, Zap } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -9,6 +9,20 @@ import AgentMessage from './AgentMessage';
 import ChatInput from './ChatInput';
 
 const verifiedWorkflows = [
+  {
+    title: 'API 617 Compressor Anti-Surge Envelope',
+    desc: 'Aerodynamic head-capacity map, 10% Surge Control Line (SCL), and <0.9s fast-opening ASV hot-gas recirculation',
+    query: 'Analyze recycle gas compressor K-101 anti-surge operating map: suction flow 6500 m3/h, suction pressure 18.5 bar, discharge pressure 62.0 bar, speed 10450 RPM. Evaluate polytropic head, surge control margin, and display dynamic compressor map.',
+    icon: RotateCw,
+    badge: 'API 617 Aerodynamic',
+  },
+  {
+    title: 'ASME PTC 6 Steam Turbine Cogeneration',
+    desc: 'Multi-stage superheated steam expansion, 35 MW gross power generation, process heat export, and avoided carbon emissions',
+    query: 'Evaluate steam turbine generator STG-01 multi-stage cogeneration balance: throttle flow 120 t/h at 90 bar and 510 C, MP extraction 45 t/h at 32 bar, LP extraction 35 t/h at 4.2 bar. Calculate electrical power generation, process thermal export, and carbon offset.',
+    icon: Zap,
+    badge: 'ASME PTC 6 Cogen',
+  },
   {
     title: 'Statutory Approval Note & ASME B31.3 Inspection',
     desc: 'Review crude line CDU-Pipe-104 ultrasonic report, calculate t_min, and draft executive Word (.docx) approval note',

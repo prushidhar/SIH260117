@@ -420,6 +420,43 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_compressor_anti_surge_map",
+                    "description": "Calculates API 617 / ASME PTC 10 Centrifugal Compressor Anti-Surge operating envelope, polytropic head, Surge Control Line (SCL) safety margin, stonewall choke limit, and ASV modulation requirements.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "compressor_tag": {"type": "string", "description": "Compressor tag e.g. K-101"},
+                            "inlet_flow_m3_h": {"type": "number", "description": "Actual suction volumetric flow in m3/h"},
+                            "suction_p_bar": {"type": "number", "description": "Suction pressure in bar"},
+                            "discharge_p_bar": {"type": "number", "description": "Discharge pressure in bar"},
+                            "suction_t_c": {"type": "number", "description": "Suction temperature in Celsius"},
+                            "gas_mw": {"type": "number", "description": "Process gas molecular weight"},
+                            "speed_rpm": {"type": "number", "description": "Operating rotational speed in RPM"}
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_steam_turbine_cogen_balance",
+                    "description": "Calculates ASME PTC 6 & IAPWS-IF97 Steam Turbine Generator (STG) multi-stage cogeneration enthalpy drop, power generated in MW, process steam heat export, and carbon emissions offset.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "turbine_tag": {"type": "string", "description": "Turbine tag e.g. STG-01"},
+                            "throttle_steam_flow_t_h": {"type": "number", "description": "Main throttle steam flow rate in tons/hr"},
+                            "hp_inlet_p_bar": {"type": "number", "description": "HP throttle inlet steam pressure in bar"},
+                            "hp_inlet_t_c": {"type": "number", "description": "HP throttle inlet steam temperature in Celsius"},
+                            "mp_extraction_flow_t_h": {"type": "number", "description": "Medium pressure process steam extraction flow in tons/hr"},
+                            "lp_extraction_flow_t_h": {"type": "number", "description": "Low pressure process steam extraction flow in tons/hr"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -445,7 +482,9 @@ class ToolRegistry:
             "simulate_crude_distillation_mass_balance",
             "evaluate_hazop_lopa_sil",
             "calculate_api521_flare_radiation_and_dispersion",
-            "calculate_turnaround_critical_path"
+            "calculate_turnaround_critical_path",
+            "calculate_compressor_anti_surge_map",
+            "calculate_steam_turbine_cogen_balance"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

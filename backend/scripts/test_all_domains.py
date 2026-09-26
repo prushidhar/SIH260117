@@ -346,6 +346,41 @@ def test_card_10_turnaround_critical_path():
     print(f"  [+] Turnaround CPM Engine: planned={tar_res.get('planned_duration_days')}d, CPM_duration={tar_res.get('calculated_cpm_duration_days')}d, critical_tasks={tar_res.get('critical_path_tasks_count')}, delay_exposure=${tar_res.get('financial_delay_exposure_usd'):,.2f}")
 
 
+def test_card_11_compressor_anti_surge():
+    print("\n--- [TEST 11] Card 11: API 617 / ASME PTC 10 Compressor Anti-Surge & Dynamic Performance ---")
+    comp_res = tool_registry.execute_tool("calculate_compressor_anti_surge_map", {
+        "compressor_tag": "K-101",
+        "inlet_flow_m3_h": 6200.0,
+        "suction_p_bar": 18.5,
+        "discharge_p_bar": 62.0,
+        "suction_t_c": 38.0,
+        "gas_mw": 19.8,
+        "speed_rpm": 10450.0
+    })
+    assert comp_res.get("status") == "success", f"Compressor calc failed: {comp_res}"
+    assert comp_res.get("polytropic_head_kj_kg", 0) > 100.0, "Polytropic head calculation error"
+    assert comp_res.get("surge_margin_pct", 0) > 0, "Surge margin negative"
+    assert len(comp_res.get("speed_curves", [])) == 3, "Expected 3 speed performance curves"
+    print(f"  [+] API 617 Anti-Surge Engine: head={comp_res.get('polytropic_head_kj_kg')} kJ/kg, surge_margin={comp_res.get('surge_margin_pct')}%, zone='{comp_res.get('operating_zone')}', gas_power={comp_res.get('gas_power_kw')} kW")
+
+
+def test_card_12_steam_turbine_cogen():
+    print("\n--- [TEST 12] Card 12: ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Carbon Offset ---")
+    stg_res = tool_registry.execute_tool("calculate_steam_turbine_cogen_balance", {
+        "turbine_tag": "STG-01",
+        "throttle_steam_flow_t_h": 120.0,
+        "hp_inlet_p_bar": 90.0,
+        "hp_inlet_t_c": 510.0,
+        "mp_extraction_flow_t_h": 45.0,
+        "lp_extraction_flow_t_h": 35.0
+    })
+    assert stg_res.get("status") == "success", f"STG calc failed: {stg_res}"
+    assert stg_res.get("gross_electrical_power_mw", 0) > 15.0, "Electrical power generation too low"
+    assert stg_res.get("process_thermal_export_mwth", 0) > 30.0, "Thermal export lower than expected"
+    assert len(stg_res.get("expansion_stages", [])) == 3, "Expected 3 expansion stages"
+    print(f"  [+] Steam Turbine Cogen Engine: electrical_power={stg_res.get('gross_electrical_power_mw')} MW, thermal_export={stg_res.get('process_thermal_export_mwth')} MWth, cogen_eff={stg_res.get('overall_cogen_efficiency_pct')}%, CO2_offset={stg_res.get('carbon_offset_t_co2_per_hr')} t/hr")
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -360,6 +395,8 @@ if __name__ == "__main__":
     test_card_8_hazop_lopa_sil()
     test_card_9_flare_radiation_and_dispersion()
     test_card_10_turnaround_critical_path()
+    test_card_11_compressor_anti_surge()
+    test_card_12_steam_turbine_cogen()
     print("\n================================================================")
-    print("ALL 10 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 12 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
