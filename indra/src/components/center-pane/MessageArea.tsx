@@ -1,15 +1,8 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { 
-  Calculator, 
-  Scan, 
-  Activity, 
-  FileSpreadsheet, 
-  Sparkles,
-  ShieldAlert
-} from 'lucide-react';
-import useIndraStore from '@/store/indra-store';
+import { FileText, Terminal, ScanEye, Activity } from 'lucide-react';
+import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
 import AgentMessage from './AgentMessage';
@@ -17,34 +10,67 @@ import ChatInput from './ChatInput';
 
 const verifiedWorkflows = [
   {
-    title: 'Pump P-101 Live Telemetry & Control Deck',
-    desc: 'Stream interactive React gauge, dynamic vibration line chart, and PLC setpoint controls',
-    query: 'What is the status of pump P-101? Stream live telemetry gauge, vibration chart, and DCS setpoint control deck',
+    title: 'Statutory Approval Note & ASME B31.3 Inspection',
+    desc: 'Review crude line CDU-Pipe-104 ultrasonic report, calculate t_min, and draft executive Word (.docx) approval note',
+    query: 'Review the ultrasonic thickness inspection report for crude distillation unit CDU-Pipe-104: nominal thickness 12.7mm, measured thickness 7.2mm, corrosion rate 0.45 mm/yr, design pressure 3.2 MPa. Perform ASME B31.3 minimum thickness calculation and draft a statutory plant approval note for executive sign-off.',
+    icon: FileText,
+    badge: 'SIH Deliverable (.docx)',
+  },
+  {
+    title: 'Fluid Dynamics Darcy-Weisbach Sandbox',
+    desc: 'Synthesize & verify Python hydraulic solver for friction factor and pressure drop using Colebrook-White equation',
+    query: 'Write a Python script to calculate the Darcy-Weisbach friction factor and pressure drop in a 100m carbon steel pipe with flow rate 0.05 m3/s and diameter 0.15m.',
+    icon: Terminal,
+    badge: 'Code Sandbox',
+  },
+  {
+    title: 'P&ID Schematic & ISA-5.1 Tag Localization',
+    desc: 'Multimodal vision extraction of instrument tags, control valves, and line numbers from engineering drawings',
+    query: 'Analyze the high-pressure feed P&ID schematic for crude distillation unit CDU-104. Extract all ISA-5.1 tags, valve designations, and line numbers, and verify safety relief valve isolation standards.',
+    icon: ScanEye,
+    badge: 'Multimodal Vision',
+  },
+  {
+    title: 'ISO 10816 Vibration Triage & Telemetry Deck',
+    desc: 'Triage slurry pump P-101 FFT harmonics (1X unbalance vs 2X misalignment), live telemetry gauge, and health score',
+    query: 'Perform ISO 10816-3 vibration triage on slurry feed pump P-101: 1X harmonic 7.2 mm/s RMS, 2X harmonic 1.8 mm/s RMS. Identify root cause and stream telemetry and equipment health card.',
     icon: Activity,
-    badge: 'Generative UI',
-  },
-  {
-    title: 'ASME B31.3 Pipe Thickness Calculation',
-    desc: 'Deterministic calculation for minimum wall thickness under design pressure & temperature',
-    query: 'Calculate minimum required pipe wall thickness under ASME B31.3 for design pressure 24.0 bar, temperature 180°C, and ASTM A106 Grade B pipe',
-    icon: Calculator,
-    badge: 'Interactive Math',
-  },
-  {
-    title: 'Extract P&ID Valve Part Numbers',
-    desc: 'Local neural OCR to locate and extract valve tags, instrument references, and line numbers',
-    query: 'Analyze the active P&ID drawing and extract all valve part numbers, instrument tags, and piping classes',
-    icon: Scan,
-    badge: 'Vision OCR',
-  },
-  {
-    title: 'Generate Word & Excel Deliverables',
-    desc: 'Synthesize formal Maintenance Approval Note (.docx) and Health Workbook (.xlsx)',
-    query: 'Generate statutory Maintenance Approval Note (.docx) and Equipment Health Workbook (.xlsx) with cryptographic SHA-256 verification',
-    icon: FileSpreadsheet,
-    badge: 'Native Files',
+    badge: 'Autonomous Diagnostics',
   },
 ];
+
+/**
+ * Normalize message order so user message ALWAYS appears before its agent reply.
+ * Handles both legacy sessions (indexedDB primary-key sorted) and multi-turn conversations.
+ */
+function normalizeMessageOrder(msgs: Message[]): Message[] {
+  if (!msgs || msgs.length <= 1) return msgs || [];
+
+  const list = [...msgs];
+
+  // If messages have explicit orderIndex, use it
+  const hasOrderIndex = list.some((m: any) => typeof m.orderIndex === 'number');
+  if (hasOrderIndex) {
+    return list.sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  }
+
+  // Extract epoch timestamp from id: e.g. msg-user-1726735000000 or msg-agent-1726735000000
+  const getSortKey = (m: Message, originalIdx: number): number => {
+    const match = m.id?.match(/\d{10,15}/);
+    if (match) {
+      const ts = parseInt(match[0], 10);
+      // User message always gets priority over agent response with same/adjacent timestamp
+      return m.role === 'agent' ? ts + 0.5 : ts;
+    }
+    return originalIdx;
+  };
+
+  return list.sort((a, b) => {
+    const idxA = msgs.indexOf(a);
+    const idxB = msgs.indexOf(b);
+    return getSortKey(a, idxA) - getSortKey(b, idxB);
+  });
+}
 
 export default function MessageArea() {
   const { messages, setInputValue } = useIndraStore();
@@ -55,69 +81,32 @@ export default function MessageArea() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Antigravity Home View (AI Doodle Modern Startup Style)
+  // Empty state — show home screen
   if (messages.length === 0) {
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-10 flex flex-col items-center select-none scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-10 flex flex-col items-center select-none">
         <div className="w-full max-w-2xl flex flex-col items-center my-auto">
-          {/* Sovereign AI Hero Emblem & AI Doodle Headline */}
-          <div className="flex flex-col items-center mb-6 text-center">
-            {/* Pill Badge */}
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 text-xs font-semibold tracking-wide border border-violet-200/80 dark:border-violet-800/60 mb-5 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
-              <span>SOVEREIGN INDUSTRIAL AI CO-PILOT</span>
-            </span>
-
-            {/* Seamless, free-floating cyber shield emblem with multi-pastel aurora backlight */}
-            <div className="relative mb-5 group cursor-default">
-              <div className="absolute -inset-10 bg-gradient-to-tr from-violet-400/25 via-sky-400/20 to-emerald-400/20 dark:from-violet-500/20 dark:via-sky-500/15 dark:to-emerald-500/15 rounded-full blur-3xl opacity-80 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
-              <div className="relative w-32 h-32 md:w-36 md:h-36 flex items-center justify-center">
-                <img 
-                  src="/logo.png" 
-                  alt="INDRA Sovereign AI" 
-                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_12px_24px_rgba(124,58,237,0.22)] transition-transform duration-500 group-hover:scale-105" 
-                />
-              </div>
+          <div className="flex flex-col items-center mb-8 text-center">
+            <div className="w-20 h-20 mb-4 flex items-center justify-center">
+              <img src="/logo.png" alt="INDRA" className="w-full h-full object-contain" />
             </div>
-
-            {/* Bold Modern Headline with Gradient Accent */}
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight mb-2.5">
-              Meet the Sovereign{' '}
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
-                Industrial Co-Pilot
-              </span>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight mb-2">
+              Industrial AI Co-Pilot
             </h1>
-
-            <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
-              Autonomous multi-step reasoning, ASME & P&ID verification, and deterministic calculations with 100% offline air-gap security.
+            <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+              Multi-step reasoning, ASME & P&ID verification, and deterministic engineering calculations.
             </p>
           </div>
 
-          {/* Central Floating Card (AI Doodle Pill Input) */}
           <ChatInput mode="center" />
 
-          {/* Verified Industrial Reasoning Workflows Grid Below Card */}
           <div className="w-full mt-8">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-zinc-300 font-mono">
-                Verified Industrial Reasoning Workflows
-              </span>
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                FastAPI: Online (8000)
-              </span>
+            <div className="text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-3 px-1">
+              Suggested Workflows
             </div>
-
             <div className="grid grid-cols-2 gap-3">
-              {verifiedWorkflows.map((starter, index) => {
+              {verifiedWorkflows.map((starter) => {
                 const Icon = starter.icon;
-                const iconBgColors = [
-                  'bg-violet-100 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/60',
-                  'bg-sky-100 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-800/60',
-                  'bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/60',
-                  'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60',
-                ];
-                const iconClass = iconBgColors[index % iconBgColors.length];
-
                 return (
                   <button
                     key={starter.title}
@@ -126,20 +115,18 @@ export default function MessageArea() {
                       setInputValue(starter.query);
                       sendMessage(starter.query);
                     }}
-                    className="p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 hover:border-violet-400 dark:hover:border-violet-600 hover:shadow-lg hover:-translate-y-0.5 transition-all text-left group shadow-xs cursor-pointer"
+                    className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors text-left cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center border ${iconClass} transition-transform group-hover:scale-110`}>
-                        <Icon className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900">
+                        <Icon className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-mono font-medium border border-slate-200 dark:border-zinc-700">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-medium">
                         {starter.badge}
                       </span>
                     </div>
-                    <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">
-                      {starter.title}
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1 leading-snug line-clamp-2">
+                    <div className="text-xs font-semibold text-slate-800 dark:text-zinc-200">{starter.title}</div>
+                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1 leading-normal line-clamp-2">
                       {starter.desc}
                     </div>
                   </button>
@@ -152,10 +139,12 @@ export default function MessageArea() {
     );
   }
 
-  // Active Conversation Message Feed
+  // Active conversation — normalize order then render top-to-bottom
+  const orderedMessages = normalizeMessageOrder(messages);
+
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-36 space-y-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-      {messages.map((msg) =>
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-36 space-y-4">
+      {orderedMessages.map((msg) =>
         msg.role === 'user' ? (
           <UserMessage key={msg.id} message={msg} />
         ) : (

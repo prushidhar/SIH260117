@@ -24,9 +24,10 @@ export async function saveSessionToDB(session: ConversationSession): Promise<voi
       await db.sessions.put(dbSession);
 
       if (session.messages && session.messages.length > 0) {
-        const dbMessages: DBMessage[] = session.messages.map((m) => ({
+        const dbMessages: DBMessage[] = session.messages.map((m, idx) => ({
           ...m,
           sessionId: session.id,
+          orderIndex: (m as any).orderIndex ?? idx,
         }));
         await db.messages.bulkPut(dbMessages);
       }
@@ -58,6 +59,16 @@ export async function loadSessionFromDB(sessionId: string): Promise<Conversation
     if (!s) return null;
 
     const messages = await db.messages.where('sessionId').equals(sessionId).toArray();
+    messages.sort((a: any, b: any) => {
+      if (typeof a.orderIndex === 'number' && typeof b.orderIndex === 'number') {
+        return a.orderIndex - b.orderIndex;
+      }
+      const matchA = a.id?.match(/\d{10,15}/);
+      const matchB = b.id?.match(/\d{10,15}/);
+      const tsA = matchA ? parseInt(matchA[0], 10) + (a.role === 'agent' ? 0.5 : 0) : 0;
+      const tsB = matchB ? parseInt(matchB[0], 10) + (b.role === 'agent' ? 0.5 : 0) : 0;
+      return tsA - tsB;
+    });
     const deliverables = await db.deliverables.where('sessionId').equals(sessionId).toArray();
 
     return {

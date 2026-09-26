@@ -21,9 +21,11 @@ export default function UserMessage({ message }: { message: Message }) {
             ))}
           </div>
         )}
-        <div className="px-4.5 py-3.5 rounded-2xl rounded-br-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20">
-          <p className="text-sm font-medium leading-relaxed">{message.content}</p>
-          <p className="text-[10px] text-violet-200 mt-1.5 text-right font-mono">{message.timestamp}</p>
+        <div className="px-4 py-3 rounded-xl rounded-br-sm bg-indigo-600 text-white">
+          <p className="text-sm font-normal leading-relaxed">{message.content}</p>
+          {message.timestamp && (
+            <p className="text-[10px] text-indigo-200 mt-1 text-right">{message.timestamp}</p>
+          )}
         </div>
       </div>
     </div>

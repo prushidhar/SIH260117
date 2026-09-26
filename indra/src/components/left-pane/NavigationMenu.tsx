@@ -25,13 +25,6 @@ export default function NavigationMenu() {
       desc: 'Sovereign AI Reasoning Workspace'
     },
     { 
-      id: 'canvas' as const, 
-      href: '/canvas',
-      label: 'Spatial Canvas', 
-      icon: Network,
-      desc: 'Infinite 2D Node Workspace'
-    },
-    { 
       id: 'kb' as const, 
       href: '/kb',
       label: 'Knowledge Base (RAG)', 

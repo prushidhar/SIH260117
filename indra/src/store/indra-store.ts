@@ -91,6 +91,7 @@ export interface Deliverable {
   timestamp: string;
   description: string;
   url: string;
+  download_url?: string;
   hash?: string;
 }
 
@@ -865,21 +866,53 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // Step 5: Deliverables & synthesis
-        await new Promise((r) => setTimeout(r, 600));
-        const certDeliverable: Deliverable = {
-          id: `del-cert-${Date.now()}`,
-          name: 'Inspection_Approval_HX4201.docx',
-          filename: 'Inspection_Approval_HX4201.docx',
+        // 1. Word Report
+        const docxDeliverable: Deliverable = {
+          id: `del-docx-${Date.now()}`,
+          name: 'Statutory_Plant_Approval_Note_HX4201.docx',
+          filename: 'Statutory_Plant_Approval_Note_HX4201.docx',
           type: 'docx',
-          size: '1.8 MB',
+          size: '37.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: 'Air-Gapped ASME Section VIII & API-570 Statutory Plant Fitness Certification',
-          url: '#',
+          description: 'Air-Gapped ASME B31.3 & API-570 Statutory Plant Fitness Certification',
+          url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
+          download_url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
           hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         };
-        get().addDeliverable(certDeliverable);
+        get().addDeliverable(docxDeliverable);
+
+        // 2. Excel Calculation Sheet
+        const xlsxDeliverable: Deliverable = {
+          id: `del-xlsx-${Date.now() + 1}`,
+          name: 'HX4201_ASME_B313_Calculations.xlsx',
+          filename: 'HX4201_ASME_B313_Calculations.xlsx',
+          type: 'xlsx',
+          size: '7.2 KB',
+          generatedAt: nowTime,
+          timestamp: nowTime,
+          description: 'Deterministic Engineering Workbook with verified telemetry, calculations, and formulas',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          hash: '7a91b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1',
+        };
+        get().addDeliverable(xlsxDeliverable);
+
+        // 3. Executive PowerPoint Presentation
+        const pptxDeliverable: Deliverable = {
+          id: `del-pptx-${Date.now() + 2}`,
+          name: 'HX4201_Executive_Board_Review.pptx',
+          filename: 'HX4201_Executive_Board_Review.pptx',
+          type: 'pptx',
+          size: '38.6 KB',
+          generatedAt: nowTime,
+          timestamp: nowTime,
+          description: 'Executive 16:9 Widescreen Deck with KPI Dashboard and Dual-Key Sign-Off Certificate',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          hash: 'c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1',
+        };
+        get().addDeliverable(pptxDeliverable);
 
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
@@ -998,7 +1031,22 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 
 #### 4. Statutory Decision
 - **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: \`+0.3268 in\`)
-- **Deliverable Generated:** [Inspection_Approval_HX4201.docx](#) compiled and cryptographically verified in the Sovereign Inspector pane.`;
+- **Deliverables Generated:** Complete Trinity compiled (Word Report, Excel Sheet, Board Deck) in Sovereign Inspector.
+
+#### 5. Executive Board Review Deck (16:9 Interactive Preview)
+\`\`\`gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "HX-4201",
+    "title": "Executive Asset Integrity Review: HX-4201",
+    "domain": "pipe_thickness",
+    "filename": "HX4201_Executive_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx",
+    "hash": "SHA256:c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1"
+  }
+}
+\`\`\``;
         }
 
         set((s) => ({
@@ -1135,15 +1183,18 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
   // 1. Task Submission: POST http://localhost:8000/api/tasks with {"text": "..."}
   // 2. Live WebSocket Streaming: ws://localhost:8000/ws/tasks/{taskId}
   sendMessage: async (content: string, attachments?: { id?: string; name: string; type: string; size: string; url?: string }[]) => {
+    const now = Date.now();
+    const currentCount = get().messages.length;
     const userMessage: Message = {
-      id: `msg-user-${Date.now()}`,
+      id: `msg-${now}-0-user`,
       role: 'user',
       content,
       timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
       attachments,
+      ...({ orderIndex: currentCount } as any),
     };
 
-    const agentMessageId = `msg-agent-${Date.now()}`;
+    const agentMessageId = `msg-${now}-1-agent`;
     const initialAgentMessage: Message = {
       id: agentMessageId,
       role: 'agent',
@@ -1151,6 +1202,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
       timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
       agentSteps: [],
       toolExecution: undefined,
+      ...({ orderIndex: currentCount + 1 } as any),
     };
 
     set((state) => ({
@@ -1355,7 +1407,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
             const downloadUrl = rawUrl.startsWith('http')
               ? rawUrl
               : `${API_BASE}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
-            const kind = ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : 'docx');
+            const kind = ev.file_type || ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : filename.endsWith('.pptx') ? 'pptx' : 'docx');
             const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
             
             const fallbackDescription = filename && filename !== 'Deliverable.docx'
@@ -1367,7 +1419,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
               name: filename,
               filename,
               type: kind,
-              size: ev.size || (kind === 'xlsx' ? '1.4 MB' : '2.1 MB'),
+              size: ev.size || (kind === 'xlsx' ? '1.4 MB' : kind === 'pptx' ? '3.2 MB' : '2.1 MB'),
               generatedAt: nowTime,
               timestamp: nowTime,
               description: ev.description || ev.desc || fallbackDescription,
@@ -1376,6 +1428,34 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
             };
 
             get().addDeliverable(newDeliverable);
+          }
+
+          // Event 6.5: Generative UI Micro-Frontends
+          else if (type === 'generative_ui' || type === 'ui_component' || type === 'ui') {
+            const componentName = ev.component || ev.name || ev.ui_type || 'IndustrialGauge';
+            const componentProps = ev.props || ev.data || ev.arguments || {};
+            const title = ev.title;
+            const spec: GenerativeUISpec = {
+              id: ev.id || `genui-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              component: componentName,
+              title,
+              props: componentProps,
+              status: 'ready',
+            };
+
+            set((state) => ({
+              messages: state.messages.map((m) => {
+                if (m.id !== agentMessageId) return m;
+                const existing = m.generativeUI || [];
+                if (existing.some((g) => g.component === componentName && g.title === title)) {
+                  return m;
+                }
+                return {
+                  ...m,
+                  generativeUI: [...existing, spec],
+                };
+              }),
+            }));
           }
 
           // Event 7: {"type": "done"}

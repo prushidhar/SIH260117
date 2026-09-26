@@ -13,6 +13,7 @@ export interface DBSession {
 export interface DBMessage {
   id: string;
   sessionId: string;
+  orderIndex?: number;
   role: 'user' | 'agent';
   content: string;
   timestamp: string;

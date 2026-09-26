@@ -3,9 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import LeftPane from '@/components/left-pane/LeftPane';
-import RightPane from '@/components/right-pane/RightPane';
-import HITLApprovalModal from '@/components/approvals/HITLApprovalModal';
-import ScheduledTasksModal from '@/components/modals/ScheduledTasksModal';
 import ToastContainer from '@/components/common/ToastContainer';
 import { useIndraStore } from '@/store/indra-store';
 import { useApprovalsQuery, useModelsQuery } from '@/lib/queries';
@@ -18,7 +15,8 @@ import {
   Lock, 
   ShieldCheck, 
   Sun, 
-  Moon
+  Moon,
+  Presentation
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -31,7 +29,6 @@ import { multiWindowSync } from '@/lib/sync/multi-window-sync';
 
 const navLabels: Record<string, string> = {
   workbench: 'Agent Workbench',
-  canvas: 'Spatial Canvas Workspace',
   kb: 'Knowledge Base (RAG)',
   audit: 'Merkle Audit Ledger',
 };
@@ -82,9 +79,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [pendingApprovals]);
 
   // Determine active navigation segment from current pathname
-  const activeNav: 'workbench' | 'canvas' | 'kb' | 'audit' = pathname.startsWith('/canvas')
-    ? 'canvas'
-    : pathname.startsWith('/kb')
+  const activeNav: 'workbench' | 'kb' | 'audit' = pathname.startsWith('/kb')
     ? 'kb'
     : pathname.startsWith('/audit')
     ? 'audit'
@@ -109,58 +104,55 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-800 dark:text-zinc-100 select-none">
       {/* 1. Top Sovereign Header Bar - Modern Glassmorphic AI Doodle Style */}
-      <header className="h-16 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between px-5 text-xs z-50 shadow-xs">
-        {/* Left: App Title & Large Prominent Logo */}
-        <div className="flex items-center gap-3.5">
-          <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0 group">
-            <div className="absolute -inset-1.5 bg-gradient-to-r from-violet-500/25 to-indigo-500/25 rounded-2xl blur-md opacity-70 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <header className="h-16 bg-white dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between px-5 text-xs z-50">
+        {/* Left: App Title & Logo */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
             <img 
               src="/logo.png" 
               alt="INDRA" 
-              className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(124,58,237,0.18)] transition-transform duration-300 group-hover:scale-105" 
+              className="w-full h-full object-contain" 
             />
           </div>
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="font-extrabold text-slate-900 dark:text-zinc-100 tracking-[0.22em] text-lg font-mono">INDRA</span>
-              <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50 font-bold tracking-wider flex items-center gap-1.5 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>0-WAN SOVEREIGN</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 dark:text-zinc-100 tracking-wider text-base">INDRA</span>
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/50 font-semibold">
+                SYSTEM ONLINE
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">Industrial Neural Decision & Reasoning Assistant</div>
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400">Industrial Neural Decision & Reasoning Assistant</div>
           </div>
         </div>
 
-        {/* Right: Theme Toggle & Telemetry & Air-Gap Status Indicator */}
-        <div className="flex items-center gap-3 font-mono text-[11px]">
-          {/* Theme Switcher Toggle (Light & Dark Mode) */}
+        {/* Right: Theme Toggle & Voice & Status */}
+        <div className="flex items-center gap-3 text-xs">
+          {/* Theme Switcher Toggle */}
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 transition-all cursor-pointer font-medium shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer font-medium"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px] font-mono font-semibold text-amber-300">Light Mode</span>
+                <span className="text-xs text-amber-300">Light Mode</span>
               </>
             ) : (
               <>
                 <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="text-[11px] font-mono font-semibold text-indigo-700">Dark Mode</span>
+                <span className="text-xs text-indigo-700">Dark Mode</span>
               </>
             )}
           </button>
 
-          {/* Voice Command Mic Button (Whisper Local AI) */}
+          {/* Voice Command Mic Button */}
           <VoiceCommandButton />
 
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-zinc-900 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold text-slate-800 dark:text-zinc-200">ON-PREMISE AIR-GAPPED</span>
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="font-medium text-xs text-slate-800 dark:text-zinc-200">On-Premise</span>
           </div>
-
 
           {isNative && (
             <Badge variant="violet" className="py-1 px-2.5">
@@ -187,46 +179,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
 
-        {/* Right: HITL Approvals Gate & Right Pane Toggle */}
+        {/* Right: Quick Pitch Deck Download */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setApprovalsModalOpen(true)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all border cursor-pointer ${
-              pendingApprovals.length > 0
-                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 shadow-xs'
-                : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 shadow-xs'
-            }`}
-            title="Human-in-the-Loop Pending Approvals Gate"
+          <a
+            href="http://localhost:8000/api/sih/pitch-deck"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+            title="Export official 6-slide Smart India Hackathon 2026 Presentation (.pptx)"
           >
-            <ShieldCheck className={`w-3.5 h-3.5 ${pendingApprovals.length > 0 ? 'text-amber-600' : 'text-slate-400 dark:text-zinc-500'}`} />
-            <span>HITL Approvals</span>
-            {pendingApprovals.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white font-bold text-[9px] animate-pulse">
-                {pendingApprovals.length}
-              </span>
-            )}
-          </button>
-
-          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800" />
-
-          {/* Right Inspector Pane Toggle Button */}
-          <button
-            onClick={toggleRightPane}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
-              isRightPaneOpen
-                ? 'bg-violet-50 dark:bg-violet-950/40 border-violet-300 dark:border-violet-700 text-violet-800 dark:text-violet-200 shadow-xs font-semibold'
-                : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 shadow-xs'
-            }`}
-            title="Toggle Sovereign Inspector & Deliverables Pane"
-          >
-            <PanelRight className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Inspector</span>
-            {deliverables.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-violet-600 text-white font-mono font-bold text-[9px]">
-                {deliverables.length}
-              </span>
-            )}
-          </button>
+            <Presentation className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>Export SIH Pitch Deck (6 Slides)</span>
+          </a>
         </div>
       </div>
 
@@ -237,9 +201,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Pane 2: Routed Content (Workbench, KB, or Audit) */}
         {children}
-
-        {/* Pane 3: Right Pane (w-80, Collapsible Inspector) */}
-        {isRightPaneOpen && <RightPane />}
       </main>
 
       {/* 4. Settings / Sovereign Diagnostics Modal */}
@@ -363,13 +324,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </DialogContent>
       </Dialog>
 
-      {/* 5. Human-in-the-Loop (HITL) Approvals Modal */}
-      <HITLApprovalModal />
-
-      {/* 6. Scheduled Autonomous Plant Watchdogs Modal */}
-      <ScheduledTasksModal />
-
-      {/* 7. Global Connection Alerts & Status Toasts */}
+      {/* Global Connection Alerts & Status Toasts */}
       <ToastContainer />
 
       {/* 8. Voice Command Transcript Overlay (Whisper Local AI) */}

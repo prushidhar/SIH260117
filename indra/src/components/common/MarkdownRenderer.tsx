@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { Check, Copy } from 'lucide-react';
 import GenerativeUIBlock from '@/components/generative-ui/GenerativeUIBlock';
 import { parseGenerativeUISpec } from '@/lib/generative-ui/parser';
@@ -189,7 +191,8 @@ export default function MarkdownRenderer({ content }: { content: string }) {
   return (
     <div className="markdown-body text-sm leading-relaxed overflow-hidden">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={customComponents}
       >
         {content}

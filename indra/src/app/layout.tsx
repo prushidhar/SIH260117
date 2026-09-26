@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'katex/dist/katex.min.css';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import QueryProvider from '@/providers/QueryProvider';
 import WebSocketProvider from '@/providers/WebSocketProvider';

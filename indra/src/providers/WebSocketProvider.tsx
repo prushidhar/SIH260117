@@ -197,15 +197,18 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         taskClientRef.current = null;
       }
 
+      const now = Date.now();
+      const currentCount = useIndraStore.getState().messages.length;
       const userMessage: Message = {
-        id: `msg-user-${Date.now()}`,
+        id: `msg-${now}-0-user`,
         role: 'user',
         content,
         timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
         attachments,
+        ...({ orderIndex: currentCount } as any),
       };
 
-      const agentMessageId = `msg-agent-${Date.now()}`;
+      const agentMessageId = `msg-${now}-1-agent`;
       const agentMessage: Message = {
         id: agentMessageId,
         role: 'agent',
@@ -213,6 +216,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
         modelUsed: activeModel,
         agentSteps: [],
+        ...({ orderIndex: currentCount + 1 } as any),
       };
 
       useIndraStore.setState((state) => ({
@@ -243,11 +247,16 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
           if (primary.url) payload.document_url = primary.url;
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const res = await fetch(`${API_BASE}/api/tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
 
         if (!res.ok) {
           throw new Error(`Failed to create task on backend (HTTP ${res.status})`);
@@ -351,6 +360,17 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
               getGlobalQueryClient()?.invalidateQueries({ queryKey: queryKeys.approvals });
             }
 
+            // HITL Approval Requested Event
+            else if (type === 'approval_requested') {
+              getGlobalQueryClient()?.invalidateQueries({ queryKey: queryKeys.approvals });
+              useIndraStore.getState().fetchPendingApprovals();
+              useIndraStore.getState().addToast({
+                type: 'warning',
+                title: ev.title || 'Plant Authorization Required',
+                message: ev.recommendation || `Critical finding on ${ev.equipment || 'asset'} requires Plant Superintendent sign-off.`,
+              });
+            }
+
             // Tool result event
             else if (type === 'tool_result') {
               flushTokenBuffer();
@@ -408,9 +428,9 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             else if (type === 'deliverable') {
               flushTokenBuffer();
               const filename = ev.filename || ev.name || 'deliverable.docx';
-              const fileType = (ev.file_type || ev.type || (filename.endsWith('.xlsx') ? 'xlsx' : 'docx')).toLowerCase() as any;
+              const fileType = (ev.file_type || ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : filename.endsWith('.pptx') ? 'pptx' : 'docx')).toLowerCase() as any;
               const title = ev.title || ev.name || filename.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
-              const desc = ev.description || (fileType === 'xlsx' ? 'Deterministic Equipment Health Workbook' : 'Statutory Plant Approval Note');
+              const desc = ev.description || (fileType === 'xlsx' ? 'Deterministic Equipment Health Workbook' : fileType === 'pptx' ? 'Executive Board Review Deck' : 'Statutory Plant Approval Note');
               const now = new Date().toLocaleTimeString();
 
               const newDeliverable: Deliverable = {

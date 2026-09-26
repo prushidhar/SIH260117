@@ -2,16 +2,77 @@ const { app, BrowserWindow, ipcMain, dialog, Notification, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
+const net = require('net');
+
 let mainWindow = null;
 
+function waitForServerAndLoad(win, targetUrl) {
+  let isNavigated = false;
+  const splashPath = path.join(__dirname, 'splash.html');
+
+  if (fs.existsSync(splashPath)) {
+    win.loadFile(splashPath);
+  }
+
+  const checkPort = () => {
+    if (isNavigated || win.isDestroyed()) return;
+
+    const socket = new net.Socket();
+    socket.setTimeout(1200);
+
+    socket.on('connect', () => {
+      socket.destroy();
+      if (!isNavigated && !win.isDestroyed()) {
+        isNavigated = true;
+        // Port is open! Give Next.js a short moment and load
+        setTimeout(() => {
+          if (!win.isDestroyed()) {
+            win.loadURL(targetUrl);
+          }
+        }, 500);
+      }
+    });
+
+    socket.on('error', () => {
+      socket.destroy();
+      setTimeout(checkPort, 600);
+    });
+
+    socket.on('timeout', () => {
+      socket.destroy();
+      setTimeout(checkPort, 600);
+    });
+
+    socket.connect(3000, '127.0.0.1');
+  };
+
+  // If loading fails while compiling, retry gracefully
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    if (errorCode === -3) return; // ERR_ABORTED - navigation cancelled
+    console.warn(`[INDRA Navigation] Port open but page compilation in progress (${errorCode}: ${errorDescription}). Retrying...`);
+    setTimeout(() => {
+      if (!win.isDestroyed()) {
+        win.loadURL(targetUrl);
+      }
+    }, 1500);
+  });
+
+  // Start polling after 500ms
+  setTimeout(checkPort, 500);
+}
+
 function createWindow() {
+  const iconPath = path.join(__dirname, '../public/logo.png');
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 920,
     minWidth: 1024,
     minHeight: 700,
     title: 'INDRA — Sovereign AI Workbench',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#080c14',
+    autoHideMenuBar: true,
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -21,8 +82,8 @@ function createWindow() {
     },
   });
 
-  const appUrl = process.env.APP_URL || 'http://localhost:3000';
-  mainWindow.loadURL(appUrl);
+  const appUrl = process.env.APP_URL || 'http://localhost:3000/workbench';
+  waitForServerAndLoad(mainWindow, appUrl);
 
   // Prevent navigation to non-localhost URLs (Air-Gap loopback guarantee)
   mainWindow.webContents.on('will-navigate', (event, url) => {
@@ -35,6 +96,7 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    app.quit();
   });
 }
 
