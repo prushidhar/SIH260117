@@ -757,6 +757,65 @@ export const useIndraStore = create<IndraState>()(
       runOfflineSimulation: async (messageId: string, prompt?: string) => {
         const promptText = prompt || 'Analyze Heat Exchanger HX-4201 and verify ASME B31.3 compliance';
         const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        const promptLower = promptText.toLowerCase();
+
+        const isHydraulic = /darcy|friction|hydraulic|pressure drop|reynolds|l-101|pipeline/i.test(promptLower);
+        const isPID = /blueprint|isa-5\.1|schematic|cdu-104|spatial|tag local/i.test(promptLower);
+        const isCavitation = /cavitation|npsh|api 610|suction margin|spillback/i.test(promptLower);
+        const isTema = /tema|exchanger|fouling|lmtd|heat duty|e-101|thermal rating/i.test(promptLower);
+        const isVibration = /vibration|harmonics|tri-axial|iso 10816|unbalance|rpm|bearing/i.test(promptLower);
+
+        // 1. Determine Initial Agent Steps
+        let initialSteps: AgentStep[] = [];
+        if (isHydraulic) {
+          initialSteps = [
+            { id: 'off-1', label: 'Flow Spec Ingestion: Line L-101 (16" NPS Sch 60 Crude Transfer)', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve API 14E & Crane TP-410 Piping Fluid Dynamics Standards', status: 'pending' },
+            { id: 'off-3', label: 'Execute Deterministic Darcy-Weisbach & Colebrook-White Friction Solver', status: 'pending' },
+            { id: 'off-4', label: 'Validate Reynolds Velocity (Re=422,803, v=2.83 m/s) & Head Loss', status: 'pending' },
+            { id: 'off-5', label: 'Compile Statutory Hydraulic Calculation Workbook & Deliverable', status: 'pending' },
+          ];
+        } else if (isPID) {
+          initialSteps = [
+            { id: 'off-1', label: 'Vector CAD Blueprint Ingestion: Crude Distillation Unit (CDU-104)', status: 'in-progress' },
+            { id: 'off-2', label: 'Match ISA-5.1 Instrumentation Loops & Control Valves (FV-101, PSV-101)', status: 'pending' },
+            { id: 'off-3', label: 'Compute Topology Flow Graph & Coordinate Localization', status: 'pending' },
+            { id: 'off-4', label: 'Synchronize Multi-Window Digital Twin Canvas State', status: 'pending' },
+            { id: 'off-5', label: 'Generate P&ID Blueprint Verification Report', status: 'pending' },
+          ];
+        } else if (isCavitation) {
+          initialSteps = [
+            { id: 'off-1', label: 'Local Sensor Telemetry: Extract P-101 Suction & Discharge Pressure', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve API 610 12th Ed. Centrifugal Pump Hydraulics Standard', status: 'pending' },
+            { id: 'off-3', label: 'Execute Deterministic NPSHa vs NPSHr Margin Calculation', status: 'pending' },
+            { id: 'off-4', label: 'Cavitation Risk Assessment: Margin = +1.85m (> 1.0m Statutory Minimum)', status: 'pending' },
+            { id: 'off-5', label: 'Compile API 610 Pump Fitness Certificate & Word Note', status: 'pending' },
+          ];
+        } else if (isTema) {
+          initialSteps = [
+            { id: 'off-1', label: 'Thermal Process Data Ingestion: E-101 Crude Pre-Heat Exchanger Bank', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve TEMA Class R Shell & Tube Heat Exchanger Standard', status: 'pending' },
+            { id: 'off-3', label: 'Execute Deterministic Thermal Duty Q = m·Cp·ΔT = 5.28 MW Solver', status: 'pending' },
+            { id: 'off-4', label: 'Calculate Log Mean Temperature Difference (LMTD) & Fouling Factor Rf', status: 'pending' },
+            { id: 'off-5', label: 'Compile TEMA Class R Statutory Certification & Calculation Sheet', status: 'pending' },
+          ];
+        } else if (isVibration) {
+          initialSteps = [
+            { id: 'off-1', label: 'Vibration Historian Ingestion: Tri-Axial Velocity Spectra for P-101', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve ISO 10816-3 Class II Rigid Rotating Machine Standard', status: 'pending' },
+            { id: 'off-3', label: 'Execute FFT Harmonics Decomposition (1X Unbalance, 2X Misalignment)', status: 'pending' },
+            { id: 'off-4', label: 'Triage Severity: Dynamic Rotor Unbalance (Zone B, 4.2 mm/s RMS)', status: 'pending' },
+            { id: 'off-5', label: 'Compile Autonomous Vibration Diagnostics & Setpoint Deck', status: 'pending' },
+          ];
+        } else {
+          initialSteps = [
+            { id: 'off-1', label: 'Local Vision OCR: Scan Inspection_Report_HX-4201.pdf', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve API-570 & ASME B31.3 Standards', status: 'pending' },
+            { id: 'off-3', label: 'Execute Deterministic Python Sandbox Math', status: 'pending' },
+            { id: 'off-4', label: 'Cross-Reference P&ID Tags (TI-4201, FV-3102, PI-3104)', status: 'pending' },
+            { id: 'off-5', label: 'Compile Statutory Approval Deliverable', status: 'pending' },
+          ];
+        }
 
         set((s) => ({
           isAgentWorking: true,
@@ -768,13 +827,7 @@ export const useIndraStore = create<IndraState>()(
                   isError: false,
                   errorDetails: undefined,
                   modelUsed: 'Qwen2.5-Coder-32B (Air-Gapped Sandbox)',
-                  agentSteps: [
-                    { id: 'off-1', label: 'Local Vision OCR: Scan Inspection_Report_HX-4201.pdf', status: 'in-progress' },
-                    { id: 'off-2', label: 'Retrieve API-570 & ASME B31.3 Standards', status: 'pending' },
-                    { id: 'off-3', label: 'Execute Deterministic Python Sandbox Math', status: 'pending' },
-                    { id: 'off-4', label: 'Cross-Reference P&ID Tags (TI-4201, FV-3102, PI-3104)', status: 'pending' },
-                    { id: 'off-5', label: 'Compile Statutory Approval Deliverable', status: 'pending' },
-                  ],
+                  agentSteps: initialSteps,
                   content: '',
                 }
               : m
@@ -783,7 +836,15 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 1: OCR & Tag recognition
         await new Promise((r) => setTimeout(r, 600));
-        set({ detectedTags: ['HX-4201', 'TI-4201', 'FV-3102', 'PI-3104'] });
+        let detected: string[] = [];
+        if (isHydraulic) detected = ['L-101', 'P-101', 'FIC-101', 'PI-101'];
+        else if (isPID) detected = ['CDU-104', 'FV-101', 'PSV-101', 'TI-101', 'P-101'];
+        else if (isCavitation) detected = ['P-101', 'FV-101', 'PIT-101', 'PI-102'];
+        else if (isTema) detected = ['E-101', 'TIC-101', 'TIC-102', 'PI-103'];
+        else if (isVibration) detected = ['P-101', 'MT-101', 'VFD-101', 'FV-101'];
+        else detected = ['CDU-Pipe-104', 'HX-4201', 'TI-4201', 'FV-3102', 'PI-3104'];
+
+        set({ detectedTags: detected });
         set((s) => ({
           messages: s.messages.map((m) =>
             m.id === messageId
@@ -799,8 +860,104 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 2: RAG Sources
         await new Promise((r) => setTimeout(r, 600));
-        set({
-          ragSources: [
+        let ragList: RAGSource[] = [];
+        if (isHydraulic) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'API-14E-Piping-Design.pdf',
+              documentName: 'API-14E-Piping-Design.pdf',
+              section: 'Section 2.3 (Erosional Velocity & Pressure Drop Limits)',
+              relevance: 98,
+              snippet: 'Darcy-Weisbach head loss: h_f = f * (L/D) * (v^2 / 2g). Liquid velocity must stay below erosional velocity limit v_e = c / sqrt(rho).',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'Crane-TP-410-Fluid-Flow.pdf',
+              documentName: 'Crane-TP-410-Fluid-Flow.pdf',
+              section: 'Chapter 1 (Friction Factors for Clean Commercial Steel)',
+              relevance: 95,
+              snippet: 'Colebrook-White equation for turbulent transition: 1/sqrt(f) = -2*log10( (eps / 3.7D) + (2.51 / (Re*sqrt(f))) ). Roughness eps = 0.0457mm.',
+            },
+          ];
+        } else if (isPID) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'ISA-5.1-Instrumentation-Symbols.pdf',
+              documentName: 'ISA-5.1-Instrumentation-Symbols.pdf',
+              section: 'Table 1 (Identification Letters & Loop Numbering)',
+              relevance: 99,
+              snippet: 'First letter designates measured process variable (F=Flow, T=Temperature, P=Pressure, L=Level). Succeeding letters designate readout/control function.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'ASME-B31.3-Process-Piping.pdf',
+              documentName: 'ASME-B31.3-Process-Piping.pdf',
+              section: 'Appendix F (Precautionary Considerations)',
+              relevance: 92,
+              snippet: 'Control valve bypass manifolds must incorporate full-flow isolation valves and equalizing drains for on-line maintenance.',
+            },
+          ];
+        } else if (isCavitation) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'API-610-12th-Ed-Centrifugal-Pumps.pdf',
+              documentName: 'API-610-12th-Ed-Centrifugal-Pumps.pdf',
+              section: 'Section 6.1.10 (NPSH Margin Criteria)',
+              relevance: 99,
+              snippet: 'NPSH available (NPSHa) must exceed NPSH required (NPSHr) by a minimum margin of 1.0 m (3.3 ft) or 1.10 times NPSHr across operating range.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'Hydraulic-Institute-Standards-9.6.1.pdf',
+              documentName: 'Hydraulic-Institute-Standards-9.6.1.pdf',
+              section: 'NPSH Margin Guidelines for Hydrocarbon Applications',
+              relevance: 94,
+              snippet: 'NPSHa = h_atm + h_static - h_friction - h_vap. Cavitation damage acceleration occurs rapidly when NPSHa approaches NPSHr.',
+            },
+          ];
+        } else if (isTema) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'TEMA-Standards-Class-R.pdf',
+              documentName: 'TEMA-Standards-Class-R.pdf',
+              section: 'Section 5 (Fouling Resistances & Thermal Rating)',
+              relevance: 98,
+              snippet: 'TEMA Class R for petroleum refinery service specifies standard fouling resistances: crude oil Rf = 0.00035 m2-K/W, cooling water Rf = 0.00017 m2-K/W.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'ASME-Section-VIII-Div-1.pdf',
+              documentName: 'ASME-Section-VIII-Div-1.pdf',
+              section: 'Part UG (General Requirements for Heat Exchanger Shells)',
+              relevance: 93,
+              snippet: 'Calculated tube bundle thermal expansion differential must not exceed tubesheet joint allowable shear stresses.',
+            },
+          ];
+        } else if (isVibration) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'ISO-10816-3-Evaluation-Machinery-Vibration.pdf',
+              documentName: 'ISO-10816-3-Evaluation-Machinery-Vibration.pdf',
+              section: 'Clause 4 (Zone Boundary Limits for Class II Rotating Assets)',
+              relevance: 99,
+              snippet: 'Zone A: < 1.4 mm/s RMS (Newly commissioned). Zone B: 1.4 - 2.8 mm/s RMS (Unrestricted). Zone C: 2.8 - 4.5 mm/s RMS (Restricted). Zone D: > 4.5 mm/s RMS (Stop machine).',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'API-670-Machinery-Protection-Systems.pdf',
+              documentName: 'API-670-Machinery-Protection-Systems.pdf',
+              section: 'Section 4.1 (Vibration Transducer Mounting & Frequency Response)',
+              relevance: 94,
+              snippet: 'Tri-axial accelerometer mounting must capture sub-synchronous (0.4X) oil whirl and super-synchronous (2X, 3X) blade pass harmonics.',
+            },
+          ];
+        } else {
+          ragList = [
             {
               id: 'rag-off-1',
               document: 'ASME-B31.3-Process-Piping.pdf',
@@ -817,8 +974,10 @@ export const useIndraStore = create<IndraState>()(
               relevance: 94,
               snippet: 'Remaining Life = (t_actual - t_required) / Corrosion_Rate. Minimum allowable structural thickness must satisfy API 570 Table 1.',
             },
-          ],
-        });
+          ];
+        }
+
+        set({ ragSources: ragList });
         set((s) => ({
           messages: s.messages.map((m) =>
             m.id === messageId
@@ -834,9 +993,35 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 3: Tool Execution (Python Sandbox)
         await new Promise((r) => setTimeout(r, 700));
-        const pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
+        let pythonCode = '';
+        let pythonOutput = '';
+        let toolName = 'engineering_sandbox';
 
-        const pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED REFINERY SERVICE`;
+        if (isHydraulic) {
+          toolName = 'darcy_weisbach_hydraulic_solver';
+          pythonCode = `import math\n# Darcy-Weisbach Hydraulic Pipeline Friction Drop\nQ_gpm = 450.0\nrho = 880.0  # kg/m3 (crude oil)\nmu = 0.0032  # Pa.s dynamic viscosity\nD_m = 0.3874 # 16-inch Sch 60 inside diameter (m)\nL_m = 120.0  # pipeline length (m)\n\nQ_m3s = Q_gpm * 0.00006309\narea = math.pi * (D_m / 2)**2\nvelocity = Q_m3s / area\nRe = (rho * velocity * D_m) / mu\neps = 0.0000457 # commercial steel roughness (m)\n# Swamee-Jain approximation for Colebrook friction factor\nf = 0.25 / (math.log10(eps / (3.7 * D_m) + 5.74 / (Re**0.9)))**2\ndelta_p_pa = f * (L_m / D_m) * (rho * velocity**2) / 2\ndelta_p_kpa = delta_p_pa / 1000.0\n\nprint(f"Velocity: {velocity:.3f} m/s")\nprint(f"Reynolds Number: {Re:.1f} (Fully Turbulent)")\nprint(f"Darcy Friction Factor: {f:.5f}")\nprint(f"Pressure Drop: {delta_p_kpa:.2f} kPa ({delta_p_kpa * 0.145038:.2f} psi)")\nprint("STATUS: API 14E VELOCITY CRITERIA SATISFIED")`;
+          pythonOutput = `Velocity: 2.829 m/s\nReynolds Number: 422803.6 (Fully Turbulent)\nDarcy Friction Factor: 0.01648\nPressure Drop: 43.89 kPa (6.37 psi)\nSTATUS: API 14E VELOCITY CRITERIA SATISFIED`;
+        } else if (isPID) {
+          toolName = 'isa_5_1_topology_grapher';
+          pythonCode = `import json\n# ISA-5.1 CAD Vector Tag Parser & Topology Mapper\nblueprint = "PID-001_Heat_Exchanger_Unit_Spec.txt"\nvalves = ["FV-101", "PSV-101", "HCV-102", "XV-104"]\ninstruments = ["TI-101", "PI-101", "FIC-101", "TT-102"]\n\ntopology = {\n  "unit": "CDU-104",\n  "loops": [{"loop": "Crude Charge", "controller": "FIC-101", "valve": "FV-101", "status": "NOMINAL"}],\n  "identified_tags": valves + instruments,\n  "compliance": "ISA-5.1 / IEC 62424 Compliant"\n}\nprint(json.dumps(topology, indent=2))`;
+          pythonOutput = `{\n  "unit": "CDU-104",\n  "loops": [\n    {\n      "loop": "Crude Charge",\n      "controller": "FIC-101",\n      "valve": "FV-101",\n      "status": "NOMINAL"\n    }\n  ],\n  "identified_tags": [\n    "FV-101",\n    "PSV-101",\n    "HCV-102",\n    "XV-104",\n    "TI-101",\n    "PI-101",\n    "FIC-101",\n    "TT-102"\n  ],\n  "compliance": "ISA-5.1 / IEC 62424 Compliant"\n}`;
+        } else if (isCavitation) {
+          toolName = 'api_610_pump_hydraulics_solver';
+          pythonCode = `# API 610 12th Ed. NPSH Margin & Cavitation Risk Assessment\nP_suct_psig = 14.5\nP_disc_psig = 78.4\nSG = 0.88\nP_vap_psia = 12.2\nZ_suct_ft = 6.5\nh_f_ft = 2.1\n\nP_suct_psia = P_suct_psig + 14.7\nhead_suct_ft = (P_suct_psia * 2.31) / SG\nhead_vap_ft = (P_vap_psia * 2.31) / SG\nNPSHa_ft = head_suct_ft - head_vap_ft + Z_suct_ft - h_f_ft\nNPSHa_m = NPSHa_ft * 0.3048\nNPSHr_m = 3.20 # Pump curve rating at 450 GPM\nmargin_m = NPSHa_m - NPSHr_m\n\nprint(f"Operating Head: {(P_disc_psig - P_suct_psig) * 2.31 / SG:.1f} ft")\nprint(f"NPSH Available (NPSHa): {NPSHa_m:.2f} m")\nprint(f"NPSH Required (NPSHr): {NPSHr_m:.2f} m")\nprint(f"Net Cavitation Margin: +{margin_m:.2f} m")\nprint("STATUS: SAFE PER API 610 (Margin > 1.0m Statutory Minimum)")`;
+          pythonOutput = `Operating Head: 167.7 ft\nNPSH Available (NPSHa): 5.05 m\nNPSH Required (NPSHr): 3.20 m\nNet Cavitation Margin: +1.85 m\nSTATUS: SAFE PER API 610 (Margin > 1.0m Statutory Minimum)`;
+        } else if (isTema) {
+          toolName = 'tema_thermal_rating_calculator';
+          pythonCode = `import math\n# TEMA Class R Shell & Tube Heat Exchanger Rating\nm_dot = 220000.0 / 3600.0 # kg/s (61.11 kg/s)\nCp = 2.25 # kJ/kg.K (crude oil)\nT_in = 140.0 # C\nT_out = 185.0 # C\n\nQ_kw = m_dot * Cp * (T_out - T_in) # 61.11 * 2.25 * 45 = 6187 kW\nQ_mw = Q_kw / 1000.0\n# LMTD counter-current calculation (Steam: 240 C in, 210 C out)\ndT1 = 240.0 - 185.0 # 55 C\ndT2 = 210.0 - 140.0 # 70 C\nLMTD = (dT2 - dT1) / math.log(dT2 / dT1)\nRf_measured = 0.00032 # m2.K/W (TEMA max allowable = 0.00035)\n\nprint(f"Exchanger Thermal Duty Q: {Q_mw:.2f} MW")\nprint(f"Log Mean Temp Difference (LMTD): {LMTD:.1f} °C")\nprint(f"Measured Fouling Resistance: {Rf_measured:.5f} m²·K/W")\nprint(f"TEMA Class R Limit: 0.00035 m²·K/W")\nprint("STATUS: SATISFACTORY THERMAL PERFORMANCE - FOULING ACCEPTABLE")`;
+          pythonOutput = `Exchanger Thermal Duty Q: 6.19 MW\nLog Mean Temp Difference (LMTD): 62.2 °C\nMeasured Fouling Resistance: 0.00032 m²·K/W\nTEMA Class R Limit: 0.00035 m²·K/W\nSTATUS: SATISFACTORY THERMAL PERFORMANCE - FOULING ACCEPTABLE`;
+        } else if (isVibration) {
+          toolName = 'iso_10816_vibration_analyzer';
+          pythonCode = `# ISO 10816-3 Tri-Axial Vibration Triage\nrms_velocity = 4.2 # mm/s RMS (Drive End)\nrunning_speed_rpm = 2950 # 49.17 Hz\nharmonics = {\n  "1X_unbalance": 2.85,\n  "2X_misalignment": 1.10,\n  "3X_looseness": 0.25\n}\nstatus = "ZONE B (Satisfactory for Continued Service)" if rms_velocity < 4.5 else "ZONE C"\nprint(f"1X Peak (Unbalance): {harmonics['1X_unbalance']} mm/s")\nprint(f"2X Peak (Misalignment): {harmonics['2X_misalignment']} mm/s")\nprint(f"Total Overall RMS: {rms_velocity} mm/s")\nprint(f"Classification: {status}")\nprint("RECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND")`;
+          pythonOutput = `1X Peak (Unbalance): 2.85 mm/s\n2X Peak (Misalignment): 1.10 mm/s\nTotal Overall RMS: 4.2 mm/s\nClassification: ZONE B (Satisfactory for Continued Service)\nRECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND`;
+        } else {
+          toolName = 'asme_b31_3_deterministic_sandbox';
+          pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
+          pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED REFINERY SERVICE`;
+        }
 
         set((s) => ({
           messages: s.messages.map((m) =>
@@ -847,7 +1032,7 @@ export const useIndraStore = create<IndraState>()(
                     code: pythonCode,
                     output: pythonOutput,
                     language: 'python',
-                    toolName: 'asme_b31_3_deterministic_sandbox',
+                    toolName: toolName,
                   },
                   agentSteps: m.agentSteps?.map((st) =>
                     st.id === 'off-3' ? { ...st, status: 'completed' as const } : st.id === 'off-4' ? { ...st, status: 'in-progress' as const } : st
@@ -857,7 +1042,7 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // Step 4: P&ID cross reference
+        // Step 4: Verification & Tag mapping
         await new Promise((r) => setTimeout(r, 600));
         set((s) => ({
           messages: s.messages.map((m) =>
@@ -872,58 +1057,252 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // 1. Word Report
+        // Step 5: Deliverables Trinity
+        const primaryTagForDel = detected[0] || 'CDU-Pipe-104';
         const docxDeliverable: Deliverable = {
           id: `del-docx-${Date.now()}`,
-          name: 'Statutory_Plant_Approval_Note_HX4201.docx',
-          filename: 'Statutory_Plant_Approval_Note_HX4201.docx',
+          name: `Statutory_Plant_Approval_Note_${primaryTagForDel}.docx`,
+          filename: `Statutory_Plant_Approval_Note_${primaryTagForDel}.docx`,
           type: 'docx',
           size: '37.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: 'Air-Gapped ASME B31.3 & API-570 Statutory Plant Fitness Certification',
-          url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
-          download_url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
+          description: `Air-Gapped Statutory Plant Fitness Certification for ${primaryTagForDel}`,
+          url: `http://localhost:8000/api/deliverables/sample/docx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
+          download_url: `http://localhost:8000/api/deliverables/sample/docx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
           hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         };
         get().addDeliverable(docxDeliverable);
 
-        // 2. Excel Calculation Sheet
         const xlsxDeliverable: Deliverable = {
           id: `del-xlsx-${Date.now() + 1}`,
-          name: 'HX4201_ASME_B313_Calculations.xlsx',
-          filename: 'HX4201_ASME_B313_Calculations.xlsx',
+          name: `${primaryTagForDel}_Calculations.xlsx`,
+          filename: `${primaryTagForDel}_Calculations.xlsx`,
           type: 'xlsx',
           size: '7.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: 'Deterministic Engineering Workbook with verified telemetry, calculations, and formulas',
-          url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
-          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          description: `Deterministic Engineering Workbook with verified telemetry, calculations, and formulas for ${primaryTagForDel}`,
+          url: `http://localhost:8000/api/deliverables/sample/xlsx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
+          download_url: `http://localhost:8000/api/deliverables/sample/xlsx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
           hash: '7a91b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1',
         };
         get().addDeliverable(xlsxDeliverable);
 
-        // 3. Executive PowerPoint Presentation
         const pptxDeliverable: Deliverable = {
           id: `del-pptx-${Date.now() + 2}`,
-          name: 'HX4201_Executive_Board_Review.pptx',
-          filename: 'HX4201_Executive_Board_Review.pptx',
+          name: `${primaryTagForDel}_Executive_Board_Review.pptx`,
+          filename: `${primaryTagForDel}_Executive_Board_Review.pptx`,
           type: 'pptx',
           size: '38.6 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
           description: 'Executive 16:9 Widescreen Deck with KPI Dashboard and Dual-Key Sign-Off Certificate',
-          url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
-          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          url: 'http://localhost:8000/api/sih/pitch-deck',
+          download_url: 'http://localhost:8000/api/sih/pitch-deck',
           hash: 'c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1',
         };
         get().addDeliverable(pptxDeliverable);
 
-        const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
-
+        // Step 6: Generative UI synthesis
         let finalMarkdown = '';
-        if (isPumpQuery) {
+        if (isHydraulic) {
+          finalMarkdown = `### Sovereign Darcy-Weisbach Hydraulic Pipeline Evaluation (Line L-101)
+
+The sovereign neural agent has calculated fluid velocity, Reynolds number, Colebrook friction factor, and frictional pressure drop across **Line L-101 (16" NPS Sch 60 Crude Transfer Header)** per API 14E and Crane TP-410 standards.
+
+#### 1. Interactive Darcy-Weisbach Hydraulic Solver Sandbox
+Modify flow rate or pipe roughness live in the sandbox below to observe instantaneous changes in friction factor and pressure drop:
+
+\`\`\`gen-ui
+{
+  "component": "DynamicSandboxWidget",
+  "props": {
+    "title": "API 14E / Darcy-Weisbach Hydraulic Solver",
+    "domain": "hydraulic_pipeline",
+    "tag": "L-101"
+  }
+}
+\`\`\`
+
+#### 2. Line Differential Pressure Gauge
+\`\`\`gen-ui
+{
+  "component": "IndustrialGauge",
+  "props": {
+    "tag": "PI-101",
+    "title": "Line L-101 Frictional Pressure Drop",
+    "value": 43.9,
+    "min": 0,
+    "max": 100,
+    "unit": "kPa",
+    "thresholds": { "normal": 60, "warning": 80, "critical": 95 },
+    "status": "optimal",
+    "subtitle": "Crude Distillation Unit 1 • Transfer Header"
+  }
+}
+\`\`\`
+
+#### 3. Asset Integrity & Flow Capacity
+\`\`\`gen-ui
+{
+  "component": "EquipmentHealthCard",
+  "props": {
+    "tag": "L-101",
+    "name": "Crude Oil Transfer Header",
+    "type": "16-inch NPS Sch 60 Carbon Steel (A106 Gr B)",
+    "healthScore": 92,
+    "mtbfHours": 40000,
+    "operatingHours": 18200,
+    "lastInspectionDate": "2026-08-15"
+  }
+}
+\`\`\`
+
+- **Hydraulic Verification:** Fluid velocity \`2.829 m/s\` is well below the erosional velocity threshold (\`v_e = 4.65 m/s\`).
+- **Statutory Decision:** **ADEQUATE FOR UNRESTRICTED CRUDE PUMPING** (Pressure drop: \`43.89 kPa / 6.37 psi\`).`;
+        } else if (isPID) {
+          finalMarkdown = `### Sovereign P&ID Blueprint & ISA-5.1 Tag Localization
+
+The sovereign agent has ingested the process topology for the **Crude Distillation Unit (CDU-104)**, cross-referencing piping instrumentation loops against ISA-5.1 standards.
+
+#### 1. Interactive P&ID Schematic Diagram
+Inspect the dynamic process flows, valve alignments, and live process lines below:
+
+\`\`\`gen-ui
+{
+  "component": "InteractivePIDWidget",
+  "props": {
+    "title": "CDU-104 Crude Distillation Unit P&ID Topology",
+    "initialLoop": "crude",
+    "tag": "CDU-104"
+  }
+}
+\`\`\`
+
+#### 2. DCS Loop Control & Flow Trim
+\`\`\`gen-ui
+{
+  "component": "ParameterControlForm",
+  "props": {
+    "tag": "FV-101",
+    "title": "Control Valve FV-101 Loop Trim",
+    "subtitle": "Feed Flow Control Loop FIC-101",
+    "equipmentMode": "AUTO",
+    "requireHITL": true
+  }
+}
+\`\`\`
+
+- **ISA-5.1 Compliance:** All 8 active instrumentation tags verified against P&ID spatial coordinates.
+- **Topology Integrity:** Bypass line and emergency relief valve \`PSV-101\` verified online.`;
+        } else if (isCavitation) {
+          finalMarkdown = `### Sovereign API 610 Centrifugal Pump NPSH & Cavitation Assessment
+
+The sovereign agent has evaluated **Slurry Feed Pump P-101** for cavitation risk under current suction conditions per API 610 (12th Edition) and Hydraulic Institute standards.
+
+#### 1. Real-Time Process Loop with Cavitation Simulation
+\`\`\`gen-ui
+{
+  "component": "InteractivePIDWidget",
+  "props": {
+    "title": "Slurry Pump P-101 Cavitation & Suction Schematic",
+    "initialLoop": "crude",
+    "tag": "P-101"
+  }
+}
+\`\`\`
+
+#### 2. Pump Discharge Pressure Gauge
+\`\`\`gen-ui
+{
+  "component": "IndustrialGauge",
+  "props": {
+    "tag": "P-101",
+    "title": "P-101 Discharge Pressure",
+    "value": 78.4,
+    "min": 0,
+    "max": 100,
+    "unit": "psig",
+    "thresholds": { "normal": 70, "warning": 85, "critical": 95 },
+    "status": "warning",
+    "subtitle": "Crude Distillation Unit 1 • Header A"
+  }
+}
+\`\`\`
+
+#### 3. Equipment Reliability & NPSH Health
+\`\`\`gen-ui
+{
+  "component": "EquipmentHealthCard",
+  "props": {
+    "tag": "P-101",
+    "name": "Crude Slurry Charge Pump",
+    "type": "API 610 BB2 Heavy-Duty Centrifugal",
+    "healthScore": 78,
+    "mtbfHours": 18000,
+    "operatingHours": 12400,
+    "lastInspectionDate": "2026-09-10"
+  }
+}
+\`\`\`
+
+- **NPSH Evaluation:** Net Positive Suction Head Available (\`NPSHa = 5.05 m\`) exceeds Required (\`NPSHr = 3.20 m\`) by **+1.85 m**.
+- **Statutory Decision:** **COMPLIANT PER API 610** (Safety margin exceeds 1.0 m minimum requirement; no cavitation inception).`;
+        } else if (isTema) {
+          finalMarkdown = `### Sovereign TEMA Class R Thermal Exchanger Rating & Fouling Assessment
+
+The sovereign agent has completed the thermal duty and fouling resistance analysis for **Crude Pre-Heat Exchanger E-101** per TEMA Class R refinery standards.
+
+#### 1. Interactive TEMA Thermal Rating Sandbox
+\`\`\`gen-ui
+{
+  "component": "DynamicSandboxWidget",
+  "props": {
+    "title": "TEMA Class R Thermal Duty & Fouling Rating",
+    "domain": "heat_exchanger",
+    "tag": "E-101"
+  }
+}
+\`\`\`
+
+#### 2. Exchanger Crude Outlet Temperature
+\`\`\`gen-ui
+{
+  "component": "IndustrialGauge",
+  "props": {
+    "tag": "TIC-102",
+    "title": "E-101 Crude Outlet Temperature",
+    "value": 185.0,
+    "min": 50,
+    "max": 250,
+    "unit": "°C",
+    "thresholds": { "normal": 190, "warning": 215, "critical": 235 },
+    "status": "optimal",
+    "subtitle": "Shell & Tube Exchanger Bank A"
+  }
+}
+\`\`\`
+
+#### 3. Exchanger Health & Thermal Efficiency
+\`\`\`gen-ui
+{
+  "component": "EquipmentHealthCard",
+  "props": {
+    "tag": "E-101",
+    "name": "Crude Pre-Heat Exchanger Bank A",
+    "type": "Shell & Tube Exchanger (TEMA Class R)",
+    "healthScore": 89,
+    "mtbfHours": 24000,
+    "operatingHours": 15800,
+    "lastInspectionDate": "2026-09-05"
+  }
+}
+\`\`\`
+
+- **Thermal Duty:** Calculated duty **Q = 6.19 MW** with an LMTD of **62.2 °C**.
+- **Fouling Factor:** Measured fouling resistance \`Rf = 0.00032 m²·K/W\` is within the TEMA Class R limit (\`0.00035 m²·K/W\`).`;
+        } else if (isVibration) {
           finalMarkdown = `### Sovereign Equipment Status & Telemetry (P-101)
 
 The sovereign neural agent has retrieved live telemetry for **Slurry Feed Pump P-101** from the local SCADA historian. Real-time vibration spectra and discharge pressure have been synthesized into interactive micro-frontends below.
@@ -990,7 +1369,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "ASMEComplianceCard",
   "props": {
-    "tag": "HX-4201",
+    "tag": "CDU-Pipe-104",
     "title": "ASME B31.3 §304.1.2 Interactive Wall Thickness Evaluator",
     "initialPressure": 450,
     "diameter": 8.625,
@@ -1007,14 +1386,14 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
   "component": "IndustrialGauge",
   "props": {
     "tag": "PI-3104",
-    "title": "HX-4201 Shell Operating Pressure",
+    "title": "CDU-Pipe-104 Operating Pressure",
     "value": 310.5,
     "min": 0,
     "max": 600,
     "unit": "psig",
     "thresholds": { "normal": 400, "warning": 480, "critical": 550 },
     "status": "optimal",
-    "subtitle": "High Pressure Steam Pre-Heater"
+    "subtitle": "High Pressure Steam Pre-Heater Spool"
   }
 }
 \`\`\`
@@ -1024,9 +1403,9 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "EquipmentHealthCard",
   "props": {
-    "tag": "HX-4201",
-    "name": "Crude Pre-Heat Exchanger Bank A",
-    "type": "Shell & Tube Exchanger (TEMA Class R)",
+    "tag": "CDU-Pipe-104",
+    "name": "Crude Unit Transfer Line Spool",
+    "type": "ASTM A106 Gr B Seamless Steel Piping",
     "healthScore": 94,
     "mtbfHours": 22000,
     "operatingHours": 14200,
@@ -1044,11 +1423,11 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "ExecutivePresentationWidget",
   "props": {
-    "tag": "HX-4201",
-    "title": "Executive Asset Integrity Review: HX-4201",
+    "tag": "CDU-Pipe-104",
+    "title": "Executive Asset Integrity Review: CDU-Pipe-104",
     "domain": "pipe_thickness",
-    "filename": "HX4201_Executive_Board_Review.pptx",
-    "downloadUrl": "http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx",
+    "filename": "CDU-Pipe-104_Executive_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
     "hash": "SHA256:c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1"
   }
 }
@@ -1073,7 +1452,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
         get().addToast({
           type: 'success',
           title: 'Offline Simulation Completed',
-          message: 'Full ASME B31.3 calculation & statutory certificate generated in zero-egress sandbox.',
+          message: 'Full deterministic engineering calculation & statutory certificate generated in zero-egress sandbox.',
         });
       },
 
