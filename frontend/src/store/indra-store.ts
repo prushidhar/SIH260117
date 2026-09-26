@@ -764,7 +764,9 @@ export const useIndraStore = create<IndraState>()(
         const isCavitation = /cavitation|npsh|api 610|suction margin|spillback/i.test(promptLower);
         const isTema = /tema|exchanger|fouling|lmtd|heat duty|e-101|thermal rating/i.test(promptLower);
         const isVibration = /vibration|harmonics|tri-axial|iso 10816|unbalance|rpm|bearing/i.test(promptLower);
-        const isRCA = /rca|root cause|failure|troubleshoot|fishbone|5-why|fault tree|trip/i.test(promptLower);
+        const isRCA = /rca|root cause|failure|troubleshoot|fishbone|5-why|fault tree/i.test(promptLower);
+        const isConsensus = /consensus|debate|tri-agent|tri-model|peer-review|multi-agent/i.test(promptLower);
+        const isAlarm = /alarm|flood|isa-18\.2|first-out|eemua/i.test(promptLower);
 
         // 1. Determine Initial Agent Steps
         let initialSteps: AgentStep[] = [];
@@ -815,6 +817,22 @@ export const useIndraStore = create<IndraState>()(
             { id: 'off-3', label: 'Execute Bayesian Fault Tree Synthesis (FTA) & Multi-Factor 5-Whys Deep-Dive', status: 'pending' },
             { id: 'off-4', label: 'Correlate Suction Strainer Mesh Degradation with Orifice Choking Proofs', status: 'pending' },
             { id: 'off-5', label: 'Formulate Corrective and Preventive Actions (CAPA) with 1-Click DCS Dispatch', status: 'pending' },
+          ];
+        } else if (isConsensus) {
+          initialSteps = [
+            { id: 'off-1', label: 'Initialize Tri-Model Personas: Alpha (Process), Beta (Materials), Gamma (Safety)', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve Multi-Standard Knowledge Base: ASME B31.3, API 14E, and IEC 61511', status: 'pending' },
+            { id: 'off-3', label: 'Execute 3-Round Autonomous Peer-Review Cross-Examination & Debate', status: 'pending' },
+            { id: 'off-4', label: 'Evaluate Mathematical Equilibrium & Risk Reduction Factor (RRF=1,250)', status: 'pending' },
+            { id: 'off-5', label: 'Generate Tri-Signed Consensus Merkle Leaf & Forward to Plant Superintendent', status: 'pending' },
+          ];
+        } else if (isAlarm) {
+          initialSteps = [
+            { id: 'off-1', label: 'DCS Alarm Historian Ingestion: Capture Millisecond Sequence of Events (SOE)', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve ANSI/ISA-18.2-2016 & EEMUA 191 Alarm Management Standards', status: 'pending' },
+            { id: 'off-3', label: 'Execute First-Out Causality Filter & Dynamic Flood Suppression Algorithms', status: 'pending' },
+            { id: 'off-4', label: 'Isolate Root Trip Alarm (PS-101LL) & Collapse 9 Consequential Sympathetic Alarms', status: 'pending' },
+            { id: 'off-5', label: 'Compile ISA-18.2 Audit Compliance Proof & Emergency Acknowledge Certificate', status: 'pending' },
           ];
         } else {
           initialSteps = [
@@ -984,6 +1002,44 @@ export const useIndraStore = create<IndraState>()(
               snippet: 'Employers shall investigate each incident resulting in equipment trip or loss of containment using structured root cause analysis with tracked corrective actions.',
             },
           ];
+        } else if (isConsensus) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'IEC-61511-Functional-Safety.pdf',
+              documentName: 'IEC-61511-Functional-Safety.pdf',
+              section: 'Clause 9.2 (Multi-Discipline Safety Integrity Level Allocation)',
+              relevance: 99,
+              snippet: 'Safety instrumented functions (SIF) require independent verification across operational, mechanical, and safety disciplines to satisfy SIL-2 target failure measures.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'ASME-B31.3-Process-Piping.pdf',
+              documentName: 'ASME-B31.3-Process-Piping.pdf',
+              section: 'Clause 302.2.4 (Allowances for Pressure & Temperature Variations)',
+              relevance: 96,
+              snippet: 'Occasional variations above design pressure are permissible up to 20% for not more than 100 hours/year or 33% for not more than 10 hours/year.',
+            },
+          ];
+        } else if (isAlarm) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'ANSI-ISA-18.2-Alarm-Management.pdf',
+              documentName: 'ANSI-ISA-18.2-Alarm-Management.pdf',
+              section: 'Clause 8.4 (Alarm Rationalization & Consequential Alarm Suppression)',
+              relevance: 99,
+              snippet: 'Alarm flood suppression logic shall suppress lower-priority alarms that are direct physical consequences of a higher-priority first-out trip.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'EEMUA-Publication-191.pdf',
+              documentName: 'EEMUA-Publication-191.pdf',
+              section: 'Section 4.3 (Target Operator Alarm Rates)',
+              relevance: 95,
+              snippet: 'In flood conditions following plant trip, average alarm presentation rate to the operator should not exceed 10 alarms in the first 10 minutes.',
+            },
+          ];
         } else {
           ragList = [
             {
@@ -1049,6 +1105,14 @@ export const useIndraStore = create<IndraState>()(
           toolName = 'bayesian_fault_tree_evaluator';
           pythonCode = `# Bayesian Root Cause & Fault Tree Analysis\n# Incident: P-101 Seal Flush Interruption & High Temp Trip\np_prior_orifice_choke = 0.65\np_evidence_temp = 0.95  # TI-101A measured 188.4°C\np_evidence_dp = 0.90    # dP-101 differential surged to 2.4 bar\n\nlikelihood = p_prior_orifice_choke * p_evidence_temp * p_evidence_dp\nnormalizer = likelihood + (0.35 * 0.15 * 0.10)\nposterior_prob = (likelihood / normalizer) * 100.0\n\nprint(f"Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking")\nprint(f"Bayesian Posterior Probability: {posterior_prob:.1f}%")\nprint(f"5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119")\nprint(f"CAPA Remediation Status: 3 Actions Formulated (1 Dispatched)")`;
           pythonOutput = `Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking\nBayesian Posterior Probability: 99.1%\n5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119\nCAPA Remediation Status: 3 Actions Formulated (1 Dispatched)`;
+        } else if (isConsensus) {
+          toolName = 'tri_model_consensus_engine';
+          pythonCode = `# Tri-Model Autonomous Multi-Agent Consensus Algorithm\n# Debaters: Alpha (Process), Beta (Materials), Gamma (Safety)\np_alpha = 510.0 # psig (Process throughput target)\np_beta = 455.0  # psig (ASME B31.3 structural limit)\np_gamma = 465.0 # psig (IEC 61511 SIL-2 trip setpoint)\n\n# Multi-objective optimization with safety constraints\np_consensus = min(p_alpha * 0.912, max(p_beta, p_gamma))\nrrf = 1250 # Risk Reduction Factor\nagreement_index = 100.0 - (abs(p_consensus - p_gamma) / p_gamma * 100.0)\n\nprint(f"Optimal Consensus Operating Pressure: {p_consensus:.1f} psig")\nprint(f"Surge Recirculation Margin: 14.5% via FV-101")\nprint(f"Convergence Agreement Score: {agreement_index:.1f}%")\nprint(f"Risk Reduction Factor: {rrf}:1 (SIL-2 / IEC 61508 Certified)")\nprint("STATUS: TRI-SIGNED CRYPTOGRAPHIC CONSENSUS REACHED")`;
+          pythonOutput = `Optimal Consensus Operating Pressure: 465.0 psig\nSurge Recirculation Margin: 14.5% via FV-101\nConvergence Agreement Score: 98.4%\nRisk Reduction Factor: 1250:1 (SIL-2 / IEC 61508 Certified)\nSTATUS: TRI-SIGNED CRYPTOGRAPHIC CONSENSUS REACHED`;
+        } else if (isAlarm) {
+          toolName = 'isa_18_2_alarm_rationalization_engine';
+          pythonCode = `# ISA-18.2 / EEMUA 191 Real-Time Alarm Rationalization\nraw_alarms_count = 10\ntrip_timestamp = "14:32:00.104"\nroot_tag = "PS-101LL"\n\n# First-Out Sequence of Events (SOE) Detection\nconsequential_count = raw_alarms_count - 1\nnoise_reduction_pct = (consequential_count / raw_alarms_count) * 100.0\nflood_rate_10m = 1.0 # Alarms per 10 mins (EEMUA 191 limit = 10)\n\nprint(f"First-Out Root Cause Tag: {root_tag} (Suction Low-Low Trip)")\nprint(f"Timestamp: {trip_timestamp} (Millisecond Accuracy)")\nprint(f"Consequential Alarms Suppressed: {consequential_count}")\nprint(f"Alarm Noise Reduced: {noise_reduction_pct:.1f}%")\nprint(f"Rationalized Rate: {flood_rate_10m:.1f} / 10 mins (EEMUA Compliant)")`;
+          pythonOutput = `First-Out Root Cause Tag: PS-101LL (Suction Low-Low Trip)\nTimestamp: 14:32:00.104 (Millisecond Accuracy)\nConsequential Alarms Suppressed: 9\nAlarm Noise Reduced: 90.0%\nRationalized Rate: 1.0 / 10 mins (EEMUA Compliant)`;
         } else {
           toolName = 'asme_b31_3_deterministic_sandbox';
           pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
@@ -1442,6 +1506,101 @@ The sovereign neural agent has completed a rigorous root cause failure investiga
 
 - **Primary Root Cause:** Suction Strainer \`ST-101-A\` mesh breach allowed 250μm particulates to choke the 3.2mm Plan 11 restriction orifice, eliminating seal convective cooling.
 - **Statutory Compliance:** Full PSM investigation logged to Merkle ledger with dual-key approval pending.`;
+        } else if (isConsensus) {
+          finalMarkdown = `### Sovereign Tri-Model Peer-Review & Consensus Convergence
+The sovereign system has completed a 3-round autonomous engineering peer-review debate across 3 specialized on-device models. The agents have reconciled operational throughput, ASME B31.3 wall stress limits, and IEC 61511 functional safety interlocks.
+
+\`\`\`gen-ui
+{
+  "component": "MultiAgentConsensusWidget",
+  "props": {
+    "tag": "CDU-Pipe-104",
+    "title": "CDU-Pipe-104 Tri-Model Peer-Review & Consensus Engine",
+    "targetParameter": "Maximum Allowable Operating Pressure (MAOP) & Recirculation Trip",
+    "consensusValue": "465.0 psig (with 14.5% FV-101 bypass)",
+    "agreementScore": 98.4,
+    "riskReductionFactor": 1250
+  }
+}
+\`\`\`
+
+#### Interactive Wall Thickness & Safety Margin (ASME B31.3)
+\`\`\`gen-ui
+{
+  "component": "ASMEComplianceCard",
+  "props": {
+    "tag": "CDU-Pipe-104",
+    "title": "ASME B31.3 Evaluator at Consensus Pressure (465 psig)",
+    "initialPressure": 465,
+    "diameter": 8.625,
+    "allowableStress": 20000,
+    "corrosionAllowance": 0.0625,
+    "actualThickness": 0.4850
+  }
+}
+\`\`\`
+
+#### Executive Peer-Review Deck
+\`\`\`gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "CDU-Pipe-104",
+    "title": "Tri-Model Engineering Consensus Review: CDU-Pipe-104",
+    "domain": "pipe_thickness",
+    "filename": "CDU-Pipe-104_Consensus_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
+    "hash": "SHA256:44b9e28fa10c3b88...c7a1"
+  }
+}
+\`\`\`
+
+- **Consensus Decision:** **APPROVED AT 465.0 PSIG** (Agreement Score: \`98.4%\`, RRF = \`1,250:1\`).
+- **Tri-Key Seal:** Cryptographic Merkle leaf generated with signatures from Agent Alpha, Beta, and Gamma.`;
+        } else if (isAlarm) {
+          finalMarkdown = `### Sovereign Alarm Flood Rationalization (ISA-18.2 / EEMUA 191)
+The sovereign AI alarm management engine has intercepted a sudden plant trip cascade on **Crude Distillation Unit CDU-104**. Using millisecond-precision Sequence of Events (SOE) correlation, 9 consequential alarms have been suppressed into a single First-Out root cause.
+
+\`\`\`gen-ui
+{
+  "component": "AlarmRationalizationWidget",
+  "props": {
+    "tag": "P-101",
+    "title": "CDU-104 ISA-18.2 Alarm Flood Rationalization",
+    "initialMode": "RATIONALIZED"
+  }
+}
+\`\`\`
+
+#### Root Cause Failure Investigation (RCA)
+\`\`\`gen-ui
+{
+  "component": "RootCauseAnalysisWidget",
+  "props": {
+    "tag": "P-101",
+    "title": "First-Out Incident Root Cause & Bayesian Fault Tree",
+    "incidentTitle": "P-101 Suction Pressure Low-Low Trip (PS-101LL)",
+    "incidentTime": "${nowTime} UTC",
+    "confidenceScore": 99.1,
+    "topEvent": "Suction Strainer Mesh Rupture & Restriction Orifice Choking"
+  }
+}
+\`\`\`
+
+#### Interactive P&ID Process Schematic
+\`\`\`gen-ui
+{
+  "component": "InteractivePIDWidget",
+  "props": {
+    "title": "Crude Pump P-101 Tripped Loop Alignment",
+    "initialLoop": "crude",
+    "tag": "P-101"
+  }
+}
+\`\`\`
+
+- **First-Out Root Cause:** Tag \`PS-101LL\` (Suction Pressure Low-Low) initiated emergency trip at \`14:32:00.104\`.
+- **EEMUA 191 Compliance:** Operator presentation rate reduced from \`48.2\` to \`1.0\` alarm/10min (90% noise elimination).`;
         } else {
           finalMarkdown = `### Sovereign Engineering Analysis Completed (Offline Simulation Mode)
 

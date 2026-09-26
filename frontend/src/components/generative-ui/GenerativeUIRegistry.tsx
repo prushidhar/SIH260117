@@ -10,6 +10,8 @@ import DynamicSandboxWidget from './components/DynamicSandboxWidget';
 import InteractivePIDWidget from './components/InteractivePIDWidget';
 import ExecutivePresentationWidget from './components/ExecutivePresentationWidget';
 import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
+import MultiAgentConsensusWidget from './components/MultiAgentConsensusWidget';
+import AlarmRationalizationWidget from './components/AlarmRationalizationWidget';
 
 interface RegistryProps {
   component: string;
@@ -62,6 +64,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 9. Root Cause Analysis (RCA) & Fault Tree Synthesis
   if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('faulttree') || compKey.includes('fishbone') || compKey === 'rootcauseanalysiswidget') {
     return <RootCauseAnalysisWidget {...props} />;
+  }
+
+  // 10. Tri-Model Autonomous Multi-Agent Consensus Debate
+  if (compKey.includes('consensus') || compKey.includes('debate') || compKey.includes('tri-model') || compKey.includes('triagent') || compKey === 'multiagentconsensuswidget') {
+    return <MultiAgentConsensusWidget {...props} />;
+  }
+
+  // 11. ISA-18.2 / EEMUA 191 Intelligent Alarm Flood Rationalization
+  if (compKey.includes('alarm') || compKey.includes('flood') || compKey.includes('firstout') || compKey.includes('rationalization') || compKey === 'alarmrationalizationwidget') {
+    return <AlarmRationalizationWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

@@ -166,3 +166,24 @@ export interface RootCauseAnalysisProps {
     hitlRequired: boolean;
   }>;
 }
+
+// 8. Multi-Agent Consensus Props
+export interface MultiAgentConsensusProps {
+  tag?: string;
+  title?: string;
+  equipmentType?: string;
+  targetParameter?: string;
+  consensusValue?: string;
+  agreementScore?: number;
+  riskReductionFactor?: number;
+  debaters?: Array<any>;
+  debateTranscript?: Array<any>;
+}
+
+// 9. Alarm Rationalization Props
+export interface AlarmRationalizationProps {
+  tag?: string;
+  title?: string;
+  initialMode?: 'RATIONALIZED' | 'RAW';
+  alarms?: Array<any>;
+}
