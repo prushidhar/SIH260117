@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import LeftPane from '@/components/left-pane/LeftPane';
 import ToastContainer from '@/components/common/ToastContainer';
 import { useIndraStore } from '@/store/indra-store';
@@ -18,7 +19,10 @@ import {
   Moon,
   Presentation,
   Volume2,
-  VolumeX
+  VolumeX,
+  Bot,
+  Network,
+  Database
 } from 'lucide-react';
 import { isSoundEnabled, toggleSound, playSuccessChirp } from '@/lib/sound/sovereign-audio';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -209,9 +213,57 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <PanelLeft className="w-4 h-4" />
           </button>
           <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800" />
-          <span className="text-slate-700 dark:text-zinc-200 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 font-mono">
-            {navLabels[activeNav] || 'Agent Workbench'}
-          </span>
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/workbench"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
+                activeNav === 'workbench'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shadow-2xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>Workbench</span>
+            </Link>
+            <Link
+              href="/canvas"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
+                activeNav === 'canvas'
+                  ? 'bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 shadow-2xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <Network className="w-3.5 h-3.5" />
+              <span>P&ID Spatial Canvas</span>
+            </Link>
+            <Link
+              href="/kb"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
+                activeNav === 'kb'
+                  ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shadow-2xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>RAG Knowledge Base</span>
+            </Link>
+            <Link
+              href="/audit"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
+                activeNav === 'audit'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Merkle Audit</span>
+              {pendingApprovals.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] flex items-center justify-center font-bold font-sans">
+                  {pendingApprovals.length}
+                </span>
+              )}
+            </Link>
+          </nav>
         </div>
 
         {/* Right: Quick Pitch Deck Download */}
