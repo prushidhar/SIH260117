@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -15,6 +15,34 @@ const verifiedWorkflows = [
     query: 'Review the ultrasonic thickness inspection report for crude distillation unit CDU-Pipe-104: nominal thickness 12.7mm, measured thickness 7.2mm, corrosion rate 0.45 mm/yr, design pressure 3.2 MPa. Perform ASME B31.3 minimum thickness calculation and draft a statutory plant approval note for executive sign-off.',
     icon: FileText,
     badge: 'SIH Deliverable (.docx)',
+  },
+  {
+    title: 'Tri-Model Autonomous Peer-Review & Consensus',
+    desc: 'Multi-agent debate across Process, Materials, and Safety models reconciling throughput vs ASME B31.3 limits',
+    query: 'Execute a tri-model autonomous peer-review debate for CDU-Pipe-104 between Agent Alpha (Process), Beta (Materials), and Gamma (Safety) to reconcile operating pressure and surge margins.',
+    icon: Users,
+    badge: 'Multi-Agent Debate',
+  },
+  {
+    title: 'ISA-18.2 Intelligent Alarm Flood Rationalization',
+    desc: 'Sequence of Events (SOE) first-out trip detection, suppressing sympathetic alarms per EEMUA 191',
+    query: 'Analyze the DCS alarm flood sequence following the CDU-104 plant trip. Execute ISA-18.2 first-out root cause isolation and rationalize consequential secondary alarms.',
+    icon: BellOff,
+    badge: 'Alarm Management',
+  },
+  {
+    title: 'Refinery Process Train & Mass-Energy Digital Twin',
+    desc: 'Interactive CDU/VDU digital twin, real-time Nelson-Farrar cut yields, furnace duty, and Souders-Brown flooding check',
+    query: 'Simulate refinery atmospheric distillation unit CDU-104 mass and energy balance for Arab Light crude feed at 100,000 BPD and 365 C furnace temperature. Display digital twin.',
+    icon: Factory,
+    badge: 'Process Digital Twin',
+  },
+  {
+    title: 'Automated HAZOP & LOPA SIL Safety Case',
+    desc: 'Quantitative Layer of Protection Analysis (LOPA) calculating cumulative PFD, required RRF, and IEC 61511 SIL level',
+    query: 'Perform an automated HAZOP and Layer of Protection Analysis (LOPA) for Node 01 crude charge line overpressure deviation. Calculate cumulative PFD across active IPLs and target SIL allocation.',
+    icon: ShieldAlert,
+    badge: 'IEC 61511 Safety',
   },
   {
     title: 'Fluid Dynamics Darcy-Weisbach Sandbox',
