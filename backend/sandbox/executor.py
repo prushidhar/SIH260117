@@ -355,6 +355,39 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "simulate_crude_distillation_mass_balance",
+                    "description": "Deterministic refinery atmospheric distillation unit (CDU) mass & energy balance simulation engine. Calculates cut yields, furnace duty, Souders-Brown flooding margins, and carbon intensity per API Tech Data Book and GPSA §13.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "crude_api": {"type": "number", "description": "Crude oil API gravity e.g. 33.4 (Arab Light) or 21.8 (Maya Heavy)"},
+                            "feed_bpd": {"type": "number", "description": "Feed flow rate in barrels per day (BPD)"},
+                            "furnace_temp_c": {"type": "number", "description": "Atmospheric charge heater outlet temperature in Celsius"},
+                            "steam_stripping_rate": {"type": "number", "description": "Bottom stripping steam rate kg/bbl"}
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "evaluate_hazop_lopa_sil",
+                    "description": "Industrial HAZOP & Layer of Protection Analysis (LOPA) functional safety engine. Calculates unmitigated frequency, cumulative PFD of active IPLs, mitigated event frequency, and SIL target allocation per IEC 61508 / IEC 61511.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "node_id": {"type": "string", "description": "Process node identifier e.g. NODE-01_CDU_FEED"},
+                            "deviation": {"type": "string", "description": "HAZOP guide word deviation e.g. HIGH_PRESSURE, LESS_FLOW"},
+                            "consequence_severity": {"type": "string", "description": "Severity category: CATASTROPHIC, SEVERE, SERIOUS, MODERATE"},
+                            "initiating_frequency": {"type": "number", "description": "Initiating event frequency in events per year"},
+                            "enabled_ipl_ids": {"type": "array", "items": {"type": "string"}, "description": "List of active IPL identifiers e.g. ['IPL-01', 'IPL-02']"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -376,7 +409,9 @@ class ToolRegistry:
             "calculate_compressor_surge_margin",
             "calculate_control_valve_cv_isa75",
             "calculate_heat_exchanger_fouling_tema",
-            "evaluate_root_cause_tree"
+            "evaluate_root_cause_tree",
+            "simulate_crude_distillation_mass_balance",
+            "evaluate_hazop_lopa_sil"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

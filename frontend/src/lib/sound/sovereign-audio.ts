@@ -225,3 +225,14 @@ export function speakSovereignAlert(text: string): void {
     console.debug('[Audio] Voice synthesis skipped:', err);
   }
 }
+
+export const sovereignAudio = {
+  playClick: playClickBeep,
+  playWarning: playAlarmChime,
+  playSuccess: playSuccessChirp,
+  playNotification: playClickBeep,
+  speak: speakSovereignAlert,
+  toggle: toggleSound,
+  isEnabled: isSoundEnabled,
+};
+

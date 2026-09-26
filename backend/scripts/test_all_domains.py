@@ -287,6 +287,36 @@ def test_card_6_root_cause_analysis():
     print(f"  [+] Bayesian RCA Evaluator: root_cause='{rca_res.get('primary_root_cause')}', posterior_confidence={rca_res.get('confidence_score')}%, 5-Whys={len(rca_res.get('five_whys_chain'))} steps, CAPA={len(rca_res.get('capa_remediations'))} remedies")
 
 
+def test_card_7_plant_digital_twin():
+    print("\n--- [TEST 7] Card 7: Refinery Plant Digital Twin & Mass-Energy Balance ---")
+    mb_res = tool_registry.execute_tool("simulate_crude_distillation_mass_balance", {
+        "crude_api": 33.4,
+        "feed_bpd": 100000.0,
+        "furnace_temp_c": 365.0,
+        "steam_stripping_rate": 1.2
+    })
+    assert mb_res.get("status") == "success", f"Mass balance failed: {mb_res}"
+    assert len(mb_res.get("yield_breakdown", [])) == 6, "Expected 6 crude distillation cuts"
+    assert mb_res.get("furnace_duty_mw", 0) > 30.0, "Furnace duty calculation error"
+    assert mb_res.get("column_tray_flooding_margin_pct", 0) > 0, "Flooding margin negative"
+    print(f"  [+] Refinery Mass Balance: cuts={len(mb_res.get('yield_breakdown'))}, furnace_duty={mb_res.get('furnace_duty_mw')} MW, flood_margin={mb_res.get('column_tray_flooding_margin_pct')}%, HEN_recovery={mb_res.get('hen_pinch_recovery_pct')}%")
+
+
+def test_card_8_hazop_lopa_sil():
+    print("\n--- [TEST 8] Card 8: Automated HAZOP & LOPA SIL Functional Safety Engine ---")
+    lopa_res = tool_registry.execute_tool("evaluate_hazop_lopa_sil", {
+        "node_id": "NODE-01_CDU_FEED",
+        "deviation": "HIGH_PRESSURE",
+        "consequence_severity": "CATASTROPHIC",
+        "initiating_frequency": 0.1,
+        "enabled_ipl_ids": ["IPL-01", "IPL-02", "IPL-03", "IPL-04"]
+    })
+    assert lopa_res.get("status") == "success", f"LOPA failed: {lopa_res}"
+    assert lopa_res.get("sil_level") in [3, 4], f"Expected SIL 3 or 4, got: {lopa_res.get('sil_level')}"
+    assert lopa_res.get("risk_acceptable") is True, "Expected mitigated risk to be acceptable"
+    print(f"  [+] IEC 61511 LOPA Engine: target_sil='{lopa_res.get('sil_target')}', required_rrf={lopa_res.get('required_rrf')}, total_pfd={lopa_res.get('total_pfd')}, risk_acceptable={lopa_res.get('risk_acceptable')}")
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -297,6 +327,8 @@ if __name__ == "__main__":
     test_card_4_vibration_triage()
     test_deliverables_and_airgap()
     test_card_6_root_cause_analysis()
+    test_card_7_plant_digital_twin()
+    test_card_8_hazop_lopa_sil()
     print("\n================================================================")
-    print("ALL 6 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 8 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")

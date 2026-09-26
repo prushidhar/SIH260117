@@ -12,6 +12,8 @@ import ExecutivePresentationWidget from './components/ExecutivePresentationWidge
 import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 import MultiAgentConsensusWidget from './components/MultiAgentConsensusWidget';
 import AlarmRationalizationWidget from './components/AlarmRationalizationWidget';
+import { PlantDigitalTwinWidget } from './components/PlantDigitalTwinWidget';
+import { HazopLopaWorkbench } from './components/HazopLopaWorkbench';
 
 interface RegistryProps {
   component: string;
@@ -74,6 +76,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 11. ISA-18.2 / EEMUA 191 Intelligent Alarm Flood Rationalization
   if (compKey.includes('alarm') || compKey.includes('flood') || compKey.includes('firstout') || compKey.includes('rationalization') || compKey === 'alarmrationalizationwidget') {
     return <AlarmRationalizationWidget {...props} />;
+  }
+
+  // 12. Plant Digital Twin (Refinery Mass-Energy Balance & Process Flow)
+  if (compKey.includes('digitaltwin') || compKey.includes('refinery') || compKey.includes('plant') || compKey.includes('distillation') || compKey === 'plantdigitaltwinwidget') {
+    return <PlantDigitalTwinWidget {...props} />;
+  }
+
+  // 13. HAZOP & LOPA SIL Functional Safety Workbench (IEC 61508 / 61511)
+  if (compKey.includes('hazop') || compKey.includes('lopa') || compKey.includes('sil') || compKey.includes('protectionlayer') || compKey === 'hazoplopaworkbench') {
+    return <HazopLopaWorkbench {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

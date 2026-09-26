@@ -187,3 +187,20 @@ export interface AlarmRationalizationProps {
   initialMode?: 'RATIONALIZED' | 'RAW';
   alarms?: Array<any>;
 }
+
+// 10. Plant Digital Twin Props
+export interface PlantDigitalTwinProps {
+  initialCrudeApi?: number;
+  initialFeedBpd?: number;
+  initialFurnaceTempC?: number;
+  plantName?: string;
+  onStreamSelect?: (streamId: string) => void;
+}
+
+// 11. HAZOP & LOPA SIL Props
+export interface HazopLopaProps {
+  initialNodeId?: string;
+  initialDeviation?: string;
+  initialSeverity?: string;
+  initialInitiatingFreq?: number;
+}

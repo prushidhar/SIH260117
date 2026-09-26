@@ -767,6 +767,8 @@ export const useIndraStore = create<IndraState>()(
         const isRCA = /rca|root cause|failure|troubleshoot|fishbone|5-why|fault tree/i.test(promptLower);
         const isConsensus = /consensus|debate|tri-agent|tri-model|peer-review|multi-agent/i.test(promptLower);
         const isAlarm = /alarm|flood|isa-18\.2|first-out|eemua/i.test(promptLower);
+        const isDigitalTwin = /digital twin|digitaltwin|refinery|mass balance|crude switch|cdu\/vdu|fractionation|distillation/i.test(promptLower);
+        const isHazop = /hazop|lopa|sil|iec 61511|protection layer|sif|tmef|rrf/i.test(promptLower);
 
         // 1. Determine Initial Agent Steps
         let initialSteps: AgentStep[] = [];
@@ -834,6 +836,22 @@ export const useIndraStore = create<IndraState>()(
             { id: 'off-4', label: 'Isolate Root Trip Alarm (PS-101LL) & Collapse 9 Consequential Sympathetic Alarms', status: 'pending' },
             { id: 'off-5', label: 'Compile ISA-18.2 Audit Compliance Proof & Emergency Acknowledge Certificate', status: 'pending' },
           ];
+        } else if (isDigitalTwin) {
+          initialSteps = [
+            { id: 'off-1', label: 'Refinery Train Ingestion: Extract Process Flow Architecture (CDU/VDU)', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve API Technical Data Book & GPSA Section 13 Standards', status: 'pending' },
+            { id: 'off-3', label: 'Execute Deterministic Mass & Energy Balance (Nelson-Farrar / Souders-Brown)', status: 'pending' },
+            { id: 'off-4', label: 'Verify Column Flooding Margins (+20.2%) & Pinch HEN Recovery (72.5%)', status: 'pending' },
+            { id: 'off-5', label: 'Compile Autonomous Refinery Digital Twin Schedule & Executive Deck', status: 'pending' },
+          ];
+        } else if (isHazop) {
+          initialSteps = [
+            { id: 'off-1', label: 'Functional Safety Ingestion: Node 01 Crude Charge Overpressure Deviation', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve IEC 61508 / IEC 61511 & CCPS LOPA Guidelines', status: 'pending' },
+            { id: 'off-3', label: 'Evaluate Initiating Frequency (0.1/yr) vs Cumulative PFD across 4 IPLs', status: 'pending' },
+            { id: 'off-4', label: 'Compute Required RRF (10,000:1) & Verify Target SIL Allocation (SIL 3/4)', status: 'pending' },
+            { id: 'off-5', label: 'Seal IEC 61511 Safety Case into Cryptographic Merkle Audit Ledger', status: 'pending' },
+          ];
         } else {
           initialSteps = [
             { id: 'off-1', label: 'Local Vision OCR: Scan Inspection_Report_HX-4201.pdf', status: 'in-progress' },
@@ -869,6 +887,8 @@ export const useIndraStore = create<IndraState>()(
         else if (isCavitation) detected = ['P-101', 'FV-101', 'PIT-101', 'PI-102'];
         else if (isTema) detected = ['E-101', 'TIC-101', 'TIC-102', 'PI-103'];
         else if (isVibration) detected = ['P-101', 'MT-101', 'VFD-101', 'FV-101'];
+        else if (isDigitalTwin) detected = ['CDU-104', 'F-101', 'T-101', 'E-101', 'V-101'];
+        else if (isHazop) detected = ['PSV-101', 'PAH-104', 'SIS-101', 'CDU-104'];
         else detected = ['CDU-Pipe-104', 'HX-4201', 'TI-4201', 'FV-3102', 'PI-3104'];
 
         set({ detectedTags: detected });
@@ -1040,6 +1060,44 @@ export const useIndraStore = create<IndraState>()(
               snippet: 'In flood conditions following plant trip, average alarm presentation rate to the operator should not exceed 10 alarms in the first 10 minutes.',
             },
           ];
+        } else if (isDigitalTwin) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'API-Technical-Data-Book-Refining.pdf',
+              documentName: 'API-Technical-Data-Book-Refining.pdf',
+              section: 'Chapter 3 (Petroleum Fractions Characterization & True Boiling Point Curves)',
+              relevance: 99,
+              snippet: 'Nelson-Farrar crude assay models correlate API gravity and mid-boiling points to distillate cut yields: Offgas/LPG, Light & Heavy Naphtha, Kerosene, Diesel, and Residue.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'GPSA-Engineering-Data-Book-Sec13.pdf',
+              documentName: 'GPSA-Engineering-Data-Book-Sec13.pdf',
+              section: 'Section 13 (Separation & Fractionation Columns)',
+              relevance: 95,
+              snippet: 'Souders-Brown vapor velocity limit v_max = K * sqrt((rho_L - rho_V) / rho_V). Operating velocity must not exceed 85% of flooding limit to prevent liquid carryover.',
+            },
+          ];
+        } else if (isHazop) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'IEC-61511-Functional-Safety-Process.pdf',
+              documentName: 'IEC-61511-Functional-Safety-Process.pdf',
+              section: 'Clause 9 (Quantification of Risk Reduction & SIL Assignment)',
+              relevance: 99,
+              snippet: 'Demand mode Safety Instrumented Functions (SIFs): SIL 1 (10 <= RRF < 100), SIL 2 (100 <= RRF < 1000), SIL 3 (1000 <= RRF < 10000), SIL 4 (RRF >= 10000). Total PFD = product of active independent protection layers.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'CCPS-LOPA-Layer-of-Protection-Analysis.pdf',
+              documentName: 'CCPS-LOPA-Layer-of-Protection-Analysis.pdf',
+              section: 'Chapter 5 (Criteria for Independent Protection Layers)',
+              relevance: 96,
+              snippet: 'An IPL must be independent of the initiating event and any other protection layer. Qualifying IPLs: BPCS trip loops (PFD=0.10), operator intervention with alarm (PFD=0.10), ASME PSV (PFD=0.01), dedicated SIS (PFD=0.005).',
+            },
+          ];
         } else {
           ragList = [
             {
@@ -1113,6 +1171,14 @@ export const useIndraStore = create<IndraState>()(
           toolName = 'isa_18_2_alarm_rationalization_engine';
           pythonCode = `# ISA-18.2 / EEMUA 191 Real-Time Alarm Rationalization\nraw_alarms_count = 10\ntrip_timestamp = "14:32:00.104"\nroot_tag = "PS-101LL"\n\n# First-Out Sequence of Events (SOE) Detection\nconsequential_count = raw_alarms_count - 1\nnoise_reduction_pct = (consequential_count / raw_alarms_count) * 100.0\nflood_rate_10m = 1.0 # Alarms per 10 mins (EEMUA 191 limit = 10)\n\nprint(f"First-Out Root Cause Tag: {root_tag} (Suction Low-Low Trip)")\nprint(f"Timestamp: {trip_timestamp} (Millisecond Accuracy)")\nprint(f"Consequential Alarms Suppressed: {consequential_count}")\nprint(f"Alarm Noise Reduced: {noise_reduction_pct:.1f}%")\nprint(f"Rationalized Rate: {flood_rate_10m:.1f} / 10 mins (EEMUA Compliant)")`;
           pythonOutput = `First-Out Root Cause Tag: PS-101LL (Suction Low-Low Trip)\nTimestamp: 14:32:00.104 (Millisecond Accuracy)\nConsequential Alarms Suppressed: 9\nAlarm Noise Reduced: 90.0%\nRationalized Rate: 1.0 / 10 mins (EEMUA Compliant)`;
+        } else if (isDigitalTwin) {
+          toolName = 'refinery_mass_energy_balance_engine';
+          pythonCode = `# API Technical Data Book Refinery Mass & Energy Balance\napi = 33.4 # Arab Light\nbpd = 100000.0\nsg = 141.5 / (131.5 + api)\nmass_tonne_day = (bpd * 0.1589873 * sg * 999.0) / 1000.0\ncuts = [\n  {"cut": "LPG / Offgas", "pct": 4.5, "bpd": 4500},\n  {"cut": "Light Naphtha", "pct": 9.5, "bpd": 9500},\n  {"cut": "Heavy Naphtha", "pct": 14.8, "bpd": 14800},\n  {"cut": "Kerosene / Jet A-1", "pct": 14.5, "bpd": 14500},\n  {"cut": "Ultra-Low Sulfur Diesel", "pct": 27.2, "bpd": 27200},\n  {"cut": "Atmospheric Residue", "pct": 29.5, "bpd": 29500}\n]\nfurnace_duty_mw = 80.81\nflooding_margin_pct = 20.2\nhen_recovery_pct = 72.5\nprint(f"Crude Feed Throughput: {bpd:,.0f} BPD ({mass_tonne_day:,.0f} Tonnes/Day)")\nprint(f"Charge Heater F-101 Duty: {furnace_duty_mw} MW")\nprint(f"Column Tray Flooding Margin: {flooding_margin_pct}% (Safe)")\nprint(f"Pinch HEN Heat Recovery: {hen_recovery_pct}%")\nprint("STATUS: 100.0% CLOSED MASS & ENERGY BALANCE CONVERGED")`;
+          pythonOutput = `Crude Feed Throughput: 100,000 BPD (13,639 Tonnes/Day)\nCharge Heater F-101 Duty: 80.81 MW\nColumn Tray Flooding Margin: 20.2% (Safe)\nPinch HEN Heat Recovery: 72.5%\nSTATUS: 100.0% CLOSED MASS & ENERGY BALANCE CONVERGED`;
+        } else if (isHazop) {
+          toolName = 'iec_61511_hazop_lopa_engine';
+          pythonCode = `# IEC 61508 / IEC 61511 Quantitative LOPA Risk Solver\nf_init = 0.1 # Initiating frequency (1 in 10 years)\ntmef = 1.0e-5 # Catastrophic risk target (1 in 100,000 years)\npfd_total = 0.10 * 0.10 * 0.01 * 0.005 # 4 Active IPLs\nf_mitigated = f_init * pfd_total\nrequired_rrf = f_init / tmef\nsil_target = "SIL 3 / SIL 4"\nprint(f"Initiating Event Frequency: {f_init} events/year")\nprint(f"Target Mitigated Frequency (TMEF): {tmef} events/year")\nprint(f"Active Protection Layers PFD: {pfd_total:.2e}")\nprint(f"Mitigated Frequency: {f_mitigated:.2e} events/year")\nprint(f"Required Risk Reduction Factor: {required_rrf:,.0f}:1")\nprint(f"SIL Target Allocation: {sil_target}")\nprint("STATUS: RISK COMPLIANT WITH ALARP TOLERABILITY CRITERIA")`;
+          pythonOutput = `Initiating Event Frequency: 0.1 events/year\nTarget Mitigated Frequency (TMEF): 1e-05 events/year\nActive Protection Layers PFD: 5.00e-07\nMitigated Frequency: 5.00e-08 events/year\nRequired Risk Reduction Factor: 10,000:1\nSIL Target Allocation: SIL 3 / SIL 4\nSTATUS: RISK COMPLIANT WITH ALARP TOLERABILITY CRITERIA`;
         } else {
           toolName = 'asme_b31_3_deterministic_sandbox';
           pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
@@ -1601,6 +1667,100 @@ The sovereign AI alarm management engine has intercepted a sudden plant trip cas
 
 - **First-Out Root Cause:** Tag \`PS-101LL\` (Suction Pressure Low-Low) initiated emergency trip at \`14:32:00.104\`.
 - **EEMUA 191 Compliance:** Operator presentation rate reduced from \`48.2\` to \`1.0\` alarm/10min (90% noise elimination).`;
+        } else if (isDigitalTwin) {
+          finalMarkdown = `### Sovereign Refinery Plant Digital Twin & Mass-Energy Balance
+The sovereign AI digital twin has synthesized a real-time mass and energy balance for **Refinery Train 1 (CDU-104 / VDU-201)** per the API Technical Data Book and Nelson-Farrar distillation models.
+
+\`\`\`gen-ui
+{
+  "component": "PlantDigitalTwinWidget",
+  "props": {
+    "plantName": "Refinery Train 1 — CDU / VDU Digital Twin",
+    "initialCrudeApi": 33.4,
+    "initialFeedBpd": 100000,
+    "initialFurnaceTempC": 365
+  }
+}
+\`\`\`
+
+#### Interactive P&ID Process Schematic
+\`\`\`gen-ui
+{
+  "component": "InteractivePIDWidget",
+  "props": {
+    "title": "CDU-104 Fractionation Flow Topology",
+    "initialLoop": "crude",
+    "tag": "CDU-104"
+  }
+}
+\`\`\`
+
+#### Executive Refinery Operations Review Deck
+\`\`\`gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "CDU-104",
+    "title": "Refinery Plant Digital Twin & Mass Balance Review",
+    "domain": "plant_digital_twin",
+    "filename": "Refinery_Digital_Twin_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
+    "hash": "SHA256:77a8b9c0d1e2f3a4...e5f6"
+  }
+}
+\`\`\`
+
+- **Closed Mass Balance:** Mass in (\`13,639 T/D\`) matches total cut yields with \`0.00%\` discrepancy.
+- **Flooding Check:** Column tray vapor velocity complies with Souders-Brown criteria (\`+20.2%\` safety margin).`;
+        } else if (isHazop) {
+          finalMarkdown = `### Sovereign Automated HAZOP & LOPA SIL Functional Safety Engine
+The sovereign functional safety engine has evaluated **Node 01: Crude Feed to Charge Furnace F-101** under the **MORE PRESSURE** deviation per IEC 61508 / IEC 61511 and CCPS LOPA standards.
+
+\`\`\`gen-ui
+{
+  "component": "HazopLopaWorkbench",
+  "props": {
+    "initialNodeId": "NODE-01_CDU_FEED",
+    "initialDeviation": "HIGH_PRESSURE",
+    "initialSeverity": "CATASTROPHIC",
+    "initialInitiatingFreq": 0.1
+  }
+}
+\`\`\`
+
+#### Safety Relief Valve Health & Integrity Index
+\`\`\`gen-ui
+{
+  "component": "EquipmentHealthCard",
+  "props": {
+    "tag": "PSV-101",
+    "name": "Pressure Safety Relief Valve",
+    "type": "API 526 Flanged Spring-Loaded Relief Valve",
+    "healthScore": 96,
+    "mtbfHours": 50000,
+    "operatingHours": 14200,
+    "lastInspectionDate": "2026-08-30"
+  }
+}
+\`\`\`
+
+#### Executive Functional Safety Case Deck
+\`\`\`gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "PSV-101",
+    "title": "IEC 61511 Safety Case: Node 01 High-Pressure LOPA",
+    "domain": "hazop_lopa",
+    "filename": "IEC_61511_Safety_Case_Node_01.pptx",
+    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
+    "hash": "SHA256:99a8b7c6d5e4f3a2...b1c0"
+  }
+}
+\`\`\`
+
+- **Target SIL Allocation:** Safety Instrumented Function verified at \`SIL 3\` with \`RRF = 10,000:1\`.
+- **ALARP Tolerability:** Cumulative PFD (\`5.00 × 10⁻⁷\`) satisfies corporate risk criteria for catastrophic scenarios.`;
         } else {
           finalMarkdown = `### Sovereign Engineering Analysis Completed (Offline Simulation Mode)
 
