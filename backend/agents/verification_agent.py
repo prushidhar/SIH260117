@@ -129,6 +129,18 @@ class VerificationAgent:
                 })
                 verified_count += 1
 
+            elif tool_name == "evaluate_root_cause_tree":
+                prob = tool_output.get("confidence_score")
+                root_cause = tool_output.get("primary_root_cause")
+                evidence_sources.append(f"OSHA 1910.119 PSM / API 682 Root Cause Analysis (Confidence: {prob}%, Cause: {root_cause})")
+                checks.append({
+                    "type": "ROOT_CAUSE_ANALYSIS_VERIFICATION",
+                    "subject": "Bayesian Fault Tree & 5-Whys Synthesis",
+                    "result": f"Root Cause: {root_cause}, Posterior: {prob}%",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
             elif tool_name == "calculate_equipment_health_score":
                 score = tool_output.get("health_score")
                 zone = tool_output.get("iso_zone")

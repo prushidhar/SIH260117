@@ -9,6 +9,7 @@ import ASMEComplianceCard from './components/ASMEComplianceCard';
 import DynamicSandboxWidget from './components/DynamicSandboxWidget';
 import InteractivePIDWidget from './components/InteractivePIDWidget';
 import ExecutivePresentationWidget from './components/ExecutivePresentationWidget';
+import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 
 interface RegistryProps {
   component: string;
@@ -56,6 +57,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 8. Executive Board Review Presentation Deck
   if (compKey.includes('presentation') || compKey.includes('board') || compKey.includes('slide') || compKey === 'executivepresentationwidget') {
     return <ExecutivePresentationWidget {...props} />;
+  }
+
+  // 9. Root Cause Analysis (RCA) & Fault Tree Synthesis
+  if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('faulttree') || compKey.includes('fishbone') || compKey === 'rootcauseanalysiswidget') {
+    return <RootCauseAnalysisWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

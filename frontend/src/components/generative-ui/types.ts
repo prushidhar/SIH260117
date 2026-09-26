@@ -132,3 +132,37 @@ export interface DynamicSandboxWidgetProps {
   html?: string;
   initialData?: Record<string, any>;
 }
+
+// 7. Root Cause Analysis (RCA) Props
+export interface RootCauseAnalysisProps {
+  tag?: string;
+  title?: string;
+  incidentTitle?: string;
+  incidentTime?: string;
+  equipmentType?: string;
+  confidenceScore?: number;
+  topEvent?: string;
+  fiveWhys?: Array<{
+    step: number;
+    question: string;
+    finding: string;
+    standardRef?: string;
+  }>;
+  treeData?: Array<{
+    id: string;
+    label: string;
+    category: 'MACHINE' | 'METHOD' | 'MATERIAL' | 'MEASUREMENT' | 'ENVIRONMENT' | 'MANPOWER';
+    probability: number;
+    isRootCause?: boolean;
+    evidence: string;
+    subCauses?: Array<any>;
+  }>;
+  capaList?: Array<{
+    id: string;
+    type: 'IMMEDIATE' | 'SHORT_TERM' | 'LONG_TERM';
+    action: string;
+    owner: string;
+    status: 'PENDING' | 'DISPATCHED' | 'COMPLETED';
+    hitlRequired: boolean;
+  }>;
+}

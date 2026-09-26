@@ -340,6 +340,21 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "evaluate_root_cause_tree",
+                    "description": "Industrial Root Cause Analysis (RCA) & Bayesian Fault Tree Evaluator. Evaluates failure modes, 5-Whys causal chains, Ishikawa 6M factors, and CAPA remediations per OSHA 1910.119 PSM and API 682.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "equipment_tag": {"type": "string", "description": "Asset tag e.g. P-101, CDU-104"},
+                            "incident_type": {"type": "string", "description": "Type of trip or failure mode e.g. seal_flush_temperature_trip"},
+                            "evidence_tags": {"type": "array", "items": {"type": "string"}, "description": "Telemetry sensor tags correlated with the failure"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -360,7 +375,8 @@ class ToolRegistry:
             "calculate_pump_cavitation_margin",
             "calculate_compressor_surge_margin",
             "calculate_control_valve_cv_isa75",
-            "calculate_heat_exchanger_fouling_tema"
+            "calculate_heat_exchanger_fouling_tema",
+            "evaluate_root_cause_tree"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

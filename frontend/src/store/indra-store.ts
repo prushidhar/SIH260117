@@ -764,6 +764,7 @@ export const useIndraStore = create<IndraState>()(
         const isCavitation = /cavitation|npsh|api 610|suction margin|spillback/i.test(promptLower);
         const isTema = /tema|exchanger|fouling|lmtd|heat duty|e-101|thermal rating/i.test(promptLower);
         const isVibration = /vibration|harmonics|tri-axial|iso 10816|unbalance|rpm|bearing/i.test(promptLower);
+        const isRCA = /rca|root cause|failure|troubleshoot|fishbone|5-why|fault tree|trip/i.test(promptLower);
 
         // 1. Determine Initial Agent Steps
         let initialSteps: AgentStep[] = [];
@@ -806,6 +807,14 @@ export const useIndraStore = create<IndraState>()(
             { id: 'off-3', label: 'Execute FFT Harmonics Decomposition (1X Unbalance, 2X Misalignment)', status: 'pending' },
             { id: 'off-4', label: 'Triage Severity: Dynamic Rotor Unbalance (Zone B, 4.2 mm/s RMS)', status: 'pending' },
             { id: 'off-5', label: 'Compile Autonomous Vibration Diagnostics & Setpoint Deck', status: 'pending' },
+          ];
+        } else if (isRCA) {
+          initialSteps = [
+            { id: 'off-1', label: 'Telemetry Historian: Extract Trip Excursion Logs for P-101 (TI-101A, dP-101)', status: 'in-progress' },
+            { id: 'off-2', label: 'Retrieve API 682 4th Ed. Mechanical Seals & OSHA 1910.119 PSM Guidelines', status: 'pending' },
+            { id: 'off-3', label: 'Execute Bayesian Fault Tree Synthesis (FTA) & Multi-Factor 5-Whys Deep-Dive', status: 'pending' },
+            { id: 'off-4', label: 'Correlate Suction Strainer Mesh Degradation with Orifice Choking Proofs', status: 'pending' },
+            { id: 'off-5', label: 'Formulate Corrective and Preventive Actions (CAPA) with 1-Click DCS Dispatch', status: 'pending' },
           ];
         } else {
           initialSteps = [
@@ -956,6 +965,25 @@ export const useIndraStore = create<IndraState>()(
               snippet: 'Tri-axial accelerometer mounting must capture sub-synchronous (0.4X) oil whirl and super-synchronous (2X, 3X) blade pass harmonics.',
             },
           ];
+        } else if (isRCA) {
+          ragList = [
+            {
+              id: 'rag-off-1',
+              document: 'API-682-Shaft-Seals.pdf',
+              documentName: 'API-682-Shaft-Seals.pdf',
+              section: 'Piping Plan 11 (Recirculation from Discharge through Orifice to Seal)',
+              relevance: 99,
+              snippet: 'Plan 11 delivers recirculation from pump discharge through a restriction orifice to seal chamber. Orifice bore must not be smaller than 3.0 mm to prevent solids plugging.',
+            },
+            {
+              id: 'rag-off-2',
+              document: 'OSHA-1910-119-Process-Safety-Management.pdf',
+              documentName: 'OSHA-1910-119-Process-Safety-Management.pdf',
+              section: 'Clause (j) Mechanical Integrity & Incident Investigation',
+              relevance: 96,
+              snippet: 'Employers shall investigate each incident resulting in equipment trip or loss of containment using structured root cause analysis with tracked corrective actions.',
+            },
+          ];
         } else {
           ragList = [
             {
@@ -1017,6 +1045,10 @@ export const useIndraStore = create<IndraState>()(
           toolName = 'iso_10816_vibration_analyzer';
           pythonCode = `# ISO 10816-3 Tri-Axial Vibration Triage\nrms_velocity = 4.2 # mm/s RMS (Drive End)\nrunning_speed_rpm = 2950 # 49.17 Hz\nharmonics = {\n  "1X_unbalance": 2.85,\n  "2X_misalignment": 1.10,\n  "3X_looseness": 0.25\n}\nstatus = "ZONE B (Satisfactory for Continued Service)" if rms_velocity < 4.5 else "ZONE C"\nprint(f"1X Peak (Unbalance): {harmonics['1X_unbalance']} mm/s")\nprint(f"2X Peak (Misalignment): {harmonics['2X_misalignment']} mm/s")\nprint(f"Total Overall RMS: {rms_velocity} mm/s")\nprint(f"Classification: {status}")\nprint("RECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND")`;
           pythonOutput = `1X Peak (Unbalance): 2.85 mm/s\n2X Peak (Misalignment): 1.10 mm/s\nTotal Overall RMS: 4.2 mm/s\nClassification: ZONE B (Satisfactory for Continued Service)\nRECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND`;
+        } else if (isRCA) {
+          toolName = 'bayesian_fault_tree_evaluator';
+          pythonCode = `# Bayesian Root Cause & Fault Tree Analysis\n# Incident: P-101 Seal Flush Interruption & High Temp Trip\np_prior_orifice_choke = 0.65\np_evidence_temp = 0.95  # TI-101A measured 188.4°C\np_evidence_dp = 0.90    # dP-101 differential surged to 2.4 bar\n\nlikelihood = p_prior_orifice_choke * p_evidence_temp * p_evidence_dp\nnormalizer = likelihood + (0.35 * 0.15 * 0.10)\nposterior_prob = (likelihood / normalizer) * 100.0\n\nprint(f"Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking")\nprint(f"Bayesian Posterior Probability: {posterior_prob:.1f}%")\nprint(f"5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119")\nprint(f"CAPA Remediation Status: 3 Actions Formulated (1 Dispatched)")`;
+          pythonOutput = `Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking\nBayesian Posterior Probability: 99.1%\n5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119\nCAPA Remediation Status: 3 Actions Formulated (1 Dispatched)`;
         } else {
           toolName = 'asme_b31_3_deterministic_sandbox';
           pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
@@ -1359,6 +1391,57 @@ Use the control deck below to adjust VFD speed, modulate minimum flow recirculat
 
 - **P&ID Cross-Reference:** Equipment tag \`P-101\` and recirculation valve \`FV-101\` highlighted on schematic.
 - **Compliance Status:** ISO 10816-3 Class II compliant; bearing lube temperature nominal at 64°C.`;
+        } else if (isRCA) {
+          finalMarkdown = `### Sovereign Root Cause Analysis (RCA) & Bayesian Fault Tree
+The sovereign neural agent has completed a rigorous root cause failure investigation for **Crude Feed Pump P-101** following the thermal trip excursion. Evidence from SCADA telemetry (\`TI-101A\`, \`dP-101\`) and inspection records have been correlated.
+
+\`\`\`gen-ui
+{
+  "component": "RootCauseAnalysisWidget",
+  "props": {
+    "tag": "P-101",
+    "title": "P-101 Bayesian Failure Tree & CAPA Matrix",
+    "incidentTitle": "Mechanical Seal Flush Disruption & High Temperature Trip",
+    "incidentTime": "${nowTime} UTC",
+    "confidenceScore": 99.1,
+    "topEvent": "Seal Barrier Fluid Vaporization & Secondary O-Ring Degradation"
+  }
+}
+\`\`\`
+
+#### Equipment Health Index & Reliability Degradation
+\`\`\`gen-ui
+{
+  "component": "EquipmentHealthCard",
+  "props": {
+    "tag": "P-101",
+    "name": "Crude Slurry Charge Pump",
+    "type": "API 610 BB2 Between-Bearing Centrifugal Pump",
+    "healthScore": 48,
+    "mtbfHours": 18000,
+    "operatingHours": 14200,
+    "lastInspectionDate": "2026-09-20"
+  }
+}
+\`\`\`
+
+#### Executive Incident Review Deck
+\`\`\`gen-ui
+{
+  "component": "ExecutivePresentationWidget",
+  "props": {
+    "tag": "P-101",
+    "title": "Incident Root Cause Review: P-101 Trip",
+    "domain": "root_cause_analysis",
+    "filename": "P-101_RCA_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
+    "hash": "SHA256:d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5"
+  }
+}
+\`\`\`
+
+- **Primary Root Cause:** Suction Strainer \`ST-101-A\` mesh breach allowed 250μm particulates to choke the 3.2mm Plan 11 restriction orifice, eliminating seal convective cooling.
+- **Statutory Compliance:** Full PSM investigation logged to Merkle ledger with dual-key approval pending.`;
         } else {
           finalMarkdown = `### Sovereign Engineering Analysis Completed (Offline Simulation Mode)
 

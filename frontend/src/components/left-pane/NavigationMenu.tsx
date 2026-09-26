@@ -25,11 +25,18 @@ export default function NavigationMenu() {
       desc: 'Sovereign AI Reasoning Workspace'
     },
     { 
+      id: 'canvas' as const, 
+      href: '/canvas',
+      label: 'Spatial 2D Canvas', 
+      icon: Network,
+      desc: 'Infinite CAD & Process Flow Graph'
+    },
+    { 
       id: 'kb' as const, 
       href: '/kb',
       label: 'Knowledge Base (RAG)', 
       icon: Database,
-      desc: 'Plant SOPs & CAD Schematics'
+      desc: 'Plant SOPs & Vector Space'
     },
     { 
       id: 'audit' as const, 

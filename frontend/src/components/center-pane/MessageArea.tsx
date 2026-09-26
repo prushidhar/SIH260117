@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -50,6 +50,20 @@ const verifiedWorkflows = [
     query: 'Perform thermal rating and fouling resistance calculation on crude pre-heat exchanger E-101: crude flow 220,000 kg/h, inlet 140 C, outlet 185 C. Calculate duty in MW and compare against TEMA Class R.',
     icon: Flame,
     badge: 'TEMA Thermal',
+  },
+  {
+    title: 'Root Cause Failure Analysis & 5-Whys (RCA)',
+    desc: 'Bayesian Fault Tree (FTA), 5-Whys causal chain, Ishikawa 6M fishbone, and CAPA DCS dispatch for pump P-101 trip',
+    query: 'Perform Root Cause Analysis (RCA) on crude feed pump P-101 mechanical seal flush disruption and high temperature trip. Synthesize Bayesian Fault Tree, 5-Whys, Ishikawa fishbone matrix, and CAPA remediations.',
+    icon: AlertTriangle,
+    badge: 'RCA & CAPA Engine',
+  },
+  {
+    title: '0-WAN Air-Gap Penetration & Merkle Proof',
+    desc: 'Kernel-level socket containment audit, local loopback boundary verification, and SHA-256 Merkle root verification',
+    query: 'Execute 0-WAN Air-Gap penetration probe test and verify kernel socket loopback enforcement and SHA-256 Merkle ledger integrity.',
+    icon: ShieldCheck,
+    badge: '0-WAN Security',
   },
 ];
 

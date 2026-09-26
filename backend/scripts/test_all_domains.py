@@ -273,6 +273,20 @@ def test_deliverables_and_airgap():
     print(f"  [+] Dual-Key HITL Approval: Committed & Signed by '{res.get('signed_by')}' (Tier {res.get('tier')})")
 
 
+def test_card_6_root_cause_analysis():
+    print("\n--- [TEST 6] Card 6: Root Cause Analysis (RCA) & Bayesian Fault Tree ---")
+    rca_res = tool_registry.execute_tool("evaluate_root_cause_tree", {
+        "equipment_tag": "P-101",
+        "incident_type": "seal_flush_temperature_trip",
+        "evidence_tags": ["TI-101A", "dP-101", "FT-101"]
+    })
+    assert rca_res.get("status") == "success", f"RCA tool failed: {rca_res}"
+    assert rca_res.get("confidence_score") > 90.0, "Confidence score lower than expected"
+    assert len(rca_res.get("five_whys_chain", [])) == 5, "Expected 5-Whys steps"
+    assert len(rca_res.get("capa_remediations", [])) >= 3, "Expected 3 CAPA remediations"
+    print(f"  [+] Bayesian RCA Evaluator: root_cause='{rca_res.get('primary_root_cause')}', posterior_confidence={rca_res.get('confidence_score')}%, 5-Whys={len(rca_res.get('five_whys_chain'))} steps, CAPA={len(rca_res.get('capa_remediations'))} remedies")
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -282,6 +296,7 @@ if __name__ == "__main__":
     test_card_3_pid_extraction()
     test_card_4_vibration_triage()
     test_deliverables_and_airgap()
+    test_card_6_root_cause_analysis()
     print("\n================================================================")
-    print("ALL 5 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 6 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
