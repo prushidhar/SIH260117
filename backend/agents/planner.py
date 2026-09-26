@@ -398,7 +398,11 @@ class AgentDAG:
                 print(f"[Planner] OCR inspection tool error: {e}")
         
         # Check for P&ID / Drawing queries
-        is_pid_query = any(kw in prompt.lower() for kw in ["p&id", "pid", "drawing", "schematic", "blueprint", "isa-5.1"])
+        is_pid_query = any(kw in prompt.lower() for kw in [
+            "p&id", "pid", "drawing", "schematic", "blueprint", "isa-5.1",
+            "piping and instrumentation", "flowsheet", "instrumentation diagram",
+            "piping diagram", "process loop", "cdu-104", "interactive schematic"
+        ])
         if is_pid_query:
             try:
                 pid_res = await self._execute_tool_and_emit("extract_pid_components", {
@@ -639,15 +643,31 @@ class AgentDAG:
             })
             active_tools.append("calculate_heat_exchanger_fouling_tema")
 
-        # 8. Control Valve Cv (ISA-75)
-        if "control_valve_cv" in domains:
+        # 8. Control Valve Cv (ISA-75) & Setpoint Parameter Control
+        if "control_valve_cv" in domains or any(kw in prompt.lower() for kw in ["setpoint", "vfd", "recirc", "throttle", "modulate", "control form", "parameter control", "speed setpoint", "loop control"]):
+            flow_val = params.get("flow_gpm") or 450.0
             cv_res = await self._execute_tool_and_emit("calculate_control_valve_cv_isa75", {
-                "flow_rate_gpm": params.get("flow_gpm") or 450.0,
+                "flow_rate_gpm": flow_val,
                 "delta_p_psi": 25.0,
                 "specific_gravity": params.get("specific_gravity") or 0.85,
                 "valve_tag": tag
             })
             active_tools.append("calculate_control_valve_cv_isa75")
+            try:
+                await self.websocket.send_json({
+                    "type": "generative_ui",
+                    "component": "ParameterControlForm",
+                    "title": f"Process Loop Setpoint Control — {tag}",
+                    "props": {
+                        "tag": tag,
+                        "title": f"{tag} VFD & Recirculation Setpoint Control",
+                        "subtitle": f"DCS Loop FIC-101 • Distributed Controller Station #4",
+                        "equipmentMode": "AUTO",
+                        "requireHITL": True
+                    }
+                })
+            except Exception as e:
+                print(f"[Planner] ParameterControlForm emission error: {e}")
 
         # 9. Vibration Harmonics & ISO 10816 Triage
         if "vibration_harmonics" in domains or "vibration_severity" in domains:

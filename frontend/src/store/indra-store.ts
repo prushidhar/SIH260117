@@ -275,6 +275,7 @@ export interface IndraState {
   }) => Promise<{ success: boolean; message?: string }>;
   sendMessage: (content: string, attachments?: { id?: string; name: string; type: string; size: string; url?: string }[]) => Promise<void>;
   addDeliverable: (deliverable: Deliverable) => void;
+  clearDeliverables: () => void;
   addNetworkEvent: (event: NetworkEvent) => void;
   incrementBlockedCount: () => void;
   setDetectedTags: (tags: string[]) => void;
@@ -609,6 +610,11 @@ export const useIndraStore = create<IndraState>()(
             ...state.deliverables.filter((d) => d.filename !== deliverable.filename),
           ],
         }));
+        get().saveCurrentSession();
+      },
+
+      clearDeliverables: () => {
+        set({ deliverables: [] });
         get().saveCurrentSession();
       },
 

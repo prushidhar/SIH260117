@@ -30,3 +30,4 @@ backend/test_task.py
 Thumbs.db
 .vscode/
 .idea/
+.edge_app_profile/

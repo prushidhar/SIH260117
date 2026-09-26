@@ -1,11 +1,97 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sliders, Send, ShieldAlert, CheckCircle2, RotateCcw, AlertTriangle, FileSignature, Crosshair, Lock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Sliders, Send, ShieldAlert, CheckCircle2, RotateCcw, AlertTriangle, FileSignature, Crosshair, Lock, Zap, Activity, Thermometer, Droplets, X } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
 import type { ParameterControlFormProps, ControlParameter } from '../types';
 
+// ─── Domain Detection ───────────────────────────────────────────────────────
+type Domain = 'HYDRAULIC' | 'VIBRATION' | 'THERMAL' | 'STRUCTURAL' | 'PROCESS';
+
+function detectDomain(title: string, subtitle: string, params: ControlParameter[]): Domain {
+  const haystack = [title, subtitle, ...params.map((p) => `${p.label} ${p.description ?? ''}`)].join(' ').toLowerCase();
+  if (/pump|valve|pressure|flow/.test(haystack)) return 'HYDRAULIC';
+  if (/vibration|rpm|bearing|vfd|motor/.test(haystack)) return 'VIBRATION';
+  if (/temperature|heat|furnace|boiler/.test(haystack)) return 'THERMAL';
+  if (/stress|thickness|pipe|wall/.test(haystack)) return 'STRUCTURAL';
+  return 'PROCESS';
+}
+
+const DOMAIN_COLORS: Record<Domain, { accent: string; bg: string; text: string; border: string; label: string }> = {
+  HYDRAULIC:  { accent: '#06b6d4', bg: 'bg-cyan-500/10',    text: 'text-cyan-600 dark:text-cyan-400',    border: 'border-cyan-500/30',   label: '💧 HYDRAULIC'  },
+  VIBRATION:  { accent: '#8b5cf6', bg: 'bg-violet-500/10',  text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-500/30', label: '⚙️ VIBRATION'  },
+  THERMAL:    { accent: '#f59e0b', bg: 'bg-amber-500/10',   text: 'text-amber-600 dark:text-amber-400',  border: 'border-amber-500/30',  label: '🌡️ THERMAL'    },
+  STRUCTURAL: { accent: '#10b981', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30', label: '🏗️ STRUCTURAL' },
+  PROCESS:    { accent: '#6366f1', bg: 'bg-indigo-500/10',  text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/30', label: '⚗️ PROCESS'     },
+};
+
+// ─── Change Log Entry ────────────────────────────────────────────────────────
+interface ChangeLogEntry {
+  ts: string;
+  label: string;
+  oldVal: number | boolean;
+  newVal: number | boolean;
+  unit?: string;
+}
+
+function getTimestamp(): string {
+  const now = new Date();
+  return now.toTimeString().slice(0, 8);
+}
+
+// ─── Live Simulation Helpers ─────────────────────────────────────────────────
+function computeSimulation(domain: Domain, params: ControlParameter[]): Record<string, string> {
+  const rpm   = Number(params.find((p) => p.id === 'vfd_rpm')?.value ?? 2000);
+  const valve = Number(params.find((p) => p.id === 'recirc_valve_pct')?.value ?? 35);
+
+  // Generic efficiency (0-100), highest at ~70% valve and mid-RPM
+  const effBase = 60 + ((rpm - 600) / 3000) * 25 - Math.abs(valve - 40) * 0.15;
+  const efficiency = Math.min(100, Math.max(0, effBase)).toFixed(1);
+
+  if (domain === 'VIBRATION') {
+    const bearingLoad = ((rpm / 3600) * 18.5).toFixed(1);
+    const powerDraw   = ((rpm / 3600) * 45.2 * (valve / 100 + 0.5)).toFixed(1);
+    return { 'Estimated Bearing Load': `${bearingLoad} kN`, 'Power Draw': `${powerDraw} kW`, 'Operating Efficiency': `${efficiency}%` };
+  }
+  if (domain === 'HYDRAULIC') {
+    const flowRate   = ((rpm / 3600) * 120 * (1 - valve / 200)).toFixed(1);
+    const headPressure = ((rpm / 3600) * 8.5).toFixed(2);
+    return { 'Estimated Flow Rate': `${flowRate} m³/h`, 'Head Pressure': `${headPressure} bar`, 'Operating Efficiency': `${efficiency}%` };
+  }
+  if (domain === 'THERMAL') {
+    const heatFlux = ((rpm / 3600) * 65.0 * (valve / 100 + 0.3)).toFixed(1);
+    return { 'Estimated Heat Flux': `${heatFlux} kW/m²`, 'Operating Efficiency': `${efficiency}%` };
+  }
+  return { 'Operating Efficiency': `${efficiency}%` };
+}
+
+// ─── Confidence Calculation ──────────────────────────────────────────────────
+function computeConfidence(params: ControlParameter[]): number {
+  let score = 100;
+  for (const p of params) {
+    if (p.type === 'slider') {
+      const v   = Number(p.value);
+      const lo  = p.min ?? 0;
+      const hi  = p.max ?? 100;
+      const mid = (lo + hi) / 2;
+      const dev = Math.abs(v - mid) / ((hi - lo) / 2 || 1); // 0=center, 1=edge
+      score -= dev * 10;
+    }
+    if (p.type === 'toggle' && p.isHazardous && Boolean(p.value)) score -= 20;
+  }
+  return Math.min(100, Math.max(0, Math.round(score)));
+}
+
+// ─── Mode Indicator Dots ─────────────────────────────────────────────────────
+const MODE_DOT: Record<'MANUAL' | 'AUTO' | 'CASCADE' | 'STANDBY', string> = {
+  AUTO:    'bg-emerald-500',
+  MANUAL:  'bg-amber-500',
+  CASCADE: 'bg-blue-500',
+  STANDBY: 'bg-slate-400',
+};
+
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function ParameterControlForm({
   tag = 'P-101',
   title = 'P-101 VFD & Recirculation Setpoint Control',
@@ -58,14 +144,43 @@ export default function ParameterControlForm({
   const [activeMode, setActiveMode] = useState<'MANUAL' | 'AUTO' | 'CASCADE' | 'STANDBY'>(equipmentMode);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  const [submitTimestamp, setSubmitTimestamp] = useState<string>('');
   const [emergencyTripActive, setEmergencyTripActive] = useState<boolean>(false);
+  const [changeLog, setChangeLog] = useState<ChangeLogEntry[]>([]);
 
   const { selectTag, setApprovalsModalOpen, addToast } = useIndraStore();
 
+  // Derived domain & colors
+  const domain = detectDomain(title, subtitle, params);
+  const domainStyle = DOMAIN_COLORS[domain];
+
+  // Live simulation values
+  const simValues = computeSimulation(domain, params);
+  const confidence = computeConfidence(params);
+
+  // Interlock status helpers
+  const rpm   = Number(params.find((p) => p.id === 'vfd_rpm')?.value ?? 0);
+  const valve  = Number(params.find((p) => p.id === 'recirc_valve_pct')?.value ?? 0);
+  const interlockOverride = Boolean(params.find((p) => p.id === 'interlock_override')?.value);
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
   const handleSliderChange = (id: string, newVal: number) => {
-    setParams((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, value: newVal } : p))
-    );
+    setParams((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id !== id) return p;
+        // Log the change
+        const entry: ChangeLogEntry = {
+          ts:     getTimestamp(),
+          label:  p.label,
+          oldVal: Number(p.value),
+          newVal,
+          unit:   p.unit,
+        };
+        setChangeLog((log) => [entry, ...log].slice(0, 4));
+        return { ...p, value: newVal };
+      });
+      return updated;
+    });
     setSubmitSuccess(false);
   };
 
@@ -82,22 +197,23 @@ export default function ParameterControlForm({
     setEmergencyTripActive(false);
   };
 
-  const handleTransmit = () => {
+  const handleTransmit = useCallback(() => {
     setIsSubmitting(true);
+    const ts = new Date().toISOString();
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitSuccess(true);
+      setSubmitTimestamp(ts);
       addToast({
         type: 'success',
         title: 'PLC Setpoint Transmitted',
-        message: `${tag} parameters dispatched to field controller station successfully.`,
+        message: `${tag} parameters dispatched to field controller station successfully. [${ts}]`,
       });
       setTimeout(() => setSubmitSuccess(false), 4000);
     }, 700);
-  };
+  }, [tag, addToast]);
 
   const handleRequestHITL = () => {
-    // Open the HITL approval modal so the operator or supervisor can formally sign off
     setApprovalsModalOpen(true);
     addToast({
       type: 'info',
@@ -109,14 +225,11 @@ export default function ParameterControlForm({
   const handleLocateTag = () => {
     if (tag) {
       selectTag(tag);
-      broadcastSyncEvent({
-        type: 'TAG_SELECTED',
-        tag,
-      });
+      broadcastSyncEvent({ type: 'TAG_SELECTED', tag });
     }
   };
 
-  const handleEmergencyTrip = () => {
+  const handleEmergencyTrip = useCallback(() => {
     setEmergencyTripActive(true);
     setParams((prev) =>
       prev.map((p) => {
@@ -131,8 +244,25 @@ export default function ParameterControlForm({
       title: 'EMERGENCY SCRAM TRIGGERED',
       message: `${tag} tripped offline. Spillback valve 100% opened.`,
     });
-  };
+  }, [tag, addToast]);
 
+  // ─── Keyboard Shortcuts ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        handleTransmit();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleEmergencyTrip();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handleTransmit, handleEmergencyTrip]);
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200">
       {/* Header */}
@@ -149,12 +279,14 @@ export default function ParameterControlForm({
             </button>
           )}
           <div>
-            <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-              {title}
-            </h4>
-            <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
-              {subtitle}
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">{title}</h4>
+              {/* Domain Badge */}
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold ${domainStyle.bg} ${domainStyle.text} ${domainStyle.border} border`}>
+                {domainStyle.label}
+              </span>
             </div>
+            <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">{subtitle}</div>
           </div>
         </div>
 
@@ -164,19 +296,20 @@ export default function ParameterControlForm({
             <button
               key={mode}
               onClick={() => setActiveMode(mode)}
-              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                 activeMode === mode
                   ? 'bg-white dark:bg-zinc-700 text-violet-700 dark:text-violet-300 shadow-xs'
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
               }`}
             >
+              <span className={`w-1.5 h-1.5 rounded-full ${MODE_DOT[mode]} ${activeMode === mode ? 'opacity-100' : 'opacity-40'}`} />
               {mode}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Emergency Alert Banner if Tripped */}
+      {/* Emergency Alert Banner */}
       {emergencyTripActive && (
         <div className="mt-3 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-between text-xs font-mono font-bold">
           <div className="flex items-center gap-2">
@@ -201,7 +334,7 @@ export default function ParameterControlForm({
               <div key={param.id} className="space-y-1.5 p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{param.label}</span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-violet-600 dark:text-violet-400">
+                  <div className="flex items-center gap-1 font-mono font-bold" style={{ color: domainStyle.accent }}>
                     <span>{numVal}</span>
                     <span className="text-[10px] text-slate-400">{param.unit}</span>
                   </div>
@@ -239,9 +372,7 @@ export default function ParameterControlForm({
                     {param.isHazardous && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
                     <span>{param.label}</span>
                   </div>
-                  <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
-                    {param.description}
-                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">{param.description}</div>
                 </div>
 
                 <button
@@ -266,6 +397,84 @@ export default function ParameterControlForm({
         })}
       </div>
 
+      {/* ─── INTERLOCK STATUS ──────────────────────────────────────────────── */}
+      {(rpm > 3000 || rpm === 0 || valve > 80 || interlockOverride) && (
+        <div className="mb-3 p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
+          <div className="text-[10px] font-mono font-bold text-slate-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
+            Interlock Status
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {rpm > 3000 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                <AlertTriangle className="w-3 h-3" /> OVERSPEED WARNING
+              </span>
+            )}
+            {rpm === 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-300 dark:border-zinc-700">
+                PUMP STOPPED
+              </span>
+            )}
+            {valve > 80 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                <AlertTriangle className="w-3 h-3" /> HIGH RECIRCULATION
+              </span>
+            )}
+            {interlockOverride && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse">
+                <Lock className="w-3 h-3" /> BYPASS ACTIVE
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── LIVE PROCESS SIMULATION ───────────────────────────────────────── */}
+      <div className="mb-3 p-2.5 rounded-xl border border-dashed" style={{ borderColor: domainStyle.accent + '40', background: domainStyle.accent + '08' }}>
+        <div className="flex items-center gap-1.5 mb-2">
+          <Activity className="w-3.5 h-3.5" style={{ color: domainStyle.accent }} />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: domainStyle.accent }}>
+            Live Process Simulation
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          {Object.entries(simValues).map(([key, val]) => (
+            <div key={key} className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-500 dark:text-zinc-400">{key}:</span>
+              <span className="font-bold" style={{ color: domainStyle.accent }}>{val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── CHANGE LOG ────────────────────────────────────────────────────── */}
+      {changeLog.length > 0 && (
+        <div className="mb-3 p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Change Log</span>
+            <button
+              onClick={() => setChangeLog([])}
+              className="text-[9px] font-mono text-slate-400 hover:text-rose-500 flex items-center gap-0.5 cursor-pointer transition-colors"
+            >
+              <X className="w-2.5 h-2.5" /> Clear
+            </button>
+          </div>
+          <div className="space-y-0.5 max-h-20 overflow-y-auto">
+            {changeLog.map((entry, i) => (
+              <div key={i} className="text-[9px] font-mono text-slate-500 dark:text-zinc-400 leading-relaxed">
+                <span className="text-slate-400 dark:text-zinc-500">{entry.ts}</span>
+                {' — '}
+                <span className="text-slate-700 dark:text-zinc-300 font-semibold">{entry.label}</span>
+                {': '}
+                <span className="text-rose-500">{String(entry.oldVal)}</span>
+                {' → '}
+                <span className="text-emerald-500">{String(entry.newVal)}</span>
+                {entry.unit ? ` ${entry.unit}` : ''}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Action Footer */}
       <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-100 dark:border-zinc-800/80 gap-2">
         <div className="flex items-center gap-2">
@@ -288,6 +497,17 @@ export default function ParameterControlForm({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Confidence Badge */}
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${
+            confidence >= 75
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : confidence >= 50
+              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+          }`}>
+            CONFIDENCE: {confidence}%
+          </span>
+
           {requireHITL && (
             <button
               onClick={handleRequestHITL}
@@ -320,6 +540,18 @@ export default function ParameterControlForm({
             )}
           </button>
         </div>
+      </div>
+
+      {/* Transmit timestamp */}
+      {submitSuccess && submitTimestamp && (
+        <div className="mt-1.5 text-[9px] font-mono text-emerald-600 dark:text-emerald-400 text-right">
+          ✓ Dispatched at {submitTimestamp}
+        </div>
+      )}
+
+      {/* Keyboard shortcut hint */}
+      <div className="mt-2 text-[9px] font-mono text-slate-400 dark:text-zinc-500 text-center tracking-wider">
+        Ctrl+Enter to transmit • Escape for emergency trip
       </div>
     </div>
   );

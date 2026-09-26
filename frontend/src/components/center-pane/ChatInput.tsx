@@ -8,7 +8,8 @@ import {
   Mic, 
   FileCheck2, 
   Loader2,
-  Square
+  Square,
+  Upload
 } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -24,6 +25,7 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const recognitionRef = useRef<any>(null);
   const [selectedAttachment, setSelectedAttachment] = useState<{ id?: string; name: string; type: string; size: string; url?: string } | null>(null);
 
@@ -49,6 +51,32 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [isAgentWorking, abortTask]);
+
+  // ─── Drag-and-drop handlers ────────────────────────────────────────────────
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    setIsUploading(true);
+    setTimeout(() => {
+      setSelectedAttachment({
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: `${(file.size / 1024).toFixed(1)} KB`,
+      });
+      setIsUploading(false);
+    }, 400);
+  };
 
   const toggleSpeechRecognition = () => {
     if (typeof window === 'undefined') return;
@@ -127,10 +155,26 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
   const isCenter = mode === 'center';
 
   return (
-    <div className={isCenter ? 'w-full max-w-xl mx-auto' : 'absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 z-20'}>
+    <div
+      className={isCenter ? 'w-full max-w-xl mx-auto' : 'absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 z-20'}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className={isCenter ? 'space-y-3' : 'relative max-w-3xl mx-auto'}>
         {/* Input Card */}
-        <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+        <div className="relative w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+
+          {/* Drag-and-Drop Overlay */}
+          {isDragOver && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl border-2 border-dashed border-violet-500 bg-violet-50/90 dark:bg-violet-950/90 pointer-events-none">
+              <div className="flex flex-col items-center gap-1 text-violet-700 dark:text-violet-300">
+                <Paperclip className="w-6 h-6" />
+                <span className="text-sm font-bold font-mono">Drop file to attach</span>
+              </div>
+            </div>
+          )}
+
           {/* File Attachment Chip */}
           {(selectedAttachment || isUploading) && (
             <div className="flex items-center gap-2 px-4 pt-3 text-xs">
