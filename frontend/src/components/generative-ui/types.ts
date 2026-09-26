@@ -204,3 +204,19 @@ export interface HazopLopaProps {
   initialSeverity?: string;
   initialInitiatingFreq?: number;
 }
+
+// 12. Flare Network & Emission Dispersion Props
+export interface FlareNetworkEmissionProps {
+  initialRelievedFlowKgS?: number;
+  initialWindSpeedMS?: number;
+  initialFlareHeightM?: number;
+  flareTag?: string;
+}
+
+// 13. Turnaround & CPM Shutdown Props
+export interface TurnaroundSchedulerProps {
+  initialShutdownId?: string;
+  initialPlannedDays?: number;
+  initialHourlyCost?: number;
+}
+

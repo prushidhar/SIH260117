@@ -14,6 +14,8 @@ import MultiAgentConsensusWidget from './components/MultiAgentConsensusWidget';
 import AlarmRationalizationWidget from './components/AlarmRationalizationWidget';
 import { PlantDigitalTwinWidget } from './components/PlantDigitalTwinWidget';
 import { HazopLopaWorkbench } from './components/HazopLopaWorkbench';
+import { FlareNetworkEmissionWidget } from './components/FlareNetworkEmissionWidget';
+import { TurnaroundSchedulerWidget } from './components/TurnaroundSchedulerWidget';
 
 interface RegistryProps {
   component: string;
@@ -86,6 +88,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 13. HAZOP & LOPA SIL Functional Safety Workbench (IEC 61508 / 61511)
   if (compKey.includes('hazop') || compKey.includes('lopa') || compKey.includes('sil') || compKey.includes('protectionlayer') || compKey === 'hazoplopaworkbench') {
     return <HazopLopaWorkbench {...props} />;
+  }
+
+  // 14. API 521 Flare Network & Atmospheric Emission Dispersion
+  if (compKey.includes('flare') || compKey.includes('emission') || compKey.includes('dispersion') || compKey.includes('radiation') || compKey === 'flarenetworkemissionwidget') {
+    return <FlareNetworkEmissionWidget {...props} />;
+  }
+
+  // 15. Refinery Turnaround (TAR) & CPM Schedule Optimization
+  if (compKey.includes('turnaround') || compKey.includes('cpm') || compKey.includes('shutdown') || compKey.includes('gantt') || compKey === 'turnaroundschedulerwidget') {
+    return <TurnaroundSchedulerWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

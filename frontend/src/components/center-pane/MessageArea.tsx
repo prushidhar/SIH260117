@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -15,6 +15,20 @@ const verifiedWorkflows = [
     query: 'Review the ultrasonic thickness inspection report for crude distillation unit CDU-Pipe-104: nominal thickness 12.7mm, measured thickness 7.2mm, corrosion rate 0.45 mm/yr, design pressure 3.2 MPa. Perform ASME B31.3 minimum thickness calculation and draft a statutory plant approval note for executive sign-off.',
     icon: FileText,
     badge: 'SIH Deliverable (.docx)',
+  },
+  {
+    title: 'API 521 Flare Thermal Radiation & Dispersion',
+    desc: 'Simulate emergency flaring heat release, tip exit Mach number (Ma <= 0.5), and radial thermal radiation contours',
+    query: 'Calculate API 521 flare radiation profile, tip exit Mach number, and Gaussian plume ground dispersion for emergency relief stack FL-101 at 45 kg/s hydrocarbon flow.',
+    icon: Flame,
+    badge: 'API 521 Flare Relief',
+  },
+  {
+    title: 'Refinery Turnaround (TAR) & CPM Scheduling',
+    desc: 'OSHA 1910.119 Critical Path Method (CPM) shutdown schedule, positive blind list, and downtime delay risk',
+    query: 'Synthesize the refinery turnaround TAR-2026-CDU1 CPM schedule for CDU-104 major overhaul. Analyze critical path tasks, positive isolation blinds, and financial downtime risk.',
+    icon: Calendar,
+    badge: 'TAR & CPM Scheduling',
   },
   {
     title: 'Tri-Model Autonomous Peer-Review & Consensus',

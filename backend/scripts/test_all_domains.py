@@ -317,6 +317,35 @@ def test_card_8_hazop_lopa_sil():
     print(f"  [+] IEC 61511 LOPA Engine: target_sil='{lopa_res.get('sil_target')}', required_rrf={lopa_res.get('required_rrf')}, total_pfd={lopa_res.get('total_pfd')}, risk_acceptable={lopa_res.get('risk_acceptable')}")
 
 
+def test_card_9_flare_radiation_and_dispersion():
+    print("\n--- [TEST 9] Card 9: API 521 Flare Thermal Radiation & Atmospheric Dispersion ---")
+    flare_res = tool_registry.execute_tool("calculate_api521_flare_radiation_and_dispersion", {
+        "relieved_flow_kg_s": 45.0,
+        "gas_mw": 44.1,
+        "flare_height_m": 45.0,
+        "wind_speed_m_s": 5.0,
+        "flare_tip_diameter_m": 0.6
+    })
+    assert flare_res.get("status") == "success", f"Flare calc failed: {flare_res}"
+    assert flare_res.get("total_heat_release_mw", 0) > 1000.0, "Heat release lower than expected"
+    assert flare_res.get("tip_mach_number", 0) <= 0.50, f"Mach number exceeded limit: {flare_res.get('tip_mach_number')}"
+    assert len(flare_res.get("radiation_profile", [])) == 5, "Expected 5 radial radiation checkpoints"
+    print(f"  [+] API 521 Flare Engine: heat_release={flare_res.get('total_heat_release_mw')} MW, tip_Mach={flare_res.get('tip_mach_number')}, steam_req={flare_res.get('smokeless_steam_required_kg_s')} kg/s, noise={flare_res.get('noise_level_100m_dba')} dBA")
+
+
+def test_card_10_turnaround_critical_path():
+    print("\n--- [TEST 10] Card 10: Refinery Turnaround (TAR) & CPM Schedule Optimization ---")
+    tar_res = tool_registry.execute_tool("calculate_turnaround_critical_path", {
+        "shutdown_id": "TAR-2026-CDU1",
+        "planned_days": 14,
+        "hourly_downtime_cost_usd": 42500.0
+    })
+    assert tar_res.get("status") == "success", f"TAR calc failed: {tar_res}"
+    assert tar_res.get("calculated_cpm_duration_days", 0) > 0, "Duration invalid"
+    assert tar_res.get("critical_path_tasks_count", 0) >= 8, "Expected at least 8 critical path tasks"
+    print(f"  [+] Turnaround CPM Engine: planned={tar_res.get('planned_duration_days')}d, CPM_duration={tar_res.get('calculated_cpm_duration_days')}d, critical_tasks={tar_res.get('critical_path_tasks_count')}, delay_exposure=${tar_res.get('financial_delay_exposure_usd'):,.2f}")
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -329,6 +358,8 @@ if __name__ == "__main__":
     test_card_6_root_cause_analysis()
     test_card_7_plant_digital_twin()
     test_card_8_hazop_lopa_sil()
+    test_card_9_flare_radiation_and_dispersion()
+    test_card_10_turnaround_critical_path()
     print("\n================================================================")
-    print("ALL 8 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 10 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")

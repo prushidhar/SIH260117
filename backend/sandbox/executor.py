@@ -388,6 +388,38 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api521_flare_radiation_and_dispersion",
+                    "description": "Calculates API 521 7th Ed. thermal radiation profile, tip exit Mach number, smokeless steam injection requirements, and Gaussian plume ground dispersion for refinery emergency flaring scenarios.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "relieved_flow_kg_s": {"type": "number", "description": "Relieved mass flow rate in kg/s"},
+                            "gas_mw": {"type": "number", "description": "Molecular weight of hydrocarbon relief gas"},
+                            "flare_height_m": {"type": "number", "description": "Flare stack height in meters"},
+                            "wind_speed_m_s": {"type": "number", "description": "Crosswind velocity in m/s"},
+                            "flare_tip_diameter_m": {"type": "number", "description": "Flare tip inside diameter in meters"}
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_turnaround_critical_path",
+                    "description": "Calculates Critical Path Method (CPM) turnaround schedule, bottleneck activities, total float hours, and hourly downtime financial exposure per OSHA 1910.119 and PMI standards.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "shutdown_id": {"type": "string", "description": "Turnaround identifier e.g. TAR-2026-CDU1"},
+                            "planned_days": {"type": "integer", "description": "Target planned turnaround window in days"},
+                            "hourly_downtime_cost_usd": {"type": "number", "description": "Financial cost of plant downtime per hour in USD"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -411,7 +443,9 @@ class ToolRegistry:
             "calculate_heat_exchanger_fouling_tema",
             "evaluate_root_cause_tree",
             "simulate_crude_distillation_mass_balance",
-            "evaluate_hazop_lopa_sil"
+            "evaluate_hazop_lopa_sil",
+            "calculate_api521_flare_radiation_and_dispersion",
+            "calculate_turnaround_critical_path"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)
