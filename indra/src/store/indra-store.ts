@@ -252,6 +252,7 @@ export interface IndraState {
   loadSession: (sessionId: string) => void;
   deleteSession: (sessionId: string) => void;
   clearAllSessions: () => void;
+  forkSession: (fromMessageId?: string) => string;
   syncHistoryWithBackend: () => Promise<void>;
 
   // Toast Notifications & Connection Alerts
@@ -536,6 +537,57 @@ export const useIndraStore = create<IndraState>()(
         } else {
           set({ sessions: remaining });
         }
+      },
+
+      forkSession: (fromMessageId?: string) => {
+        get().saveCurrentSession();
+        const { messages, deliverables, sessions, currentSessionId } = get();
+
+        let forkedMessages = [...messages];
+        if (fromMessageId) {
+          const idx = messages.findIndex((m) => m.id === fromMessageId);
+          if (idx !== -1) {
+            forkedMessages = messages.slice(0, idx + 1);
+          }
+        }
+
+        const currentSession = sessions.find((s) => s.id === currentSessionId);
+        const baseTitle = currentSession?.title || 'Engineering Session';
+        const forkedId = `session-fork-${Date.now()}`;
+        const forkedTitle = `[What-If Fork] ${baseTitle}`;
+
+        const nowIso = new Date().toISOString();
+        const newSession: ConversationSession = {
+          id: forkedId,
+          title: forkedTitle,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+          messages: forkedMessages,
+          deliverables: [...deliverables],
+          ragSources: [],
+          detectedTags: [],
+        };
+
+        const updatedSessions = [newSession, ...sessions];
+        set({
+          sessions: updatedSessions,
+          currentSessionId: forkedId,
+          messages: forkedMessages,
+          deliverables: [...deliverables],
+          isAgentWorking: false,
+        });
+
+        saveSessionToDB(newSession).catch((err) => {
+          console.warn('[IndexedDB] forkSession save error:', err);
+        });
+
+        get().addToast({
+          type: 'success',
+          title: 'What-If Session Forked',
+          message: `Branched scenario into parallel sandbox: "${forkedTitle}"`,
+        });
+
+        return forkedId;
       },
 
       clearAllSessions: () => {

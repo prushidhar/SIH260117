@@ -110,12 +110,23 @@ export default function AgentMessage({ message }: { message: Message }) {
                   </button>
                 </div>
 
-                <MarkdownRenderer content={message.content} />
+                <div className="relative">
+                  <MarkdownRenderer content={message.content} />
+                  {isAgentWorking && (
+                    <span 
+                      className="inline-block w-2.5 h-4.5 ml-1.5 align-middle rounded-xs bg-gradient-to-r from-violet-600 via-indigo-500 to-purple-600 animate-pulse shadow-sm shadow-violet-500/50" 
+                      title="Sovereign token generation active"
+                    />
+                  )}
+                </div>
               </>
             ) : (
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
                 <span>Thinking...</span>
+                <span 
+                  className="inline-block w-2.5 h-4 ml-1 align-middle rounded-xs bg-gradient-to-r from-violet-600 to-indigo-600 animate-pulse" 
+                />
               </div>
             )}
 
