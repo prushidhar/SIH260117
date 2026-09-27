@@ -301,6 +301,45 @@ class VerificationAgent:
                 })
                 verified_count += 1
 
+            elif tool_name == "calculate_weibull_rul_prognostics":
+                rul = tool_output.get("remaining_useful_life_days")
+                mtbf = tool_output.get("mtbf_hours")
+                status = tool_output.get("status")
+                evidence_sources.append(f"Weibull RUL Prognostics (RUL: {rul} days, MTBF: {mtbf} hrs, Status: {status})")
+                checks.append({
+                    "type": "WEIBULL_PROGNOSTICS_VERIFICATION",
+                    "subject": "IEC 61649 / ISO 13381-1 Remaining Useful Life",
+                    "result": f"RUL={rul} days, MTBF={mtbf} hrs, Status={status}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_pinch_analysis_heat_network":
+                q_rec = tool_output.get("maximum_heat_recovery_mw")
+                ex_eff = tool_output.get("second_law_exergetic_efficiency_pct")
+                savings = tool_output.get("annual_fuel_cost_savings_usd")
+                evidence_sources.append(f"Linnhoff Pinch Analysis (Recovery: {q_rec} MWth, Exergy Eff: {ex_eff}%, Savings: ${savings:,.0f}/yr)")
+                checks.append({
+                    "type": "PINCH_EXERGY_VERIFICATION",
+                    "subject": "Linnhoff Heat Exchanger Network & Second-Law Exergy",
+                    "result": f"Max Recovery={q_rec} MWth, Exergy Eff={ex_eff}%, Savings=${savings:,.0f}/yr",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_fatigue_cumulative_damage_miner":
+                d_ratio = tool_output.get("cumulative_damage_ratio_d")
+                life_yrs = tool_output.get("estimated_fatigue_life_years")
+                verdict = tool_output.get("fatigue_verdict")
+                evidence_sources.append(f"Palmgren-Miner Fatigue (Damage D: {d_ratio}, Fatigue Life: {life_yrs} yrs, Verdict: {verdict})")
+                checks.append({
+                    "type": "FATIGUE_DAMAGE_VERIFICATION",
+                    "subject": "ASME Sec VIII Div 2 Part 5 / BS 7608 Fatigue Damage",
+                    "result": f"Damage Ratio D={d_ratio}, Remaining Life={life_yrs} yrs, Verdict={verdict}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
             elif tool_name == "kb_search":
                 hits = tool_output.get("results", [])
                 for h in hits[:2]:

@@ -2352,5 +2352,363 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {'error': str(e)}
 
+    @staticmethod
+    def calculate_weibull_rul_prognostics(
+        asset_tag: str = "P-101",
+        operating_hours: float = 24500.0,
+        beta_shape: float = 2.40,
+        eta_scale_hours: float = 40000.0,
+        gamma_location_hours: float = 0.0,
+        vibration_deviation_pct: float = 25.0,
+        bearing_temp_c: float = 68.4,
+        nominal_bearing_temp_c: float = 55.0,
+        load_factor: float = 1.05,
+        target_reliability_pct: float = 90.0
+    ) -> dict:
+        """
+        Autonomous Fault Prognostics & Remaining Useful Life (RUL)
+        via 3-Parameter Weibull Distribution and Cox Proportional Hazards Model (PHM).
+        """
+        try:
+            import math
+
+            # 1. Effective Time since location parameter
+            t_rel = max(1.0, operating_hours - gamma_location_hours)
+
+            # 2. Baseline Weibull Reliability R0(t) and Hazard Rate lambda0(t)
+            norm_t = t_rel / eta_scale_hours
+            r_baseline = math.exp(-(norm_t ** beta_shape))
+            hazard_rate_baseline = (beta_shape / eta_scale_hours) * (norm_t ** (beta_shape - 1.0))
+
+            # Mean Time Between Failures (MTBF) via Gamma function approximation
+            # Gamma(1 + 1/beta) approx using Ramanujan/Stirling approximation
+            inv_b = 1.0 / beta_shape
+            gamma_term = math.gamma(1.0 + inv_b) if hasattr(math, 'gamma') else (0.8856 + 0.1144 * inv_b)
+            mtbf_hours = gamma_location_hours + eta_scale_hours * gamma_term
+
+            # 3. Cox Proportional Hazards Covariate Model (Condition-Based Hazard Multiplier)
+            # Covariates: vibration deviation (RMS), bearing temperature differential, hydraulic load
+            alpha_vib = 0.020 * max(0.0, vibration_deviation_pct)
+            delta_temp = max(0.0, bearing_temp_c - nominal_bearing_temp_c)
+            alpha_temp = 0.030 * delta_temp
+            alpha_load = 0.40 * max(0.0, load_factor - 1.0)
+
+            covariate_exponent = alpha_vib + alpha_temp + alpha_load
+            hazard_multiplier = math.exp(min(4.0, covariate_exponent))
+
+            # Condition-adjusted instantaneous hazard rate
+            hazard_rate_adjusted = hazard_rate_baseline * hazard_multiplier
+
+            # Condition-adjusted effective operational age
+            effective_age_hours = operating_hours * (hazard_multiplier ** (1.0 / beta_shape))
+
+            # 4. Remaining Useful Life (RUL) to Target Conditional Reliability Threshold
+            # R(t + RUL | t) = exp(-[((t+RUL)/eta)^beta - (t/eta)^beta] * hazard_multiplier) = R_target
+            r_target = target_reliability_pct / 100.0
+            ln_target = -math.log(max(1e-6, min(0.9999, r_target)))
+            hazard_term = (norm_t ** beta_shape) + (ln_target / hazard_multiplier)
+            t_limit_hours = eta_scale_hours * (hazard_term ** (1.0 / beta_shape))
+            rul_hours = max(0.0, t_limit_hours - operating_hours)
+            rul_days = rul_hours / 24.0
+
+            # 5. Short-Term 90-Day (2160 hours) Conditional Survival & Failure Probability
+            delta_future_hours = 2160.0
+            t_future = t_rel + delta_future_hours
+            norm_future = t_future / eta_scale_hours
+            delta_cumulative_hazard = ((norm_future ** beta_shape) - (norm_t ** beta_shape)) * hazard_multiplier
+            r_conditional_90d = math.exp(-max(0.0, delta_cumulative_hazard))
+            prob_failure_90d = max(0.0, min(100.0, (1.0 - r_conditional_90d) * 100.0))
+
+            # 6. Failure Mode Classification by Shape Factor beta
+            if beta_shape < 1.0:
+                failure_regime = "EARLY_LIFE_INFANT_MORTALITY"
+                regime_desc = "Decreasing failure rate (manufacturing or assembly defect)"
+            elif abs(beta_shape - 1.0) < 0.15:
+                failure_regime = "CONSTANT_RANDOM_FAILURES"
+                regime_desc = "Constant failure rate (exponential reliability, external shocks)"
+            elif beta_shape < 2.5:
+                failure_regime = "MILD_MECHANICAL_WEAROUT"
+                regime_desc = "Gradual fatigue and bearing raceway spalling wear-out"
+            else:
+                failure_regime = "RAPID_ACCELERATED_AGING"
+                regime_desc = "High wear-out acceleration (thermal/fatigue degradation)"
+
+            # Action Mandate
+            if rul_days < 30.0 or prob_failure_90d > 40.0:
+                prognostic_action = "CRITICAL_MAINTENANCE_WINDOW_IMMEDIATE_REPLACEMENT"
+                status = "URGENT_INTERVENTION"
+            elif rul_days < 90.0 or prob_failure_90d > 15.0:
+                prognostic_action = "SCHEDULE_OVERHAUL_BEFORE_NEXT_TAR_CYCLE"
+                status = "SCHEDULE_PM"
+            else:
+                prognostic_action = "NORMAL_OPERATION_MONITOR_TELEMETRY_TRENDS"
+                status = "ACCEPTABLE_RUL"
+
+            return {
+                'asset_tag': asset_tag,
+                'operating_hours': round(operating_hours, 0),
+                'beta_shape_factor': round(beta_shape, 2),
+                'eta_characteristic_life_hours': round(eta_scale_hours, 0),
+                'mtbf_hours': round(mtbf_hours, 0),
+                'effective_operational_age_hours': round(effective_age_hours, 0),
+                'hazard_multiplier_cox_phm': round(hazard_multiplier, 2),
+                'instantaneous_hazard_rate_per_hr': f"{hazard_rate_adjusted:.3e}",
+                'current_reliability_pct': round(r_baseline * 100.0, 1),
+                'target_reliability_pct': target_reliability_pct,
+                'remaining_useful_life_hours': round(rul_hours, 0),
+                'remaining_useful_life_days': round(rul_days, 1),
+                'failure_probability_next_90d_pct': round(prob_failure_90d, 1),
+                'failure_regime': failure_regime,
+                'failure_regime_description': regime_desc,
+                'prognostic_recommendation': prognostic_action,
+                'standard': 'Weibull Analysis (IEC 61649) / ISO 13381-1 Condition Prognostics',
+                'status': status
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_pinch_analysis_heat_network(
+        delta_t_min_c: float = 10.0,
+        hot_streams: Optional[list] = None,
+        cold_streams: Optional[list] = None,
+        operating_hours_per_year: float = 8400.0,
+        fuel_cost_usd_per_gj: float = 6.80,
+        co2_emission_kg_per_gj: float = 56.1
+    ) -> dict:
+        """
+        Linnhoff Pinch Analysis & Heat Exchanger Network (HEN) Exergy Synthesis.
+        Calculates Minimum Hot/Cold Utility, Pinch Temperature, Maximum Heat Recovery,
+        and Exergy Destruction (Irreversibility).
+        """
+        try:
+            import math
+
+            # Default industrial crude preheat streams if None provided
+            # Format: {'name': str, 't_in': float, 't_out': float, 'm_cp': float (kW/K)}
+            if hot_streams is None:
+                hot_streams = [
+                    {'name': 'Heavy Gas Oil Run-Down', 't_in': 240.0, 't_out': 160.0, 'm_cp': 112.5},
+                    {'name': 'Atmospheric Residue Effluent', 't_in': 340.0, 't_out': 210.0, 'm_cp': 165.0},
+                    {'name': 'Diesel Product Stream', 't_in': 210.0, 't_out': 120.0, 'm_cp': 75.0}
+                ]
+            if cold_streams is None:
+                cold_streams = [
+                    {'name': 'Raw Crude Feed (Train A)', 't_in': 90.0, 't_out': 230.0, 'm_cp': 132.0},
+                    {'name': 'Raw Crude Feed (Train B)', 't_in': 110.0, 't_out': 250.0, 'm_cp': 115.0}
+                ]
+
+            # 1. Total Enthalpy of Hot and Cold Streams
+            total_hot_duty_kw = sum(s['m_cp'] * (s['t_in'] - s['t_out']) for s in hot_streams)
+            total_cold_duty_kw = sum(s['m_cp'] * (s['t_out'] - s['t_in']) for s in cold_streams)
+
+            # 2. Temperature Intervals using Shifted Temperatures
+            # Shift: Hot = T - delta_t_min / 2, Cold = T + delta_t_min / 2
+            half_dt = delta_t_min_c / 2.0
+            shifted_temps = set()
+            for s in hot_streams:
+                shifted_temps.add(s['t_in'] - half_dt)
+                shifted_temps.add(s['t_out'] - half_dt)
+            for s in cold_streams:
+                shifted_temps.add(s['t_in'] + half_dt)
+                shifted_temps.add(s['t_out'] + half_dt)
+
+            sorted_t = sorted(list(shifted_temps), reverse=True)
+
+            # 3. Problem Table Algorithm (Heat Cascade)
+            net_heat_intervals = []
+            for i in range(len(sorted_t) - 1):
+                t_high = sorted_t[i]
+                t_low = sorted_t[i+1]
+                delta_ti = t_high - t_low
+                
+                # Active hot m_cp
+                hot_mcp = sum(s['m_cp'] for s in hot_streams if (s['t_in'] - half_dt) >= t_high and (s['t_out'] - half_dt) <= t_low)
+                # Active cold m_cp
+                cold_mcp = sum(s['m_cp'] for s in cold_streams if (s['t_out'] + half_dt) >= t_high and (s['t_in'] + half_dt) <= t_low)
+                
+                delta_h = (hot_mcp - cold_mcp) * delta_ti
+                net_heat_intervals.append(delta_h)
+
+            # Cascade without initial heat
+            cascade = [0.0]
+            current_h = 0.0
+            for dh in net_heat_intervals:
+                current_h += dh
+                cascade.append(current_h)
+
+            min_cascade = min(cascade)
+            # Minimum hot utility Q_H_min is -min_cascade (if negative)
+            q_hot_utility_kw = max(0.0, -min_cascade)
+            q_cold_utility_kw = q_hot_utility_kw + (total_cold_duty_kw - total_hot_duty_kw)
+            q_cold_utility_kw = max(0.0, q_cold_utility_kw)
+
+            # Pinch temperature is the shifted temperature where heat cascade is zero
+            adjusted_cascade = [c + q_hot_utility_kw for c in cascade]
+            pinch_index = adjusted_cascade.index(min(adjusted_cascade))
+            t_pinch_shifted = sorted_t[pinch_index]
+            t_pinch_hot = t_pinch_shifted + half_dt
+            t_pinch_cold = t_pinch_shifted - half_dt
+
+            # 4. Maximum Heat Recovery Potential
+            q_recovery_max_kw = total_hot_duty_kw - max(0.0, (total_hot_duty_kw + q_cold_utility_kw - total_cold_duty_kw - q_hot_utility_kw))
+            q_recovery_max_kw = min(total_hot_duty_kw, total_cold_duty_kw) - min(q_hot_utility_kw, q_cold_utility_kw)
+            energy_recovery_ratio_pct = (q_recovery_max_kw / max(1.0, total_hot_duty_kw)) * 100.0
+
+            # 5. Exergy Analysis (Second Law of Thermodynamics)
+            # Ambient reference temperature T0 = 298.15 K (25 C)
+            t0_k = 298.15
+            exergy_hot_kw = 0.0
+            for s in hot_streams:
+                t_in_k = s['t_in'] + 273.15
+                t_out_k = s['t_out'] + 273.15
+                delta_ex = s['m_cp'] * ((t_in_k - t_out_k) - t0_k * math.log(t_in_k / t_out_k))
+                exergy_hot_kw += delta_ex
+
+            exergy_cold_kw = 0.0
+            for s in cold_streams:
+                t_in_k = s['t_in'] + 273.15
+                t_out_k = s['t_out'] + 273.15
+                delta_ex = s['m_cp'] * ((t_out_k - t_in_k) - t0_k * math.log(t_out_k / t_in_k))
+                exergy_cold_kw += delta_ex
+
+            exergy_destruction_kw = max(0.0, exergy_hot_kw - exergy_cold_kw)
+            exergetic_efficiency_pct = (exergy_cold_kw / max(1.0, exergy_hot_kw)) * 100.0
+
+            # 6. Annual Fuel & Emission Savings
+            # Converted from kW to GJ/yr
+            annual_heat_recovery_gj = (q_recovery_max_kw * operating_hours_per_year * 3600.0) / 1e6
+            annual_cost_savings_usd = annual_heat_recovery_gj * fuel_cost_usd_per_gj
+            annual_co2_reduction_tonnes = (annual_heat_recovery_gj * co2_emission_kg_per_gj) / 1000.0
+
+            return {
+                'delta_t_min_c': delta_t_min_c,
+                'total_hot_stream_duty_mw': round(total_hot_duty_kw / 1000.0, 2),
+                'total_cold_stream_duty_mw': round(total_cold_duty_kw / 1000.0, 2),
+                'pinch_temperature_hot_c': round(t_pinch_hot, 1),
+                'pinch_temperature_cold_c': round(t_pinch_cold, 1),
+                'minimum_hot_utility_mw': round(q_hot_utility_kw / 1000.0, 2),
+                'minimum_cold_utility_mw': round(q_cold_utility_kw / 1000.0, 2),
+                'maximum_heat_recovery_mw': round(q_recovery_max_kw / 1000.0, 2),
+                'first_law_heat_recovery_pct': round(energy_recovery_ratio_pct, 1),
+                'exergy_hot_streams_mw': round(exergy_hot_kw / 1000.0, 2),
+                'exergy_cold_streams_mw': round(exergy_cold_kw / 1000.0, 2),
+                'exergy_destruction_mw': round(exergy_destruction_kw / 1000.0, 2),
+                'second_law_exergetic_efficiency_pct': round(exergetic_efficiency_pct, 1),
+                'annual_fuel_cost_savings_usd': round(annual_cost_savings_usd, 0),
+                'annual_co2_reduction_tonnes': round(annual_co2_reduction_tonnes, 1),
+                'standard': 'Linnhoff Pinch Technology / ASME PTC 4 Exergy Standards',
+                'compliance': 'OPTIMAL_PINCH_RECOVERY'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_fatigue_cumulative_damage_miner(
+        asset_tag: str = "CDU-Pipe-104",
+        material_specification: str = "ASTM A106 Grade B Carbon Steel",
+        ultimate_tensile_strength_mpa: float = 415.0,
+        yield_strength_mpa: float = 240.0,
+        stress_cycles_spectrum: Optional[list] = None,
+        design_life_years: float = 25.0
+    ) -> dict:
+        """
+        ASME Section VIII Div 2 Part 5 & BS 7608 Palmgren-Miner Cumulative Fatigue Damage.
+        Calculates alternating stress amplitude, Goodman mean stress correction,
+        per-block cycle damage (n_i / N_i), cumulative damage ratio D, and remaining fatigue life.
+        """
+        try:
+            import math
+
+            # Default spectrum of pressure/thermal cycling if none provided
+            # Format: {'cycle_type': str, 'stress_range_mpa': float, 'mean_stress_mpa': float, 'cycles_per_year': float}
+            if stress_cycles_spectrum is None:
+                stress_cycles_spectrum = [
+                    {'cycle_type': 'Full Startup/Shutdown Cycle', 'stress_range_mpa': 165.0, 'mean_stress_mpa': 82.5, 'cycles_per_year': 12.0},
+                    {'cycle_type': 'Operational Pressure Fluctuation', 'stress_range_mpa': 65.0, 'mean_stress_mpa': 110.0, 'cycles_per_year': 1450.0},
+                    {'cycle_type': 'Thermal Shock Traversal', 'stress_range_mpa': 95.0, 'mean_stress_mpa': 75.0, 'cycles_per_year': 52.0},
+                    {'cycle_type': 'Flow-Induced Acoustic Vibration', 'stress_range_mpa': 25.0, 'mean_stress_mpa': 40.0, 'cycles_per_year': 250000.0}
+                ]
+
+            # ASME Section VIII Div 2 / BS 7608 S-N curve parameters for carbon steel welded joints
+            # log10(N) = log10(C) - m * log10(S_eq)
+            # For ASME Class 1 welded joint (BS 7608 Class D): log10(C) = 11.764, m = 3.0
+            log_c = 11.764
+            m_slope = 3.0
+            fatigue_limit_stress_mpa = 22.0  # Cut-off endurance limit
+
+            cumulative_damage_d = 0.0
+            spectrum_breakdown = []
+
+            for block in stress_cycles_spectrum:
+                s_range = block['stress_range_mpa']
+                s_mean = block['mean_stress_mpa']
+                c_per_yr = block['cycles_per_year']
+                total_cycles_n = c_per_yr * design_life_years
+
+                # Stress amplitude (half of stress range)
+                s_amp = s_range / 2.0
+
+                # Goodman Mean Stress Correction: S_eq = S_amp / (1 - S_mean / S_u)
+                denom = max(0.1, 1.0 - (s_mean / ultimate_tensile_strength_mpa))
+                s_equivalent = s_amp / denom
+
+                # Cycles to failure N per Wöhler S-N curve
+                if s_equivalent <= fatigue_limit_stress_mpa:
+                    n_allowable = 1.0e9  # Infinite life beneath fatigue limit
+                else:
+                    log_n = log_c - m_slope * math.log10(s_equivalent)
+                    n_allowable = 10.0 ** max(1.0, log_n)
+
+                damage_ratio_block = total_cycles_n / max(1.0, n_allowable)
+                cumulative_damage_d += damage_ratio_block
+
+                spectrum_breakdown.append({
+                    'cycle_type': block['cycle_type'],
+                    'stress_range_mpa': s_range,
+                    'equivalent_stress_mpa': round(s_equivalent, 1),
+                    'total_applied_cycles': round(total_cycles_n, 0),
+                    'allowable_cycles_to_failure': round(n_allowable, 0) if n_allowable < 1e8 else "INFINITE (>1e8)",
+                    'damage_fraction_miner': round(damage_ratio_block, 4)
+                })
+
+            # Acceptance against Palmgren-Miner Limit (D <= 1.0; conservative engineering D <= 0.80)
+            fatigue_margin_pct = max(0.0, (1.0 - cumulative_damage_d) * 100.0)
+            if cumulative_damage_d > 0.0:
+                estimated_fatigue_life_years = design_life_years / cumulative_damage_d
+            else:
+                estimated_fatigue_life_years = 100.0
+
+            if cumulative_damage_d >= 1.0:
+                verdict = "FATIGUE_FAILURE_PREDICTED_CRACK_INITIATION_IMMINENT"
+                risk_level = "CRITICAL"
+            elif cumulative_damage_d >= 0.80:
+                verdict = "ELEVATED_FATIGUE_EXPOSURE_SCHEDULE_NDT_PAUT"
+                risk_level = "HIGH"
+            elif cumulative_damage_d >= 0.50:
+                verdict = "ACCEPTABLE_MODERATE_FATIGUE_CONSUMPTION"
+                risk_level = "MEDIUM"
+            else:
+                verdict = "COMPLIANT_NEGLIGIBLE_FATIGUE_CONSUMPTION"
+                risk_level = "LOW"
+
+            return {
+                'asset_tag': asset_tag,
+                'material_specification': material_specification,
+                'design_life_years': design_life_years,
+                'cumulative_damage_ratio_d': round(cumulative_damage_d, 4),
+                'palmgren_miner_threshold': 1.0,
+                'fatigue_margin_pct': round(fatigue_margin_pct, 1),
+                'estimated_fatigue_life_years': round(estimated_fatigue_life_years, 1),
+                'risk_level': risk_level,
+                'fatigue_verdict': verdict,
+                'stress_spectrum_breakdown': spectrum_breakdown,
+                'standard': 'ASME Section VIII Div 2 Part 5 (Design by Analysis) / BS 7608',
+                'compliance': 'PASS' if cumulative_damage_d <= 1.0 else 'FAIL'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
 engineering_tools = EngineeringSandbox()
+
 

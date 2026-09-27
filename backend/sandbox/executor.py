@@ -697,6 +697,60 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_weibull_rul_prognostics",
+                    "description": "Autonomous Fault Prognostics & Remaining Useful Life (RUL) via 3-Parameter Weibull distribution and Cox Proportional Hazards Model (PHM).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag e.g. P-101", "default": "P-101"},
+                            "operating_hours": {"type": "number", "description": "Cumulative operating hours", "default": 24500.0},
+                            "beta_shape": {"type": "number", "description": "Weibull shape factor beta", "default": 2.40},
+                            "eta_scale_hours": {"type": "number", "description": "Weibull scale parameter eta in hours", "default": 40000.0},
+                            "vibration_deviation_pct": {"type": "number", "description": "Vibration deviation above baseline %", "default": 25.0},
+                            "bearing_temp_c": {"type": "number", "description": "Measured bearing temperature in Celsius", "default": 68.4},
+                            "nominal_bearing_temp_c": {"type": "number", "description": "Baseline nominal bearing temperature in Celsius", "default": 55.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_pinch_analysis_heat_network",
+                    "description": "Linnhoff Pinch Analysis & Heat Exchanger Network (HEN) synthesis: minimum hot/cold utility, pinch temperature, and exergy destruction.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "delta_t_min_c": {"type": "number", "description": "Minimum approach temperature Delta T min in Celsius", "default": 10.0},
+                            "operating_hours_per_year": {"type": "number", "description": "Annual operating hours", "default": 8400.0},
+                            "fuel_cost_usd_per_gj": {"type": "number", "description": "Fuel gas cost in USD/GJ", "default": 6.80}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_fatigue_cumulative_damage_miner",
+                    "description": "ASME Section VIII Div 2 Part 5 & BS 7608 Palmgren-Miner Cumulative Fatigue Damage ratio D and remaining fatigue life cycles.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag e.g. CDU-Pipe-104", "default": "CDU-Pipe-104"},
+                            "material_specification": {"type": "string", "description": "Material grade", "default": "ASTM A106 Grade B Carbon Steel"},
+                            "ultimate_tensile_strength_mpa": {"type": "number", "description": "Ultimate tensile strength in MPa", "default": 415.0},
+                            "yield_strength_mpa": {"type": "number", "description": "Yield strength in MPa", "default": 240.0},
+                            "design_life_years": {"type": "number", "description": "Design life in years", "default": 25.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -735,7 +789,10 @@ class ToolRegistry:
             "calculate_asme_ptc4_boiler_efficiency",
             "calculate_tema_heat_exchanger_rating",
             "calculate_api510_vessel_remaining_life",
-            "calculate_nace_mr0175_sour_service_severity"
+            "calculate_nace_mr0175_sour_service_severity",
+            "calculate_weibull_rul_prognostics",
+            "calculate_pinch_analysis_heat_network",
+            "calculate_fatigue_cumulative_damage_miner"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

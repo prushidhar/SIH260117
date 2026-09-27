@@ -67,12 +67,36 @@ class ConsensusSpecialist:
             else:
                 findings.append(f"Calculated remaining life ({rl_years} yrs) compliant with API 510/570 standards.")
 
+            # Weibull RUL prognostics check
+            rul_days = calculation_results.get("remaining_useful_life_days")
+            prob_90d = calculation_results.get("failure_probability_next_90d_pct")
+            if rul_days is not None and rul_days < 30.0:
+                vote = "REJECT"
+                risk_score = max(risk_score, 0.92)
+                concerns.append(f"Weibull RUL ({rul_days} days) breaches 30-day operating threshold (90-day failure probability: {prob_90d}%).")
+            elif rul_days is not None:
+                findings.append(f"Weibull prognostics indicate {rul_days:.1f} days RUL (90-day survival probability: {100.0 - (prob_90d or 0.0):.1f}%).")
+
+            # Palmgren-Miner Fatigue Damage check
+            fatigue_d = calculation_results.get("cumulative_damage_ratio_d")
+            if fatigue_d is not None and fatigue_d >= 1.0:
+                vote = "REJECT"
+                risk_score = max(risk_score, 0.95)
+                concerns.append(f"Palmgren-Miner cumulative fatigue damage D={fatigue_d:.3f} >= 1.0 limit. Fatigue crack initiation predicted.")
+            elif fatigue_d is not None and fatigue_d >= 0.80:
+                vote = "APPROVE_WITH_RESERVATIONS"
+                risk_score += 0.30
+                concerns.append(f"Fatigue damage D={fatigue_d:.3f} exceeds 0.80 conservative threshold. Phased array ultrasonic (PAUT) weld inspection mandated.")
+            elif fatigue_d is not None:
+                findings.append(f"Palmgren-Miner fatigue ratio D={fatigue_d:.4f} within allowable limits (Fatigue margin: {100.0 - fatigue_d * 100.0:.1f}%).")
+
         elif self.discipline == "PROCESS_THERMODYNAMICS":
             # Flow, duty, pressure drop, and efficiency checks
             dp_shell = calculation_results.get("pressure_drop_shell_kpa", 45.0)
             dp_tube = calculation_results.get("pressure_drop_tube_kpa", 15.0)
             margin_pct = calculation_results.get("overdesign_margin_pct", 5.0)
             eff_pct = calculation_results.get("thermal_efficiency_pct", 88.0)
+            pinch_rec_mw = calculation_results.get("maximum_heat_recovery_mw")
 
             if dp_shell > 70.0 or dp_tube > 90.0:
                 vote = "APPROVE_WITH_RESERVATIONS"
@@ -80,6 +104,10 @@ class ConsensusSpecialist:
                 concerns.append(f"Hydraulic pressure drop (Shell: {dp_shell} kPa, Tube: {dp_tube} kPa) exceeds standard design allowance.")
             else:
                 findings.append(f"Hydraulic pressure drops ({dp_shell} kPa shell, {dp_tube} kPa tube) within allowable boundaries.")
+
+            if pinch_rec_mw:
+                savings_usd = calculation_results.get("annual_fuel_cost_savings_usd", 0.0)
+                findings.append(f"Linnhoff Pinch Heat Network recovery: {pinch_rec_mw} MWth captured (Annual fuel savings: ${savings_usd:,.0f} USD).")
 
             if margin_pct < 0.0:
                 vote = "REJECT"

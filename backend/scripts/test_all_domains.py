@@ -697,6 +697,68 @@ def test_card_25_rag_multidomain_standards_retrieval():
     print('  PASS')
 
 
+def test_card_26_weibull_rul_prognostics():
+    print('\n--- TEST 26: Weibull Fault Prognostics & RUL with Cox PHM ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_weibull_rul_prognostics(
+        asset_tag="K-102",
+        operating_hours=18200.0,
+        beta_shape=2.40,
+        eta_scale_hours=40000.0,
+        vibration_deviation_pct=15.0,
+        bearing_temp_c=64.2,
+        nominal_bearing_temp_c=55.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['mtbf_hours'] > 25000.0
+    assert result['remaining_useful_life_days'] > 30.0
+    assert result['status'] == 'ACCEPTABLE_RUL'
+    print(f"  [+] Asset: {result['asset_tag']} (Operating Hours: {result['operating_hours']:,} hrs)")
+    print(f"  [+] Weibull MTBF: {result['mtbf_hours']:,} hrs (Shape Beta: {result['beta_shape_factor']}, Regime: {result['failure_regime']})")
+    print(f"  [+] Cox PHM Hazard Multiplier: {result['hazard_multiplier_cox_phm']}x (Effective Age: {result['effective_operational_age_hours']:,} hrs)")
+    print(f"  [+] Calculated RUL: {result['remaining_useful_life_days']} days ({result['remaining_useful_life_hours']:,} hrs)")
+    print(f"  [+] 90-Day Failure Probability: {result['failure_probability_next_90d_pct']}%")
+    print(f"  [+] Prognostic Action: {result['prognostic_recommendation']}")
+    print('  PASS')
+
+
+def test_card_27_pinch_analysis_heat_network():
+    print('\n--- TEST 27: Linnhoff Pinch Analysis & Heat Exchanger Network Exergy ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_pinch_analysis_heat_network(
+        delta_t_min_c=10.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['maximum_heat_recovery_mw'] > 20.0
+    assert result['annual_fuel_cost_savings_usd'] > 1000000.0
+    assert result['second_law_exergetic_efficiency_pct'] > 50.0
+    print(f"  [+] Total Streams Duty: Hot={result['total_hot_stream_duty_mw']} MWth, Cold={result['total_cold_stream_duty_mw']} MWth")
+    print(f"  [+] Pinch Temperature: Hot={result['pinch_temperature_hot_c']} °C, Cold={result['pinch_temperature_cold_c']} °C")
+    print(f"  [+] Maximum Thermal Energy Recovery: {result['maximum_heat_recovery_mw']} MWth ({result['first_law_heat_recovery_pct']}%)")
+    print(f"  [+] 2nd-Law Exergetic Efficiency: {result['second_law_exergetic_efficiency_pct']}% (Exergy Destruction: {result['exergy_destruction_mw']} MW)")
+    print(f"  [+] Annual Energy Cost Savings: ${result['annual_fuel_cost_savings_usd']:,.0f} USD/year")
+    print(f"  [+] Annual CO2 Emissions Avoided: {result['annual_co2_reduction_tonnes']:,.1f} tonnes/yr")
+    print('  PASS')
+
+
+def test_card_28_fatigue_cumulative_damage_miner():
+    print('\n--- TEST 28: Palmgren-Miner Cumulative Fatigue Damage (ASME Sec VIII Div 2) ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_fatigue_cumulative_damage_miner(
+        asset_tag="CDU-Pipe-104",
+        design_life_years=25.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['cumulative_damage_ratio_d'] < 1.0
+    assert result['compliance'] == 'PASS'
+    assert len(result['stress_spectrum_breakdown']) == 4
+    print(f"  [+] Asset: {result['asset_tag']} ({result['material_specification']}, Design Life: {result['design_life_years']} yrs)")
+    print(f"  [+] Cumulative Fatigue Damage Ratio D: {result['cumulative_damage_ratio_d']} vs Limit 1.000")
+    print(f"  [+] Remaining Fatigue Margin: {result['fatigue_margin_pct']}% (Estimated Life: {result['estimated_fatigue_life_years']} years)")
+    print(f"  [+] Fatigue Risk Level: {result['risk_level']} (Verdict: {result['fatigue_verdict']})")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -726,8 +788,11 @@ if __name__ == "__main__":
     test_card_23_nace_mr0175_sour_service()
     test_card_24_multi_agent_engineering_consensus()
     test_card_25_rag_multidomain_standards_retrieval()
+    test_card_26_weibull_rul_prognostics()
+    test_card_27_pinch_analysis_heat_network()
+    test_card_28_fatigue_cumulative_damage_miner()
     print("\n================================================================")
-    print("ALL 25 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 28 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 

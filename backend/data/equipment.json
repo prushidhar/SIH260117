@@ -1675,5 +1675,57 @@
       "h2s_sensor_ppm": 24800,
       "leak_detection_status": "ZERO_LEAKAGE"
     }
+  },
+  {
+    "tag": "K-102",
+    "name": "High-Pressure Hydrogen Recycle Gas Compressor (API 617)",
+    "unit": "HYDROCRACKER_UNIT",
+    "type": "Centrifugal Barrel Compressor (API 617 8th Ed.)",
+    "service": "98% Purity Hydrogen Recycle Gas Circulation",
+    "description": "Multi-stage barrel casing centrifugal compressor operating at 11,200 RPM with active dry gas seals, magnetic thrust bearings, and continuous Weibull condition-based RUL prognostics.",
+    "design_pressure_psig": 2200.0,
+    "design_temp_c": 160.0,
+    "material": "Forged Alloy Steel 2.25Cr-1Mo / Inconel 718 Impellers",
+    "asme_rating": "Class 1500 RTJ",
+    "status": "OPERATIONAL (Continuous Prognostics)",
+    "telemetry": {
+      "operating_hours": 18200.0,
+      "speed_rpm": 11200.0,
+      "suction_pressure_bar": 125.0,
+      "discharge_pressure_bar": 178.5,
+      "suction_temp_c": 45.0,
+      "discharge_temp_c": 118.0,
+      "vibration_rms_mms": 2.3,
+      "vibration_limit_mms": 4.5,
+      "bearing_temp_c": 64.2,
+      "bearing_temp_limit_c": 85.0,
+      "weibull_beta_shape": 2.40,
+      "weibull_eta_hours": 40000.0,
+      "weibull_rul_days": 112.5,
+      "failure_probability_next_90d_pct": 3.8
+    }
+  },
+  {
+    "tag": "HEN-400",
+    "name": "Crude Distillation Preheat Pinch Network",
+    "unit": "CDU-II",
+    "type": "Heat Exchanger Network (Linnhoff Pinch Technology)",
+    "service": "Integrated Crude Preheat Train Energy Recovery",
+    "description": "Multi-stream heat exchanger network recovering 34.58 MW of high-temperature thermal energy from atmospheric residue, heavy gas oil, and diesel streams with Delta T min = 10.0 deg C.",
+    "design_pressure_psig": 450.0,
+    "design_temp_c": 360.0,
+    "material": "Carbon Steel Shell / SS316 Tubes (TEMA Class R)",
+    "asme_rating": "Class 300 RF",
+    "status": "OPTIMAL_RECOVERY",
+    "telemetry": {
+      "pinch_temperature_c": 340.0,
+      "minimum_hot_utility_mw": 8.42,
+      "minimum_cold_utility_mw": 0.0,
+      "heat_recovery_mw": 34.58,
+      "exergetic_efficiency_pct": 74.8,
+      "exergy_destruction_mw": 4.12,
+      "annual_fuel_savings_usd": 7110755.0,
+      "annual_co2_reduction_tonnes": 58650.0
+    }
   }
 ]
