@@ -876,6 +876,72 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api579_crack_growth_paris_law",
+                    "description": "API 579-1 / ASME FFS-1 Part 9 Linear Elastic Fracture Mechanics (LEFM): Paris-Erdogan sub-critical flaw propagation da/dN = C(ΔK)^m, critical crack depth ac, and fatigue life to catastrophic rupture.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag", "default": "R-401"},
+                            "component_thickness_mm": {"type": "number", "description": "Component wall thickness in mm", "default": 150.0},
+                            "initial_crack_depth_a0_mm": {"type": "number", "description": "Initial detected crack depth in mm", "default": 5.0},
+                            "stress_range_delta_sigma_mpa": {"type": "number", "description": "Cyclic cyclic stress range in MPa", "default": 145.0},
+                            "operating_cycles_per_year": {"type": "number", "description": "Thermal/pressure operational cycles per year", "default": 350.0},
+                            "evaluation_years": {"type": "number", "description": "Evaluation service period in years", "default": 5.0},
+                            "material_toughness_kic_mpa_sqrt_m": {"type": "number", "description": "Plane strain fracture toughness KIC in MPa*sqrt(m)", "default": 95.0},
+                            "paris_c": {"type": "number", "description": "Paris material coefficient C", "default": 3.0e-12},
+                            "paris_m": {"type": "number", "description": "Paris material exponent m", "default": 3.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_thermal_shock_transient",
+                    "description": "ASME Section VIII Div 2 Part 5 / ASME Section III NB-3200 Pressurized Thermal Shock (PTS): Biot number calculation, non-linear transient surface thermal shock stress, and 3*Sm elastic shakedown / cyclic ratcheting boundary.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag", "default": "PTS-101"},
+                            "wall_thickness_mm": {"type": "number", "description": "Wall thickness in mm", "default": 95.0},
+                            "initial_metal_temp_c": {"type": "number", "description": "Initial steady metal temperature in °C", "default": 380.0},
+                            "cold_quench_fluid_temp_c": {"type": "number", "description": "Cold injection / quench temperature in °C", "default": 25.0},
+                            "heat_transfer_coeff_w_m2k": {"type": "number", "description": "Surface heat transfer coefficient in W/m2K", "default": 4500.0},
+                            "metal_thermal_conductivity_w_mk": {"type": "number", "description": "Thermal conductivity in W/mK", "default": 42.0},
+                            "youngs_modulus_gpa": {"type": "number", "description": "Young's modulus in GPa", "default": 195.0},
+                            "thermal_expansion_coeff_per_k": {"type": "number", "description": "Thermal expansion coefficient per K", "default": 1.35e-5},
+                            "poisson_ratio": {"type": "number", "description": "Poisson's ratio", "default": 0.30},
+                            "material_allowable_stress_sm_mpa": {"type": "number", "description": "Material allowable design stress Sm in MPa", "default": 165.0},
+                            "internal_pressure_bar": {"type": "number", "description": "Internal operating pressure in bar", "default": 120.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api2218_fireproofing_thermal_rating",
+                    "description": "API 2218 (3rd Ed.) & UL 1709 Hydrocarbon Pool Fire Transient Fireproofing: 1D Fourier thermal diffusion through passive fireproofing jackets and hourly certified fire protection rating.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag", "default": "SK-201"},
+                            "structural_element_type": {"type": "string", "description": "Structural element type", "default": "vessel_support_skirt"},
+                            "fireproofing_material": {"type": "string", "description": "Fireproofing material", "default": "lightweight_cementitious"},
+                            "fireproofing_thickness_mm": {"type": "number", "description": "Fireproofing jacket thickness in mm", "default": 65.0},
+                            "steel_critical_failure_temp_c": {"type": "number", "description": "Critical steel structural failure temperature in °C", "default": 538.0},
+                            "initial_ambient_temp_c": {"type": "number", "description": "Ambient initial temperature in °C", "default": 35.0},
+                            "required_fire_endurance_hours": {"type": "number", "description": "Required endurance hours", "default": 2.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -923,7 +989,10 @@ class ToolRegistry:
             "calculate_api581_rbi_risk_matrix",
             "calculate_cryogenic_blowdown_depressurization",
             "calculate_rotor_dynamics_critical_speeds",
-            "calculate_iec60079_hazardous_area_ex"
+            "calculate_iec60079_hazardous_area_ex",
+            "calculate_api579_crack_growth_paris_law",
+            "calculate_asme_thermal_shock_transient",
+            "calculate_api2218_fireproofing_thermal_rating"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

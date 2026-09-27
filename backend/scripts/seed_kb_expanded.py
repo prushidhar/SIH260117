@@ -554,13 +554,60 @@ Alarm System Performance Metrics and Control Room Human Factors:
   1. First-Out Identification: Isolates the primary trip initiator from downstream consequential cascade alarms.
   2. Chattering Suppression: Automatically debounces alarms transitioning > 3 times in 60 seconds by applying 2% to 5% deadband hysteresis.
   3. Standing Alarm Suppression: Shelves stale standing alarms inactive for > 24 hours.
-  4. Priority Distribution: Recommended target: Critical/P1 <= 5%, High/P2 <= 15%, Medium/Low/P3 >= 80%."""
+5. Priority Distribution: Recommended target: Critical/P1 <= 5%, High/P2 <= 15%, Medium/Low/P3 >= 80%."""
+    },
+    {
+        "doc_id": "std-api-579-lefm",
+        "title": "API 579-1 / ASME FFS-1 Part 9 Linear Elastic Fracture Mechanics (LEFM) & Paris Law",
+        "text": """API 579-1 / ASME FFS-1 Fitness-For-Service Part 9: Assessment of Crack-Like Flaws:
+Linear Elastic Fracture Mechanics (LEFM) & Sub-Critical Fatigue Crack Propagation:
+- Paris-Erdogan Fatigue Law: da/dN = C * (Delta_K)^m
+- Stress Intensity Factor Range: Delta_K = Y * Delta_sigma * sqrt(pi * a)
+  Where Y is the boundary correction factor for semi-elliptical surface cracks in cylindrical shells:
+  Y = 1.12 - 0.231*(a/W) + 10.55*(a/W)^2 - 21.72*(a/W)^3 + 30.39*(a/W)^4
+- Critical Crack Depth (ac): Determined by setting K_I = K_IC / 1.25 (allowable toughness with safety margin):
+  ac = (1 / pi) * [ (K_IC / 1.25) / (Y * Delta_sigma) ]^2
+- Cumulative Cycles to Rupture: N_f = [2 / (C * Y^m * Delta_sigma^m * pi^(m/2))] * [a0^(1 - m/2) - ac^(1 - m/2)]
+- Fitness-for-Service Acceptance Criteria:
+  Level 2 requires final crack depth at end of inspection interval to not exceed 50% of critical depth (ac) and not exceed 20% of nominal wall thickness."""
+    },
+    {
+        "doc_id": "std-asme-thermal-shock",
+        "title": "ASME Section VIII Div 2 Part 5 & Section III NB-3200 Pressurized Thermal Shock (PTS)",
+        "text": """ASME Boiler & Pressure Vessel Code Section VIII Div 2 Part 5 (Design by Analysis) & Section III Subsection NB-3200:
+Pressurized Thermal Shock (PTS) and Elastic Shakedown Boundary Assessment:
+- Biot Number: Bi = (h * t_w) / k_m
+  Where h is the inner quench film coefficient (W/m²K), t_w is wall thickness (m), and k_m is metal thermal conductivity (W/mK).
+- Peak Transient Thermal Shock Surface Stress:
+  sigma_th = [E * alpha * Delta_T / (1 - nu)] * [Bi / (Bi + 1.2)]
+  Where E is Young's modulus, alpha is thermal expansion coefficient, Delta_T is quench differential, and nu is Poisson's ratio.
+- Combined Primary + Secondary Stress: sigma_total = sigma_hoop + sigma_th
+- Shakedown & Ratcheting Criterion:
+  sigma_total <= 3 * S_m (where S_m is the allowable design stress intensity).
+  Satisfying the 3*Sm limit guarantees that after initial cyclic plastic strain, the structure shakes down to purely elastic behavior, preventing progressive plastic ratcheting and catastrophic low-cycle thermal fatigue."""
+    },
+    {
+        "doc_id": "std-api-2218-fireproofing",
+        "title": "API 2218 & UL 1709 Passive Fireproofing for Hydrocarbon Processing Plants",
+        "text": """API Recommended Practice 2218 (3rd Edition) & UL 1709 Rapid Hydrocarbon Fire Exposure:
+Fireproofing Practices in Petroleum and Petrochemical Processing Plants:
+- Fire Curve: UL 1709 Rapid Temperature Rise Fire Test reaches 1093°C (2000°F) within 5 minutes and maintains severe heat flux of 204 kW/m².
+- Critical Steel Collapse Temperature: Structural carbon and low-alloy steels lose > 50% of yield strength at 538°C (1000°F).
+- Passive Fireproofing Materials and Thermal Diffusivity (alpha):
+  1. Dense Concrete (Portland/aggregate): alpha = 5.0e-7 m²/s
+  2. Lightweight Cementitious (Vermiculite/Perlite): alpha = 3.6e-7 m²/s
+  3. Epoxy Intumescent Coatings: alpha = 3.2e-7 m²/s
+- 1D Fourier Thermal Diffusion Model: t_endurance = [(Delta_x / (2 * 0.505))^2] / alpha
+- Statutory Fire Ratings:
+  1-Hour Rating: Minimum fireproofing thickness for secondary pipe racks.
+  2-Hour Rating: Mandatory for vessel skirts, structural columns supporting operating weight > 4500 kg.
+  3-Hour Rating: Standard for high-hazard hydrocracking units, toxic inventory columns, and pressurized sphere legs."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 35 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 38 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)

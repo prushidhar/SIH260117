@@ -3216,6 +3216,178 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {"error": str(e)}
 
+    @staticmethod
+    def calculate_api579_crack_growth_paris_law(
+        asset_tag: str = "R-401",
+        initial_crack_depth_a0_mm: float = 4.5,
+        component_thickness_mm: float = 185.0,
+        stress_range_delta_sigma_mpa: float = 145.0,
+        operating_cycles_per_year: float = 250.0,
+        evaluation_years: float = 5.0,
+        material_toughness_kic_mpa_sqrt_m: float = 110.0,
+        paris_c: float = 3.5e-12,
+        paris_m: float = 3.0
+    ) -> Dict[str, Any]:
+        """
+        API 579-1 / ASME FFS-1 Part 9 Fatigue Crack Growth & Linear Elastic Fracture Mechanics (LEFM).
+        Integrates Paris-Erdogan law, calculates stress intensity factor Delta K, critical crack size,
+        and cycles to fracture for planar crack-like flaws.
+        """
+        try:
+            w_m = component_thickness_mm / 1000.0
+            a_curr_m = initial_crack_depth_a0_mm / 1000.0
+            total_cycles = int(operating_cycles_per_year * evaluation_years)
+
+            step = 10
+            for _ in range(0, total_cycles, step):
+                a_over_w = min(0.85, a_curr_m / w_m)
+                y = 1.12 - 0.231 * a_over_w + 10.55 * (a_over_w ** 2) - 21.72 * (a_over_w ** 3) + 30.39 * (a_over_w ** 4)
+                delta_k = y * stress_range_delta_sigma_mpa * math.sqrt(math.pi * a_curr_m)
+                da = paris_c * (delta_k ** paris_m) * step
+                a_curr_m += da
+
+            final_crack_depth_mm = round(a_curr_m * 1000.0, 2)
+            total_growth_mm = round(final_crack_depth_mm - initial_crack_depth_a0_mm, 2)
+
+            k_allow = material_toughness_kic_mpa_sqrt_m / 1.25
+            y_approx = 1.25
+            ac_m = (1.0 / math.pi) * ((k_allow / (y_approx * stress_range_delta_sigma_mpa)) ** 2)
+            critical_crack_depth_mm = round(ac_m * 1000.0, 1)
+
+            const = paris_c * (y_approx ** paris_m) * (stress_range_delta_sigma_mpa ** paris_m) * (math.pi ** 1.5)
+            cycles_to_fracture = (2.0 / const) * ((1.0 / math.sqrt(initial_crack_depth_a0_mm / 1000.0)) - (1.0 / math.sqrt(ac_m)))
+            years_to_fracture = round(cycles_to_fracture / max(1.0, operating_cycles_per_year), 1)
+
+            fraction_critical_consumed = (final_crack_depth_mm / critical_crack_depth_mm) * 100.0
+            pass_level_2 = (final_crack_depth_mm < 0.50 * critical_crack_depth_mm) and (final_crack_depth_mm < 0.20 * component_thickness_mm)
+
+            return {
+                "asset_tag": asset_tag,
+                "initial_crack_depth_mm": initial_crack_depth_a0_mm,
+                "final_crack_depth_mm": final_crack_depth_mm,
+                "cumulative_growth_mm": total_growth_mm,
+                "annual_crack_growth_rate_mm_yr": round(total_growth_mm / max(0.1, evaluation_years), 3),
+                "critical_crack_depth_mm": critical_crack_depth_mm,
+                "wall_thickness_mm": component_thickness_mm,
+                "critical_crack_margin_pct": round(100.0 - fraction_critical_consumed, 1),
+                "estimated_years_to_fracture": years_to_fracture,
+                "standard": "API 579-1 / ASME FFS-1 Part 9 (Crack-Like Flaws & LEFM)",
+                "compliance": "PASS_FIT_FOR_CONTINUED_SERVICE" if pass_level_2 else "REPAIR_OR_DERATE_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_asme_thermal_shock_transient(
+        asset_tag: str = "PTS-101",
+        wall_thickness_mm: float = 95.0,
+        initial_metal_temp_c: float = 380.0,
+        cold_quench_fluid_temp_c: float = 25.0,
+        heat_transfer_coeff_w_m2k: float = 4500.0,
+        metal_thermal_conductivity_w_mk: float = 42.0,
+        youngs_modulus_gpa: float = 195.0,
+        thermal_expansion_coeff_per_k: float = 1.35e-5,
+        poisson_ratio: float = 0.30,
+        material_allowable_stress_sm_mpa: float = 165.0,
+        internal_pressure_bar: float = 120.0
+    ) -> Dict[str, Any]:
+        """
+        ASME Section VIII Div 2 Part 5 / ASME Section III NB-3200 Pressurized Thermal Shock (PTS) Engine.
+        Calculates Biot number, peak transient surface thermal shock stress, combined mechanical hoop stress,
+        and verifies the ASME 3*Sm elastic shakedown and thermal ratcheting boundary.
+        """
+        try:
+            tw_m = wall_thickness_mm / 1000.0
+            delta_t = initial_metal_temp_c - cold_quench_fluid_temp_c
+
+            biot_number = (heat_transfer_coeff_w_m2k * tw_m) / metal_thermal_conductivity_w_mk
+
+            e_pa = youngs_modulus_gpa * 1e9
+            thermal_shock_stress_pa = (e_pa * thermal_expansion_coeff_per_k * delta_t / (1.0 - poisson_ratio)) * (biot_number / (biot_number + 1.2))
+            thermal_shock_stress_mpa = thermal_shock_stress_pa / 1e6
+
+            id_m = 1.20
+            p_pa = internal_pressure_bar * 1e5
+            hoop_stress_mpa = (p_pa * id_m) / (2.0 * tw_m * 1e6)
+
+            combined_peak_stress_mpa = hoop_stress_mpa + thermal_shock_stress_mpa
+
+            asme_shakedown_limit_mpa = 3.0 * material_allowable_stress_sm_mpa
+            shakedown_margin_pct = ((asme_shakedown_limit_mpa - combined_peak_stress_mpa) / asme_shakedown_limit_mpa) * 100.0
+            shakedown_pass = combined_peak_stress_mpa <= asme_shakedown_limit_mpa
+
+            return {
+                "asset_tag": asset_tag,
+                "wall_thickness_mm": wall_thickness_mm,
+                "temperature_differential_delta_t_c": delta_t,
+                "biot_number": round(biot_number, 2),
+                "peak_thermal_shock_stress_mpa": round(thermal_shock_stress_mpa, 1),
+                "mechanical_hoop_stress_mpa": round(hoop_stress_mpa, 1),
+                "total_combined_stress_mpa": round(combined_peak_stress_mpa, 1),
+                "asme_3sm_shakedown_limit_mpa": round(asme_shakedown_limit_mpa, 1),
+                "shakedown_margin_pct": round(shakedown_margin_pct, 1),
+                "shakedown_status": "ELASTIC_SHAKEDOWN_COMPLIANT" if shakedown_pass else "PLASTIC_CYCLIC_RATCHETING_RISK",
+                "standard": "ASME Section VIII Div 2 Part 5 / ASME Section III NB-3200",
+                "compliance": "PASS" if shakedown_pass else "FAIL_EXCEEDS_3SM_SHAKEDOWN"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api2218_fireproofing_thermal_rating(
+        asset_tag: str = "SK-201",
+        structural_element_type: str = "vessel_support_skirt",
+        fireproofing_material: str = "lightweight_cementitious",
+        fireproofing_thickness_mm: float = 65.0,
+        steel_critical_failure_temp_c: float = 538.0,
+        initial_ambient_temp_c: float = 35.0,
+        required_fire_endurance_hours: float = 2.0
+    ) -> Dict[str, Any]:
+        """
+        API 2218 (3rd Ed.) & UL 1709 Hydrocarbon Pool Fire Transient Fireproofing Engine.
+        Simulates non-linear thermal diffusion through passive fireproofing jackets
+        and certifies hourly fire protection ratings (1-hr, 2-hr, 3-hr).
+        """
+        try:
+            diffusivity_map = {
+                "dense_concrete_cementitious": 5.0e-7,
+                "lightweight_cementitious": 3.6e-7,
+                "epoxy_intumescent": 3.2e-7
+            }
+            alpha = diffusivity_map.get(fireproofing_material, 3.6e-7)
+
+            delta_x_m = fireproofing_thickness_mm / 1000.0
+            z = 0.505
+            t_seconds = ((delta_x_m / (2.0 * z)) ** 2) / alpha
+            endurance_hours = t_seconds / 3600.0
+
+            pass_rating = endurance_hours >= required_fire_endurance_hours
+
+            if endurance_hours >= 3.0:
+                rating_class = "3_HOUR_FIRE_RATING"
+            elif endurance_hours >= 2.0:
+                rating_class = "2_HOUR_FIRE_RATING"
+            elif endurance_hours >= 1.0:
+                rating_class = "1_HOUR_FIRE_RATING"
+            else:
+                rating_class = "SUB_1_HOUR_DEFICIENT"
+
+            return {
+                "asset_tag": asset_tag,
+                "structural_element_type": structural_element_type,
+                "fireproofing_material": fireproofing_material,
+                "fireproofing_thickness_mm": fireproofing_thickness_mm,
+                "fire_exposure_curve": "UL 1709 Rapid Hydrocarbon Pool Fire (1093 °C)",
+                "steel_critical_temp_c": steel_critical_failure_temp_c,
+                "calculated_fire_endurance_hours": round(endurance_hours, 2),
+                "required_fire_endurance_hours": required_fire_endurance_hours,
+                "certified_fire_rating": rating_class,
+                "standard": "API 2218 (3rd Ed.) / UL 1709 / ASTM E119",
+                "compliance": "PASS_FIRE_PROTECTION_CERTIFIED" if pass_rating else "FAIL_INSUFFICIENT_FIREPROOFING_THICKNESS"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
 engineering_tools = EngineeringSandbox()
 
 

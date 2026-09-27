@@ -147,8 +147,36 @@ def main():
     assert bd_data.get("api521_depressuring_rate_met") is True
     print(f"[+] /api/blowdown/simulate: OK (Tag: {bd_data.get('vessel_tag')}, 15min P: {bd_data.get('pressure_at_15min_bar_a')} bar, Metal T: {bd_data.get('minimum_wall_metal_temp_c')} C)")
 
+    # 13. API 579 Crack Growth Paris Law Endpoint
+    res_crack = client.post("/api/engineering/crack-growth", json={
+        "asset_tag": "R-401",
+        "component_thickness_mm": 150.0,
+        "initial_crack_depth_a0_mm": 5.0,
+        "stress_range_delta_sigma_mpa": 145.0,
+        "operating_cycles_per_year": 350.0,
+        "evaluation_years": 5.0,
+        "material_toughness_kic_mpa_sqrt_m": 95.0
+    })
+    assert res_crack.status_code == 200
+    crack_data = res_crack.json()
+    assert crack_data.get("compliance") == "PASS_FIT_FOR_CONTINUED_SERVICE"
+    assert crack_data.get("final_crack_depth_mm") > 5.0
+    print(f"[+] /api/engineering/crack-growth: OK (Tag: {crack_data.get('asset_tag')}, 5yr Depth: {crack_data.get('final_crack_depth_mm')}mm, Critical: {crack_data.get('critical_crack_depth_mm')}mm, Margin: {crack_data.get('critical_crack_margin_pct')}%)")
+
+    # 14. SCADA OPC-UA / Modbus Telemetry Streamer Endpoint
+    res_scada = client.post("/api/scada/telemetry/stream", json={
+        "asset_tag": "P-101",
+        "noise_amplitude_pct": 0.50
+    })
+    assert res_scada.status_code == 200
+    scada_data = res_scada.json()
+    assert scada_data.get("link_status") == "ONLINE_AIR_GAPPED_LOOPBACK"
+    assert len(scada_data.get("opc_ua_nodes", [])) > 0
+    assert len(scada_data.get("frame_checksum_sha256", "")) == 64
+    print(f"[+] /api/scada/telemetry/stream: OK (Tag: {scada_data.get('asset_tag')}, Channels: {scada_data.get('total_channels')}, Seq: {scada_data.get('sequence_number')}, Checksum: {scada_data.get('frame_checksum_sha256')[:16]}...)")
+
     print("\n" + "=" * 65)
-    print("ALL 12 PHASE 4 REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 14 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

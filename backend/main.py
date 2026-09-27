@@ -1822,6 +1822,62 @@ async def simulate_cryogenic_blowdown(req: BlowdownSimRequest):
     )
 
 
+class CrackGrowthRequest(BaseModel):
+    asset_tag: Optional[str] = "R-401"
+    component_thickness_mm: Optional[float] = 150.0
+    initial_crack_depth_a0_mm: Optional[float] = 5.0
+    stress_range_delta_sigma_mpa: Optional[float] = 145.0
+    operating_cycles_per_year: Optional[float] = 350.0
+    evaluation_years: Optional[float] = 5.0
+    material_toughness_kic_mpa_sqrt_m: Optional[float] = 95.0
+
+
+@app.post("/api/engineering/crack-growth")
+async def evaluate_crack_growth_paris_law(req: CrackGrowthRequest):
+    """
+    API 579-1 / ASME FFS-1 Part 9 Linear Elastic Fracture Mechanics & Paris Law Crack Growth.
+    Calculates subcritical fatigue crack propagation, critical crack size ac, and years to failure.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api579_crack_growth_paris_law(
+        asset_tag=req.asset_tag or "R-401",
+        component_thickness_mm=req.component_thickness_mm or 150.0,
+        initial_crack_depth_a0_mm=req.initial_crack_depth_a0_mm or 5.0,
+        stress_range_delta_sigma_mpa=req.stress_range_delta_sigma_mpa or 145.0,
+        operating_cycles_per_year=req.operating_cycles_per_year or 350.0,
+        evaluation_years=req.evaluation_years or 5.0,
+        material_toughness_kic_mpa_sqrt_m=req.material_toughness_kic_mpa_sqrt_m or 95.0
+    )
+
+
+class ScadaStreamRequest(BaseModel):
+    asset_tag: Optional[str] = "P-101"
+    batch_tags: Optional[List[str]] = None
+    noise_amplitude_pct: Optional[float] = 0.50
+
+
+@app.post("/api/scada/telemetry/stream")
+async def stream_scada_telemetry(req: ScadaStreamRequest):
+    """
+    IEC 62541 OPC-UA & Modbus TCP Telemetry Stream Emulator.
+    Generates deterministic IEEE-754 analog registers and Modbus holding registers for HIL testing.
+    """
+    from sandbox.scada_streamer import scada_streamer
+    if req.batch_tags:
+        packets = scada_streamer.stream_batch_telemetry(req.batch_tags)
+        return {
+            "mode": "BATCH_SCAN_CYCLE",
+            "total_packets": len(packets),
+            "packets": packets,
+            "stream_timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+    packet = scada_streamer.generate_asset_scada_packet(
+        asset_tag=req.asset_tag or "P-101",
+        noise_amplitude_pct=req.noise_amplitude_pct if req.noise_amplitude_pct is not None else 0.50
+    )
+    return packet
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

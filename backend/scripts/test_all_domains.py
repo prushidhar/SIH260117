@@ -938,6 +938,82 @@ def test_card_35_isa182_alarm_triage_engine():
     print('  PASS')
 
 
+def test_card_36_api579_crack_growth_paris_law():
+    print('\n--- TEST 36: API 579-1 / ASME FFS-1 Part 9 Linear Elastic Fracture Mechanics & Paris Law ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api579_crack_growth_paris_law(
+        asset_tag="R-401",
+        component_thickness_mm=150.0,
+        initial_crack_depth_a0_mm=5.0,
+        stress_range_delta_sigma_mpa=145.0,
+        operating_cycles_per_year=350.0,
+        evaluation_years=5.0,
+        material_toughness_kic_mpa_sqrt_m=95.0,
+        paris_c=3.0e-12,
+        paris_m=3.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['final_crack_depth_mm'] > result['initial_crack_depth_mm']
+    assert result['critical_crack_depth_mm'] > result['final_crack_depth_mm']
+    assert result['critical_crack_margin_pct'] > 0
+    assert result['compliance'] in ['PASS_FIT_FOR_CONTINUED_SERVICE', 'REPAIR_OR_DERATE_REQUIRED']
+    print(f"  [+] Asset: {result['asset_tag']} (Wall: {result['wall_thickness_mm']} mm, a0: {result['initial_crack_depth_mm']} mm)")
+    print(f"  [+] 5-Year Subcritical Crack Growth: {result['initial_crack_depth_mm']} mm -> {result['final_crack_depth_mm']} mm (+{result['cumulative_growth_mm']} mm, Rate: {result['annual_crack_growth_rate_mm_yr']} mm/yr)")
+    print(f"  [+] Critical Crack Depth (ac): {result['critical_crack_depth_mm']} mm (Margin: {result['critical_crack_margin_pct']}%, Est Life: {result['estimated_years_to_fracture']} yrs)")
+    print(f"  [+] API 579 FFS Compliance: {result['compliance']}")
+    print('  PASS')
+
+
+def test_card_37_asme_thermal_shock_transient():
+    print('\n--- TEST 37: ASME Section VIII Div 2 Part 5 / Section III NB-3200 Pressurized Thermal Shock ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_asme_thermal_shock_transient(
+        asset_tag="PTS-101",
+        wall_thickness_mm=95.0,
+        initial_metal_temp_c=380.0,
+        cold_quench_fluid_temp_c=25.0,
+        heat_transfer_coeff_w_m2k=4500.0,
+        metal_thermal_conductivity_w_mk=42.0,
+        youngs_modulus_gpa=195.0,
+        thermal_expansion_coeff_per_k=1.35e-5,
+        poisson_ratio=0.30,
+        material_allowable_stress_sm_mpa=165.0,
+        internal_pressure_bar=120.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['biot_number'] > 0
+    assert result['peak_thermal_shock_stress_mpa'] > 0
+    assert result['total_combined_stress_mpa'] > 0
+    assert result['asme_3sm_shakedown_limit_mpa'] == 3.0 * 165.0
+    print(f"  [+] Asset: {result['asset_tag']} (Wall: {result['wall_thickness_mm']} mm, Delta_T: {result['temperature_differential_delta_t_c']} °C, Biot No: {result['biot_number']})")
+    print(f"  [+] Transient Surface Thermal Stress: {result['peak_thermal_shock_stress_mpa']} MPa + Hoop: {result['mechanical_hoop_stress_mpa']} MPa = Total: {result['total_combined_stress_mpa']} MPa")
+    print(f"  [+] ASME 3*Sm Shakedown Limit: {result['asme_3sm_shakedown_limit_mpa']} MPa (Margin: {result['shakedown_margin_pct']}%, Status: {result['shakedown_status']})")
+    print(f"  [+] Compliance: {result['compliance']}")
+    print('  PASS')
+
+
+def test_card_38_api2218_fireproofing_thermal_rating():
+    print('\n--- TEST 38: API 2218 & UL 1709 Hydrocarbon Pool Fire Fireproofing Endurance ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api2218_fireproofing_thermal_rating(
+        asset_tag="SK-201",
+        structural_element_type="vessel_support_skirt",
+        fireproofing_material="lightweight_cementitious",
+        fireproofing_thickness_mm=65.0,
+        steel_critical_failure_temp_c=538.0,
+        initial_ambient_temp_c=35.0,
+        required_fire_endurance_hours=2.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['calculated_fire_endurance_hours'] >= 2.0
+    assert result['compliance'] == 'PASS_FIRE_PROTECTION_CERTIFIED'
+    print(f"  [+] Asset: {result['asset_tag']} ({result['structural_element_type']}, Material: {result['fireproofing_material']}, Jacket: {result['fireproofing_thickness_mm']} mm)")
+    print(f"  [+] Exposure: {result['fire_exposure_curve']} -> Steel Failure Threshold: {result['steel_critical_temp_c']} °C")
+    print(f"  [+] Fire Endurance Rating: {result['calculated_fire_endurance_hours']} Hours vs Req: {result['required_fire_endurance_hours']} Hours ({result['certified_fire_rating']})")
+    print(f"  [+] Certification Status: {result['compliance']}")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -977,8 +1053,11 @@ if __name__ == "__main__":
     test_card_33_rotor_dynamics_critical_speeds()
     test_card_34_iec60079_hazardous_area_ex()
     test_card_35_isa182_alarm_triage_engine()
+    test_card_36_api579_crack_growth_paris_law()
+    test_card_37_asme_thermal_shock_transient()
+    test_card_38_api2218_fireproofing_thermal_rating()
     print("\n================================================================")
-    print("ALL 35 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 38 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 
