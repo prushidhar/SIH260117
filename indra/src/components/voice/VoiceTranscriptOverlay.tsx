@@ -87,8 +87,9 @@ export default function VoiceTranscriptOverlay() {
                 &ldquo;{lastTranscript}&rdquo;
               </div>
               {lastIntent ? (
-                <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-semibold mt-0.5">
-                  ✓ {lastIntent.label} ({Math.round(lastIntent.confidence * 100)}% confidence)
+                <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-semibold mt-0.5 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  <span>{lastIntent.label} ({Math.round(lastIntent.confidence * 100)}% confidence)</span>
                 </div>
               ) : (
                 <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
