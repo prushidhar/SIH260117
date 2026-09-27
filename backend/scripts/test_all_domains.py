@@ -450,6 +450,54 @@ def test_card_16():
     print('  PASS')
 
 
+def test_card_17_api579_fitness_for_service():
+    print('\n--- TEST 17: API 579-1 / ASME FFS-1 Fitness-For-Service (LTA Assessment) ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api579_fitness_for_service(
+        component_type='cylindrical_shell',
+        outside_diameter_mm=406.4,
+        nominal_thickness_mm=12.7,
+        future_corrosion_allowance_mm=1.5,
+        measured_minimum_thickness_mm=6.8,
+        longitudinal_flaw_length_mm=125.0,
+        design_pressure_mpa=3.5,
+        allowable_stress_mpa=138.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['remaining_strength_factor_rsf'] > 0.0
+    assert result['folias_bulging_factor_mt'] >= 1.0
+    assert result['design_mawp_mpa'] > 0.0
+    print(f"  [+] Folias Mt: {result['folias_bulging_factor_mt']}, Shell Lambda: {result['shell_parameter_lambda']}")
+    print(f"  [+] Remaining Strength Factor (RSF): {result['remaining_strength_factor_rsf']} vs RSFa: {result['allowable_rsf_rsfa']}")
+    print(f"  [+] Design MAWP: {result['design_mawp_mpa']} MPa, Allowable MAWPr: {result['reduced_mawp_mpa']} MPa")
+    print(f"  [+] FFS Status: {result['status']}")
+    print('  PASS')
+
+
+def test_card_18_bolted_flange_joint():
+    print('\n--- TEST 18: ASME Section VIII Div 1 App 2 & ASME PCC-1 Bolted Flanged Joint ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_bolted_flange_joint_integrity(
+        flange_nps_in=8.0,
+        flange_class=300,
+        design_pressure_bar=35.0,
+        design_temp_c=220.0,
+        gasket_type='spiral_wound_316_graphite',
+        number_of_bolts=12,
+        bolt_diameter_in=0.875
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['operating_bolt_load_wm1_kn'] > 0.0
+    assert result['seating_bolt_load_wm2_kn'] > 0.0
+    assert result['recommended_target_torque_nm'] > 0.0
+    assert result['compliance'] == 'PASS'
+    print(f"  [+] Hydrostatic End Force: {result['hydrostatic_force_kn']} kN, Gasket Reaction: {result['gasket_reaction_force_kn']} kN")
+    print(f"  [+] Wm1 (Operating): {result['operating_bolt_load_wm1_kn']} kN, Wm2 (Seating): {result['seating_bolt_load_wm2_kn']} kN")
+    print(f"  [+] Recommended Target Assembly Torque: {result['recommended_target_torque_nm']} N*m")
+    print(f"  [+] Gasket Operating Stress: {result['gasket_operating_stress_mpa']} MPa (Compliance: {result['compliance']})")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -470,6 +518,9 @@ if __name__ == "__main__":
     test_card_14_cooling_tower_performance()
     test_card_15()
     test_card_16()
+    test_card_17_api579_fitness_for_service()
+    test_card_18_bolted_flange_joint()
     print("\n================================================================")
-    print("ALL 16 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 18 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+

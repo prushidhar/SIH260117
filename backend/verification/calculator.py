@@ -1623,4 +1623,211 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {'error': str(e)}
 
+    @staticmethod
+    def calculate_api579_fitness_for_service(
+        component_type: str = 'cylindrical_shell',
+        outside_diameter_mm: float = 406.4,
+        nominal_thickness_mm: float = 12.7,
+        future_corrosion_allowance_mm: float = 1.5,
+        measured_minimum_thickness_mm: float = 6.8,
+        longitudinal_flaw_length_mm: float = 125.0,
+        circumferential_flaw_width_mm: float = 85.0,
+        design_pressure_mpa: float = 3.5,
+        allowable_stress_mpa: float = 138.0,
+        joint_efficiency: float = 1.0
+    ) -> dict:
+        """API 579-1 / ASME FFS-1 Part 5: Fitness-For-Service Assessment for Local Metal Thinning (LTA).
+        Calculates Remaining Strength Factor (RSF), Folias bulging factor, and allowable MAWPr."""
+        try:
+            import math
+            # Inside radius and inside diameter
+            t_nom = nominal_thickness_mm
+            d_o = outside_diameter_mm
+            d_i = d_o - 2.0 * t_nom
+            r_i = d_i / 2.0
+            p = design_pressure_mpa
+            s = allowable_stress_mpa
+            e = joint_efficiency
+            fca = future_corrosion_allowance_mm
+            t_mm = measured_minimum_thickness_mm
+            c_loss = t_nom - t_mm
+
+            # ASME Section VIII Div 1 UG-27 minimum required thickness
+            # t_min = (P * R_i) / (S * E - 0.6 * P)
+            denom = s * e - 0.6 * p
+            t_min = (p * r_i) / denom if denom > 0 else t_nom * 0.5
+            t_min = max(t_min, 1.0)
+
+            # Remaining thickness after future corrosion
+            t_rd = max(0.1, t_mm - fca)
+            # Remaining thickness ratio
+            r_t = t_rd / t_min
+
+            # Longitudinal flaw length s
+            s_len = longitudinal_flaw_length_mm
+            # Shell parameter lambda = 1.285 * s / sqrt(D_i * t_min)
+            shell_lambda = (1.285 * s_len) / math.sqrt(max(1.0, d_i * t_min))
+
+            # Folias bulging factor Mt
+            m_t = math.sqrt(1.0 + 0.48 * (shell_lambda ** 2))
+
+            # Remaining Strength Factor (RSF) API 579 Eq. 5.11
+            # RSF = R_t / (1.0 - (1.0 / M_t) * (1.0 - R_t))
+            rsf_denom = 1.0 - (1.0 / m_t) * (1.0 - r_t)
+            rsf = r_t / rsf_denom if rsf_denom > 0 else 0.0
+            rsf = min(1.0, max(0.0, rsf))
+
+            # Allowable Remaining Strength Factor (API 579 Section 2)
+            rsf_a = 0.90
+
+            # Original design MAWP (MPa)
+            mawp_orig = (s * e * (t_nom - fca)) / (r_i + 0.6 * (t_nom - fca))
+
+            # Reduced MAWP (MAWPr) per API 579 Eq. 5.14
+            if rsf >= rsf_a:
+                mawp_r = mawp_orig
+                status = 'ACCEPTABLE_LEVEL_1_CONTINUED_RUN'
+            elif rsf >= 0.5:
+                mawp_r = mawp_orig * (rsf / rsf_a)
+                status = 'RERATE_REQUIRED_DERATED_MAWP'
+            else:
+                mawp_r = 0.0
+                status = 'UNACCEPTABLE_REPAIR_OR_REPLACE'
+
+            # Minimum thickness threshold check (min of 2.5 mm or 0.2 * t_nom)
+            t_limit = max(2.5, 0.2 * t_nom)
+            thickness_adequate = t_rd >= t_limit
+
+            return {
+                'component_type': component_type,
+                'outside_diameter_mm': round(d_o, 1),
+                'nominal_thickness_mm': round(t_nom, 2),
+                'measured_minimum_thickness_mm': round(t_mm, 2),
+                'corrosion_loss_mm': round(c_loss, 2),
+                't_min_code_required_mm': round(t_min, 2),
+                'remaining_thickness_ratio_rt': round(r_t, 3),
+                'flaw_length_mm': round(s_len, 1),
+                'shell_parameter_lambda': round(shell_lambda, 3),
+                'folias_bulging_factor_mt': round(m_t, 3),
+                'remaining_strength_factor_rsf': round(rsf, 3),
+                'allowable_rsf_rsfa': rsf_a,
+                'design_mawp_mpa': round(mawp_orig, 2),
+                'reduced_mawp_mpa': round(mawp_r, 2),
+                'thickness_above_hard_limit': thickness_adequate,
+                'status': status,
+                'standard': 'API 579-1 / ASME FFS-1 (Part 5 Local Metal Thinning)'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_bolted_flange_joint_integrity(
+        flange_nps_in: float = 8.0,
+        flange_class: int = 300,
+        design_pressure_bar: float = 35.0,
+        design_temp_c: float = 220.0,
+        gasket_type: str = 'spiral_wound_316_graphite',
+        number_of_bolts: int = 12,
+        bolt_diameter_in: float = 0.875,
+        gasket_outer_dia_mm: float = 273.0,
+        gasket_inner_dia_mm: float = 230.0,
+        nut_factor_k: float = 0.17
+    ) -> dict:
+        """ASME Section VIII Div 1 Appendix 2 & ASME PCC-1:
+        Calculates Taylor-Forge bolt loads, gasket seating stress, and recommended assembly bolt torque."""
+        try:
+            import math
+            # Gasket parameters (Table 2-5.1)
+            # Spiral wound: m = 3.0, y = 10000 psi = 68.95 MPa
+            m = 3.00
+            y_mpa = 68.95
+            if 'kammprofile' in gasket_type.lower():
+                m = 2.75
+                y_mpa = 55.0
+            elif 'non_asbestos' in gasket_type.lower():
+                m = 2.00
+                y_mpa = 17.2
+
+            # Gasket mean diameter G and width N
+            w_gasket_mm = (gasket_outer_dia_mm - gasket_inner_dia_mm) / 2.0
+            b0_mm = w_gasket_mm / 2.0
+            b_mm = b0_mm if b0_mm <= 6.35 else 2.52 * math.sqrt(b0_mm)
+            g_dia_mm = (gasket_outer_dia_mm + gasket_inner_dia_mm) / 2.0
+
+            p_mpa = design_pressure_bar * 0.1
+
+            # Hydrostatic end force H (N)
+            # H = (pi / 4) * G^2 * P
+            h_force_n = (math.pi / 4.0) * ((g_dia_mm / 1000.0) ** 2) * (p_mpa * 1e6)
+
+            # Gasket compression load under operating pressure Hp (N)
+            # Hp = 2 * b * pi * G * m * P
+            b_m = b_mm / 1000.0
+            g_m = g_dia_mm / 1000.0
+            hp_force_n = 2.0 * b_m * math.pi * g_m * m * (p_mpa * 1e6)
+
+            # Total required operating bolt load Wm1 (N)
+            wm1_n = h_force_n + hp_force_n
+
+            # Gasket seating bolt load Wm2 (N)
+            # Wm2 = pi * b * G * y
+            wm2_n = math.pi * b_m * g_m * (y_mpa * 1e6)
+
+            # Bolt root area per bolt (in2 to mm2)
+            # For 7/8"-9 UNC bolt: root area approx 0.462 in2 = 298 mm2
+            d_bolt_mm = bolt_diameter_in * 25.4
+            # Stress area approximation: At = 0.7854 * (d - 0.9382 * p)^2
+            pitch_mm = 25.4 / 9.0  # 9 TPI typical
+            bolt_stress_area_mm2 = (math.pi / 4.0) * ((d_bolt_mm - 0.9382 * pitch_mm) ** 2)
+            total_bolt_area_mm2 = number_of_bolts * bolt_stress_area_mm2
+
+            # Allowable bolt stress for ASTM A193 B7 at 220°C approx 172 MPa
+            s_bolt_allow_mpa = 172.0
+
+            # Required bolt area Am (mm2)
+            am_operating_mm2 = wm1_n / (s_bolt_allow_mpa * 1e6) * 1e6
+            am_seating_mm2 = wm2_n / (s_bolt_allow_mpa * 1e6) * 1e6
+            am_req_mm2 = max(am_operating_mm2, am_seating_mm2)
+
+            bolt_margin_pct = ((total_bolt_area_mm2 - am_req_mm2) / am_req_mm2) * 100.0
+
+            # Target bolt stress for assembly per ASME PCC-1 (approx 50% of yield = 350 MPa for B7)
+            target_bolt_stress_mpa = 350.0
+            target_bolt_precharge_n = target_bolt_stress_mpa * bolt_stress_area_mm2
+
+            # Assembly torque per bolt T = K * F * d
+            # T (N*m) = K * F(N) * (d_mm / 1000)
+            target_torque_nm = nut_factor_k * target_bolt_precharge_n * (d_bolt_mm / 1000.0)
+
+            # Actual gasket operating stress Sg (MPa)
+            gasket_contact_area_mm2 = math.pi * ((gasket_outer_dia_mm ** 2 - gasket_inner_dia_mm ** 2) / 4.0)
+            total_assembled_bolt_load_n = number_of_bolts * target_bolt_precharge_n
+            gasket_operating_stress_mpa = (total_assembled_bolt_load_n - h_force_n) / gasket_contact_area_mm2
+            gasket_seating_stress_mpa = total_assembled_bolt_load_n / gasket_contact_area_mm2
+
+            compliance = 'PASS' if total_bolt_area_mm2 >= am_req_mm2 and gasket_operating_stress_mpa > (m * p_mpa) else 'FAIL'
+
+            return {
+                'flange_nps_in': flange_nps_in,
+                'flange_class': flange_class,
+                'design_pressure_bar': design_pressure_bar,
+                'gasket_type': gasket_type,
+                'number_of_bolts': number_of_bolts,
+                'bolt_diameter_in': bolt_diameter_in,
+                'hydrostatic_force_kn': round(h_force_n / 1000.0, 1),
+                'gasket_reaction_force_kn': round(hp_force_n / 1000.0, 1),
+                'operating_bolt_load_wm1_kn': round(wm1_n / 1000.0, 1),
+                'seating_bolt_load_wm2_kn': round(wm2_n / 1000.0, 1),
+                'required_bolt_area_mm2': round(am_req_mm2, 1),
+                'actual_bolt_area_mm2': round(total_bolt_area_mm2, 1),
+                'bolt_area_margin_pct': round(bolt_margin_pct, 1),
+                'recommended_target_torque_nm': round(target_torque_nm, 1),
+                'gasket_seating_stress_mpa': round(gasket_seating_stress_mpa, 1),
+                'gasket_operating_stress_mpa': round(gasket_operating_stress_mpa, 1),
+                'compliance': compliance,
+                'standard': 'ASME Section VIII Div 1 App 2 / ASME PCC-1 Guidelines'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
 engineering_tools = EngineeringSandbox()

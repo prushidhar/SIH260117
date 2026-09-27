@@ -1503,5 +1503,60 @@
       "noise_100m_dba": 98.2,
       "purge_gas_flow_nm3_h": 120.0
     }
+  },
+  {
+    "tag": "LTA-101",
+    "name": "Atmospheric Column Overhead Transfer Line (API 579 FFS Assessed)",
+    "unit": "CDU-1",
+    "type": "Process Piping (API 579-1 / ASME FFS-1 Level 1 & 2)",
+    "service": "Heavy Sour Hydrocarbon Overhead Vapor with Local Metal Thinning",
+    "description": "16-inch atmospheric overhead transfer line undergoing localized metal thinning evaluation per API 579-1 Part 5. Continuous ultrasonic telemetry monitoring of remaining strength factor (RSF).",
+    "design_pressure_psig": 507.6,
+    "design_temp_c": 165.0,
+    "pipe_od_in": 16.0,
+    "flange_class": 300,
+    "allowable_stress_psi": 20000.0,
+    "material": "ASTM A106 Gr B Carbon Steel",
+    "asme_rating": "Class 300 RF",
+    "status": "MONITORED_RUN",
+    "telemetry": {
+      "nominal_thickness_mm": 12.7,
+      "measured_minimum_thickness_mm": 6.8,
+      "future_corrosion_allowance_mm": 1.5,
+      "longitudinal_flaw_length_mm": 125.0,
+      "remaining_strength_factor_rsf": 1.0,
+      "folias_bulging_factor_mt": 1.48,
+      "design_mawp_mpa": 3.5,
+      "operating_pressure_mpa": 2.2,
+      "metal_loss_rate_mm_yr": 0.38,
+      "inspection_technique": "Phased Array Ultrasonic (PAUT)"
+    }
+  },
+  {
+    "tag": "BFJ-201",
+    "name": "Hydrocracker Reactor Manway Bolted Flanged Joint",
+    "unit": "HCU",
+    "type": "Bolted Flanged Joint (ASME Section VIII Div 1 App 2 / ASME PCC-1)",
+    "service": "High-Pressure High-Temperature Hydrogen & Hydrocarbon Containment",
+    "description": "24-inch NPS Class 1500 RTJ reactor manway closure. Engineered to ASME Section VIII Div 1 Appendix 2 rules with ASME PCC-1 torque tightening protocols.",
+    "design_pressure_psig": 2175.0,
+    "design_temp_c": 380.0,
+    "flange_class": 1500,
+    "material": "ASTM A336 Gr F22 (2.25Cr-1Mo-V) / Inconel 625 Weld Overlay",
+    "asme_rating": "Class 1500 RTJ",
+    "status": "TORQUED_VERIFIED",
+    "telemetry": {
+      "flange_nps_in": 24.0,
+      "design_pressure_bar": 150.0,
+      "number_of_bolts": 24,
+      "bolt_diameter_in": 1.75,
+      "bolt_material": "ASTM A193 B7M",
+      "gasket_type": "Kammprofile SS316 with Flexible Graphite Facing",
+      "target_assembly_torque_nm": 1850.0,
+      "gasket_seating_stress_mpa": 120.5,
+      "bolt_stress_margin_pct": 34.2,
+      "hydraulic_tensioner_pressure_bar": 950.0,
+      "leak_sensor_ppm": 0.0
+    }
   }
 ]

@@ -536,6 +536,52 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api579_fitness_for_service",
+                    "description": "API 579-1 / ASME FFS-1 Level 1 & 2 Fitness-For-Service Assessment for Local Metal Thinning (LTA) and pitting loss.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "component_type": {"type": "string", "description": "cylindrical_shell, pipe, or spherical_head", "default": "cylindrical_shell"},
+                            "outside_diameter_mm": {"type": "number", "description": "Component outside diameter in mm", "default": 406.4},
+                            "nominal_thickness_mm": {"type": "number", "description": "Original nominal thickness in mm", "default": 12.7},
+                            "future_corrosion_allowance_mm": {"type": "number", "description": "Future corrosion allowance in mm", "default": 1.5},
+                            "measured_minimum_thickness_mm": {"type": "number", "description": "Measured remaining minimum thickness in mm", "default": 6.8},
+                            "longitudinal_flaw_length_mm": {"type": "number", "description": "Longitudinal length of flaw s in mm", "default": 125.0},
+                            "circumferential_flaw_width_mm": {"type": "number", "description": "Circumferential width of flaw c in mm", "default": 85.0},
+                            "design_pressure_mpa": {"type": "number", "description": "Operating/Design pressure in MPa", "default": 3.5},
+                            "allowable_stress_mpa": {"type": "number", "description": "Allowable material stress S in MPa", "default": 138.0},
+                            "joint_efficiency": {"type": "number", "description": "Weld joint efficiency factor E", "default": 1.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_bolted_flange_joint_integrity",
+                    "description": "ASME Section VIII Div 1 App 2 & ASME PCC-1 bolted flanged joint seating stress, bolt area margin, and assembly torque.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "flange_nps_in": {"type": "number", "description": "Nominal pipe size in inches", "default": 8.0},
+                            "flange_class": {"type": "integer", "description": "ASME B16.5 flange pressure class", "default": 300},
+                            "design_pressure_bar": {"type": "number", "description": "Design pressure in bar", "default": 35.0},
+                            "design_temp_c": {"type": "number", "description": "Design temperature in Celsius", "default": 220.0},
+                            "gasket_type": {"type": "string", "description": "Gasket material type", "default": "spiral_wound_316_graphite"},
+                            "number_of_bolts": {"type": "integer", "description": "Number of flange studs/bolts", "default": 12},
+                            "bolt_diameter_in": {"type": "number", "description": "Nominal bolt diameter in inches", "default": 0.875},
+                            "gasket_outer_dia_mm": {"type": "number", "description": "Gasket outer diameter in mm", "default": 273.0},
+                            "gasket_inner_dia_mm": {"type": "number", "description": "Gasket inner diameter in mm", "default": 230.0},
+                            "nut_factor_k": {"type": "number", "description": "Torque friction factor K", "default": 0.17}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -567,7 +613,9 @@ class ToolRegistry:
             "calculate_cathodic_protection_and_cui_risk",
             "calculate_cooling_tower_performance",
             "calculate_teg_dehydration_unit",
-            "calculate_relief_valve_sizing"
+            "calculate_relief_valve_sizing",
+            "calculate_api579_fitness_for_service",
+            "calculate_bolted_flange_joint_integrity"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)
