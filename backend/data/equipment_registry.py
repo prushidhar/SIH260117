@@ -39,6 +39,10 @@ class EquipmentRegistry:
     def get_spec(self, tag: str) -> Optional[dict]:
         return self._by_tag.get(str(tag).upper().strip()) if tag else None
 
+    def get_equipment(self, tag: str) -> Optional[dict]:
+        """Alias for get_spec to support REST integrity lookups."""
+        return self.get_spec(tag)
+
     def get_all(self) -> List[dict]:
         return list(self._items)
 
