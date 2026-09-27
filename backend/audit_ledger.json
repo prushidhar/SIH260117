@@ -7320,5 +7320,17 @@
     },
     "previous_hash": "9328377884e05579e7ffd04b1cbf9b6af917e1018d9ca0737eb5c5e39f453c1c",
     "hash": "7483be5e2dd5991cf416782a3411594425b742d98d5acc96c4a3ff95b0318faf"
+  },
+  {
+    "timestamp": 1790521632.223593,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "91178fa04f229386d1d5faa9b42afa7ab75d9fef93c5d3704ac5b1745123f16e",
+      "file_count": 4
+    },
+    "previous_hash": "7483be5e2dd5991cf416782a3411594425b742d98d5acc96c4a3ff95b0318faf",
+    "hash": "4ada9af4dc8f5b755378f34fb39f1a6bf89a2ad52b5eed80182e3cacbf815e30"
   }
 ]

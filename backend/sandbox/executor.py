@@ -582,6 +582,49 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api650_storage_tank_shell",
+                    "description": "API 650 & API 653 oil storage tank shell sizing via 1-Foot Method, hydrostatic test thickness, and course breakdown.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tank_diameter_m": {"type": "number", "description": "Tank nominal diameter in meters", "default": 45.0},
+                            "tank_height_m": {"type": "number", "description": "Tank total shell height in meters", "default": 16.0},
+                            "design_liquid_level_m": {"type": "number", "description": "Maximum design liquid height in meters", "default": 14.5},
+                            "product_specific_gravity": {"type": "number", "description": "Stored product specific gravity", "default": 0.85},
+                            "corrosion_allowance_mm": {"type": "number", "description": "Shell corrosion allowance in mm", "default": 1.5},
+                            "allowable_stress_design_mpa": {"type": "number", "description": "Design allowable stress in MPa", "default": 160.0},
+                            "allowable_stress_test_mpa": {"type": "number", "description": "Hydrotest allowable stress in MPa", "default": 171.0},
+                            "joint_efficiency": {"type": "number", "description": "Weld joint efficiency factor", "default": 1.0},
+                            "number_of_courses": {"type": "integer", "description": "Number of shell courses", "default": 7}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_ptc4_boiler_efficiency",
+                    "description": "ASME PTC 4 & API 560 fired heater / boiler thermal efficiency via heat loss method, excess air losses, and fuel savings.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "fired_duty_mw": {"type": "number", "description": "Fired heater thermal duty in MW", "default": 65.0},
+                            "fuel_type": {"type": "string", "description": "Fuel gas or fuel oil type", "default": "refinery_fuel_gas"},
+                            "stack_temp_c": {"type": "number", "description": "Stack exhaust temperature in Celsius", "default": 165.0},
+                            "ambient_temp_c": {"type": "number", "description": "Ambient combustion air temperature in Celsius", "default": 25.0},
+                            "excess_oxygen_pct": {"type": "number", "description": "Flue gas excess O2 percentage", "default": 3.5},
+                            "target_excess_oxygen_pct": {"type": "number", "description": "Optimized target excess O2 percentage", "default": 2.0},
+                            "combustibles_co_ppm": {"type": "number", "description": "Flue gas CO concentration in ppm", "default": 35.0},
+                            "fuel_lhv_mj_kg": {"type": "number", "description": "Fuel Lower Heating Value in MJ/kg", "default": 46.5}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -615,7 +658,9 @@ class ToolRegistry:
             "calculate_teg_dehydration_unit",
             "calculate_relief_valve_sizing",
             "calculate_api579_fitness_for_service",
-            "calculate_bolted_flange_joint_integrity"
+            "calculate_bolted_flange_joint_integrity",
+            "calculate_api650_storage_tank_shell",
+            "calculate_asme_ptc4_boiler_efficiency"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

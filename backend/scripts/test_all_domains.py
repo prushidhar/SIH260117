@@ -525,6 +525,48 @@ def test_card_18_bolted_flange_joint():
     print('  PASS')
 
 
+def test_card_19_api650_storage_tank():
+    print('\n--- TEST 19: API 650 / API 653 Oil Storage Tank Shell Integrity ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api650_storage_tank_shell(
+        tank_diameter_m=45.0,
+        tank_height_m=16.0,
+        design_liquid_level_m=14.5,
+        product_specific_gravity=0.85,
+        corrosion_allowance_mm=1.5
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['capacity_barrels'] > 100000.0
+    assert result['governing_plate_thickness_mm'] >= result['api650_table52_min_mm']
+    assert len(result['courses']) == 7
+    print(f"  [+] Storage Capacity: {result['capacity_m3']} m³ ({result['capacity_barrels']:.0f} barrels)")
+    print(f"  [+] Course 1 Design: {result['course_1_design_thickness_mm']} mm, Hydrotest: {result['course_1_test_thickness_mm']} mm")
+    print(f"  [+] Governing Shell Plate: {result['governing_plate_thickness_mm']} mm (Governed by: {result['governing_condition']})")
+    print(f"  [+] API 653 Minimum Retirable Thickness: {result['api653_retirable_tmin_mm']} mm")
+    print('  PASS')
+
+
+def test_card_20_asme_ptc4_boiler_efficiency():
+    print('\n--- TEST 20: ASME PTC 4 / API 560 Fired Heater Thermal Efficiency & O2 Trim ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_asme_ptc4_boiler_efficiency(
+        fired_duty_mw=65.0,
+        stack_temp_c=165.0,
+        ambient_temp_c=25.0,
+        excess_oxygen_pct=3.5,
+        target_excess_oxygen_pct=2.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['thermal_efficiency_pct'] > 80.0
+    assert result['optimized_thermal_efficiency_pct'] >= result['thermal_efficiency_pct']
+    assert result['annual_fuel_cost_savings_usd'] > 0.0
+    print(f"  [+] Current Excess Air: {result['excess_air_pct']}%, Dry Gas Loss: {result['loss_dry_flue_gas_pct']}%")
+    print(f"  [+] ASME PTC 4 Gross Thermal Efficiency: {result['thermal_efficiency_pct']}% (Optimized: {result['optimized_thermal_efficiency_pct']}%)")
+    print(f"  [+] Annual Energy Savings: ${result['annual_fuel_cost_savings_usd']:,.0f} USD/year")
+    print(f"  [+] Annual CO2 Emissions Reduction: {result['annual_co2_reduction_tonnes']} tonnes/yr")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -547,7 +589,10 @@ if __name__ == "__main__":
     test_card_16()
     test_card_17_api579_fitness_for_service()
     test_card_18_bolted_flange_joint()
+    test_card_19_api650_storage_tank()
+    test_card_20_asme_ptc4_boiler_efficiency()
     print("\n================================================================")
-    print("ALL 18 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 20 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+
 

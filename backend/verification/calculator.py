@@ -1830,4 +1830,196 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {'error': str(e)}
 
+    @staticmethod
+    def calculate_api650_storage_tank_shell(
+        tank_diameter_m: float = 45.0,
+        tank_height_m: float = 16.0,
+        design_liquid_level_m: float = 14.5,
+        product_specific_gravity: float = 0.85,
+        corrosion_allowance_mm: float = 1.5,
+        allowable_stress_design_mpa: float = 160.0,
+        allowable_stress_test_mpa: float = 171.0,
+        joint_efficiency: float = 1.0,
+        number_of_courses: int = 7
+    ) -> dict:
+        """API 650 (13th Ed.) Section 5.6 & API 653 Section 4.3:
+        Storage Tank Shell Sizing via 1-Foot Method and Hydrostatic Test Thickness."""
+        try:
+            import math
+            d_m = tank_diameter_m
+            h_m = design_liquid_level_m
+            g = product_specific_gravity
+            ca_mm = corrosion_allowance_mm
+            s_d_mpa = allowable_stress_design_mpa
+            s_t_mpa = allowable_stress_test_mpa
+            e = joint_efficiency
+
+            # Imperial conversions for API 650 1-Foot equations
+            d_ft = d_m * 3.28084
+            h_ft = h_m * 3.28084
+            ca_in = ca_mm / 25.4
+            s_d_psi = s_d_mpa * 145.038
+            s_t_psi = s_t_mpa * 145.038
+
+            # API 650 Section 5.6.3.2 1-Foot Method
+            # td = [2.6 * D * (H - 1) * G] / (Sd * E) + CA
+            # tt = [2.6 * D * (H - 1)] / (St * E)
+            td_in = (2.6 * d_ft * (h_ft - 1.0) * g) / (s_d_psi * e) + ca_in
+            tt_in = (2.6 * d_ft * (h_ft - 1.0)) / (s_t_psi * e)
+
+            td_mm = td_in * 25.4
+            tt_mm = tt_in * 25.4
+            treq_mm = max(td_mm, tt_mm)
+
+            # API 650 Table 5.2 minimum nominal thickness:
+            # D < 15m: 5mm; 15-36m: 6mm; 36-60m: 8mm; >60m: 10mm
+            if d_m < 15.0:
+                t_code_min_mm = 5.0
+            elif d_m <= 36.0:
+                t_code_min_mm = 6.0
+            elif d_m <= 60.0:
+                t_code_min_mm = 8.0
+            else:
+                t_code_min_mm = 10.0
+
+            governing_course1_thickness_mm = max(math.ceil(treq_mm * 10) / 10.0, t_code_min_mm)
+
+            # Calculate shell course profile from Course 1 (bottom) to Course N (top)
+            courses = []
+            course_height_m = tank_height_m / number_of_courses
+            for c_idx in range(1, number_of_courses + 1):
+                # Liquid head at bottom of course
+                head_c_m = max(1.0, design_liquid_level_m - (c_idx - 1) * course_height_m)
+                head_c_ft = head_c_m * 3.28084
+                c_td_in = (2.6 * d_ft * max(0.5, head_c_ft - 1.0) * g) / (s_d_psi * e) + ca_in
+                c_tt_in = (2.6 * d_ft * max(0.5, head_c_ft - 1.0)) / (s_t_psi * e)
+                c_treq_mm = max(c_td_in * 25.4, c_tt_in * 25.4, t_code_min_mm)
+                courses.append({
+                    'course_number': c_idx,
+                    'height_range_m': f"{(c_idx-1)*course_height_m:.1f} - {c_idx*course_height_m:.1f} m",
+                    'effective_head_m': round(head_c_m, 2),
+                    'required_thickness_mm': round(c_treq_mm, 2),
+                    'nominal_plate_spec_mm': math.ceil(c_treq_mm)
+                })
+
+            # Tank capacity in m3 and barrels
+            tank_capacity_m3 = (math.pi / 4.0) * (d_m ** 2) * h_m
+            tank_capacity_bbl = tank_capacity_m3 * 6.28981
+
+            # API 653 Minimum Retirable Thickness for bottom course (t_min)
+            t_min_api653_mm = (2.6 * d_ft * (h_ft - 1.0) * g) / ((s_d_psi * 1.1) * e) * 25.4
+
+            return {
+                'tank_diameter_m': tank_diameter_m,
+                'tank_height_m': tank_height_m,
+                'design_liquid_level_m': design_liquid_level_m,
+                'capacity_m3': round(tank_capacity_m3, 1),
+                'capacity_barrels': round(tank_capacity_bbl, 0),
+                'course_1_design_thickness_mm': round(td_mm, 2),
+                'course_1_test_thickness_mm': round(tt_mm, 2),
+                'governing_plate_thickness_mm': governing_course1_thickness_mm,
+                'api650_table52_min_mm': t_code_min_mm,
+                'api653_retirable_tmin_mm': round(t_min_api653_mm, 2),
+                'courses': courses,
+                'governing_condition': 'DESIGN_INTERNAL_LIQUID' if td_mm >= tt_mm else 'HYDROSTATIC_WATER_TEST',
+                'standard': 'API Standard 650 (13th Ed.) / API 653 (5th Ed.)',
+                'status': 'PASS' if governing_course1_thickness_mm >= t_code_min_mm else 'REVIEW_SPEC'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_asme_ptc4_boiler_efficiency(
+        fired_duty_mw: float = 65.0,
+        fuel_type: str = 'refinery_fuel_gas',
+        stack_temp_c: float = 165.0,
+        ambient_temp_c: float = 25.0,
+        excess_oxygen_pct: float = 3.5,
+        target_excess_oxygen_pct: float = 2.0,
+        combustibles_co_ppm: float = 35.0,
+        fuel_lhv_mj_kg: float = 46.5
+    ) -> dict:
+        """ASME PTC 4 (Fired Steam Generators) & API 560 (Fired Heaters):
+        Calculates thermal efficiency via heat-loss method, excess air losses, and fuel savings."""
+        try:
+            import math
+            # Excess air percentage: EA = O2 / (20.9 - O2) * 100
+            denom_o2 = max(0.1, 20.9 - excess_oxygen_pct)
+            excess_air_pct = (excess_oxygen_pct / denom_o2) * 100.0
+
+            # Flue gas temperature differential
+            delta_t_c = max(10.0, stack_temp_c - ambient_temp_c)
+
+            # Dry flue gas loss (ASME PTC 4 Eq. 5-1)
+            # L_dfg approx = (0.0195 * delta_t_c * (1 + excess_air_pct / 100.0))
+            loss_dry_gas_pct = 0.0195 * delta_t_c * (1.0 + (excess_air_pct / 100.0) * 0.45)
+            loss_dry_gas_pct = min(15.0, max(2.0, loss_dry_gas_pct))
+
+            # Moisture from hydrogen in fuel (approx 6.8% for fuel gas / natural gas)
+            loss_moisture_fuel_pct = 6.8 + (delta_t_c * 0.005)
+
+            # Moisture in combustion air (approx 0.15 - 0.35%)
+            loss_moisture_air_pct = 0.25
+
+            # Unburned fuel / CO loss: approx 0.01% per 100 ppm CO
+            loss_co_combustibles_pct = (combustibles_co_ppm / 1000.0) * 0.1
+
+            # Radiation and convection casing surface loss (ABMA curve)
+            # Typically 1.5% for 65 MW industrial fired heater
+            loss_radiation_casing_pct = 1.25
+
+            # Total heat losses
+            total_losses_pct = (
+                loss_dry_gas_pct +
+                loss_moisture_fuel_pct +
+                loss_moisture_air_pct +
+                loss_co_combustibles_pct +
+                loss_radiation_casing_pct
+            )
+
+            # ASME PTC 4 Thermal Efficiency (Heat Loss Method)
+            gross_efficiency_pct = 100.0 - total_losses_pct
+
+            # Optimization: Excess Air Trim to target O2
+            target_denom = max(0.1, 20.9 - target_excess_oxygen_pct)
+            target_ea_pct = (target_excess_oxygen_pct / target_denom) * 100.0
+            target_dry_loss = 0.0195 * delta_t_c * (1.0 + (target_ea_pct / 100.0) * 0.45)
+            efficiency_gain_pct = max(0.0, loss_dry_gas_pct - target_dry_loss)
+            optimized_efficiency_pct = gross_efficiency_pct + efficiency_gain_pct
+
+            # Fuel energy savings calculation (MW and annual fuel gas in GJ)
+            current_fuel_input_mw = fired_duty_mw / (gross_efficiency_pct / 100.0)
+            optimized_fuel_input_mw = fired_duty_mw / (optimized_efficiency_pct / 100.0)
+            fuel_saved_mw = current_fuel_input_mw - optimized_fuel_input_mw
+
+            # 8400 operating hours per year
+            annual_mwh_saved = fuel_saved_mw * 8400.0
+            annual_gj_saved = annual_mwh_saved * 3.6
+            # Natural gas approx $7.00 per MMBTU ($6.63 per GJ)
+            annual_cost_savings_usd = annual_gj_saved * 6.63
+            # CO2 factor for fuel gas approx 56.1 kg CO2 / GJ
+            annual_co2_reduction_tonnes = (annual_gj_saved * 56.1) / 1000.0
+
+            return {
+                'fired_duty_mw': fired_duty_mw,
+                'fuel_type': fuel_type,
+                'stack_temperature_c': stack_temp_c,
+                'ambient_temperature_c': ambient_temp_c,
+                'excess_oxygen_pct': excess_oxygen_pct,
+                'excess_air_pct': round(excess_air_pct, 1),
+                'loss_dry_flue_gas_pct': round(loss_dry_gas_pct, 2),
+                'loss_moisture_in_fuel_pct': round(loss_moisture_fuel_pct, 2),
+                'loss_radiation_casing_pct': round(loss_radiation_casing_pct, 2),
+                'total_heat_losses_pct': round(total_losses_pct, 2),
+                'thermal_efficiency_pct': round(gross_efficiency_pct, 2),
+                'optimized_thermal_efficiency_pct': round(optimized_efficiency_pct, 2),
+                'efficiency_gain_pct': round(efficiency_gain_pct, 2),
+                'annual_fuel_cost_savings_usd': round(annual_cost_savings_usd, 0),
+                'annual_co2_reduction_tonnes': round(annual_co2_reduction_tonnes, 1),
+                'standard': 'ASME PTC 4 (Fired Steam Generators) / API 560',
+                'status': 'EFFICIENT' if gross_efficiency_pct >= 85.0 else 'EXCESS_AIR_TRIM_RECOMMENDED'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
 engineering_tools = EngineeringSandbox()

@@ -1558,5 +1558,33 @@
       "hydraulic_tensioner_pressure_bar": 950.0,
       "leak_sensor_ppm": 0.0
     }
+  },
+  {
+    "tag": "TK-101",
+    "name": "Atmospheric Crude Oil Storage Tank (API 650 / 653)",
+    "unit": "TANK_FARM",
+    "type": "Welded Steel Storage Tank (API 650 13th Ed.)",
+    "service": "Bulk Crude Oil Feed Storage and Settling",
+    "description": "45-meter diameter, 16-meter height welded steel cylindrical tank with external floating roof. Designed per API 650 1-Foot Method with API 653 bottom course retirable thickness monitoring.",
+    "design_pressure_psig": 2.5,
+    "design_temp_c": 65.0,
+    "diameter_m": 45.0,
+    "height_m": 16.0,
+    "material": "ASTM A283 Gr C / A516 Gr 70",
+    "asme_rating": "Atmospheric / Low Pressure API 650",
+    "status": "IN_SERVICE",
+    "capacity_barrels": 145051.0,
+    "telemetry": {
+      "liquid_level_m": 14.5,
+      "liquid_temperature_c": 42.0,
+      "product_specific_gravity": 0.85,
+      "course_1_thickness_mm": 18.2,
+      "course_1_required_mm": 16.5,
+      "floating_roof_rim_seal": "INTACT",
+      "radar_level_mm": 14520,
+      "settlement_tilt_mm": 12.0,
+      "last_api653_internal_inspection": "2023-08-15",
+      "next_api653_inspection_due": "2033-08-15"
+    }
   }
 ]
