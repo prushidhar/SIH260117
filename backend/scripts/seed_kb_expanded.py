@@ -505,12 +505,62 @@ Comprehensive Catalog of 66 Industrial Degradation Mechanisms:
    Deposition of NH4Cl and NH4HS salts in hydroprocessing reactor effluents causing localized under-deposit gouging.
 5. High-Temperature Hydrogen Attack (HTHA):
    Evaluated per Nelson curves in API 941; methane formation within grain boundaries causing internal fissuring and loss of ductility."""
+    },
+    {
+        "doc_id": "std-api-521-depressure",
+        "title": "API 521 § 5.7 Emergency Vapor Depressuring & Cryogenic Blowdown Systems",
+        "text": """API Standard 521 (7th Edition, 2020) Section 5.7: Vapor Depressuring Systems and Emergency Blowdown:
+Depressuring Criterion:
+- Depressuring systems shall be designed to reduce the vessel internal pressure to 50% of the design pressure or 6.9 bar gauge (100 psig), whichever is lower, within 15 minutes (900 seconds) under fire exposure or emergency trip.
+- Joule-Thomson Cryogenic Chilling: High-velocity expansion of hydrocarbon or hydrogen-rich gas across restriction orifices causes severe auto-refrigeration.
+- Minimum Design Metal Temperature (MDMT) per ASME Section VIII Div 1 UCS-66: The lowest transient metal temperature of the vessel shell and blowdown line must remain at or above the MDMT.
+- If metal temperature drops below MDMT, mandatory Charpy V-notch impact testing at minimum design temperature or metallurgical upgrade to 3.5% Ni / 304L/316L stainless steel is required to prevent catastrophic brittle failure."""
+    },
+    {
+        "doc_id": "std-api-684-rotordynamics",
+        "title": "API 684 / API 617 Rotordynamics & Critical Speed Campbell Diagrams",
+        "text": """API Standard 684 (2nd Edition) & API 617 (8th Edition) Axial and Centrifugal Compressors and Expander-Compressors:
+Rotordynamic Lateral and Torsional Critical Speeds:
+- Separation Margins:
+  1. If first lateral critical speed Nc1 is below operating speed: Nc1 shall be at least 16% below minimum operating speed.
+  2. If second lateral critical speed Nc2 is above operating speed: Nc2 shall be at least 26% above maximum continuous speed.
+- Campbell Diagram Resonance Verification: Interference check verifying that excitation harmonics (1X unbalance, 2X misalignment, blade pass frequency Z*N) do not coincide within +/- 10% of any rotor natural frequency across the operating range.
+- Shaft Misalignment Severity: Evaluated via 2X/1X vibration velocity ratio and axial vibration; excessive misalignment derates bearing L10h fatigue life per ISO 281."""
+    },
+    {
+        "doc_id": "std-iec-60079-hazloc",
+        "title": "IEC 60079 Explosive Atmospheres & Hazardous Area Classification (Ex-d / Ex-e)",
+        "text": """IEC 60079-0 (General Requirements), IEC 60079-1 (Flameproof 'd'), and IEC 60079-7 (Increased Safety 'e'):
+Equipment Protection in Flammable Vapor / Gas Environments:
+- Zone Classification: Zone 0 (continuous hazard), Zone 1 (likely in normal operation), Zone 2 (unlikely/short duration).
+- Gas Groups and Maximum Experimental Safe Gap (MESG):
+  1. Group IIA: Propane/Methane (MESG > 0.9 mm)
+  2. Group IIB: Ethylene (0.5 mm <= MESG <= 0.9 mm)
+  3. Group IIC: Hydrogen / Acetylene (MESG < 0.5 mm) - highest explosion severity.
+- Temperature Classes (T-Class): Maximum enclosure surface temperature shall not exceed:
+  T1: 450°C, T2: 300°C, T3: 200°C, T4: 135°C, T5: 100°C, T6: 85°C.
+- Thermal Safety Margin: Surface temperature must maintain at least 50°C safety margin below auto-ignition temperature (AIT) of surrounding atmosphere.
+- Enclosure Ingress Protection: IP66 or IP67 required for outdoor refinery environments."""
+    },
+    {
+        "doc_id": "std-isa-182-alarms",
+        "title": "ANSI/ISA-18.2 & EEMUA 191 Alarm Management & Alarm Flood Mitigation",
+        "text": """ANSI/ISA-18.2-2016 Management of Alarm Systems for Process Industries & EEMUA Publication 191:
+Alarm System Performance Metrics and Control Room Human Factors:
+- Target Alarm Rates:
+  1. Normal Steady-State: < 1 alarm per 10 minutes (manageable by operator).
+  2. Alarm Flood Threshold: > 10 alarms per 10 minutes (requires automated suppression).
+- Alarm Rationalization Lifecycle:
+  1. First-Out Identification: Isolates the primary trip initiator from downstream consequential cascade alarms.
+  2. Chattering Suppression: Automatically debounces alarms transitioning > 3 times in 60 seconds by applying 2% to 5% deadband hysteresis.
+  3. Standing Alarm Suppression: Shelves stale standing alarms inactive for > 24 hours.
+  4. Priority Distribution: Recommended target: Critical/P1 <= 5%, High/P2 <= 15%, Medium/Low/P3 >= 80%."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 31 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 35 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)

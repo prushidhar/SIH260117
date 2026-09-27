@@ -840,6 +840,104 @@ def test_card_31_api581_rbi_risk_matrix():
     print('  PASS')
 
 
+def test_card_32_cryogenic_blowdown_depressurization():
+    print('\n--- TEST 32: API 521 § 5.7 Emergency Depressuring & ASME UCS-66 MDMT ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_cryogenic_blowdown_depressurization(
+        vessel_tag="BDV-201",
+        vessel_volume_m3=45.0,
+        initial_pressure_bar_a=85.0,
+        initial_temp_c=40.0,
+        gas_molecular_weight=18.5,
+        gas_cp_cv_ratio=1.28,
+        blowdown_orifice_diameter_mm=38.0,
+        vessel_asme_mdmt_c=-29.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['api521_depressuring_rate_met'] is True
+    assert result['compliance'] == 'PASS_SAFE_MDMT_MARGIN'
+    assert result['minimum_wall_metal_temp_c'] >= result['vessel_design_mdmt_c']
+    print(f"  [+] Asset: {result['vessel_tag']} (Volume: {result['vessel_volume_m3']} m³, P0: {result['initial_pressure_bar_a']} bar a)")
+    print(f"  [+] 15-Minute Blowdown Pressure: {result['pressure_at_15min_bar_a']} bar a vs Target API 521: {result['api521_target_pressure_bar_a']} bar a (PASS: {result['api521_depressuring_rate_met']})")
+    print(f"  [+] Joule-Thomson Cryogenic Chilling: Fluid Min Temp={result['minimum_cryogenic_fluid_temp_c']} °C, Metal Wall Min={result['minimum_wall_metal_temp_c']} °C")
+    print(f"  [+] ASME UCS-66 Brittle Fracture Check: MDMT={result['vessel_design_mdmt_c']} °C -> Risk: {result['brittle_fracture_risk']} ({result['asme_ucs66_impact_test']})")
+    print('  PASS')
+
+
+def test_card_33_rotor_dynamics_critical_speeds():
+    print('\n--- TEST 33: API 684 / API 617 Rotordynamics & Campbell Diagram ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_rotor_dynamics_critical_speeds(
+        machine_tag="TG-502",
+        operating_speed_rpm=5400.0,
+        first_critical_speed_rpm=2450.0,
+        second_critical_speed_rpm=7800.0,
+        radial_vibration_1x_mms=2.10,
+        radial_vibration_2x_mms=0.85
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['api684_margin_nc1_pass'] is True
+    assert result['api684_margin_nc2_pass'] is True
+    assert result['compliance'] == 'PASS_API_684_COMPLIANT'
+    print(f"  [+] Machine: {result['machine_tag']} (Operating Speed: {result['operating_speed_rpm']} RPM, 1X Freq: {result['fundamental_frequency_1x_hz']} Hz)")
+    print(f"  [+] Critical Speed Separation: Nc1={result['first_critical_speed_rpm']} RPM (Margin: {result['separation_margin_nc1_pct']}%), Nc2={result['second_critical_speed_rpm']} RPM (Margin: {result['separation_margin_nc2_pct']}%)")
+    print(f"  [+] Campbell Resonance Interference: {result['campbell_harmonic_interference']} (Vane Pass: {result['vane_pass_frequency_hz']} Hz)")
+    print(f"  [+] Shaft Alignment & Bearing Health: Ratio 2X/1X={result['misalignment_ratio_2x_1x']} ({result['misalignment_diagnostic']}, Life Derate: {result['bearing_l10h_derate_factor']}x)")
+    print('  PASS')
+
+
+def test_card_34_iec60079_hazardous_area_ex():
+    print('\n--- TEST 34: IEC 60079 Hazardous Area Explosion Protection & Gas Group ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_iec60079_hazardous_area_ex(
+        tag="JB-101",
+        hazardous_zone="Zone 1",
+        gas_group="IIC",
+        auto_ignition_temp_c=560.0,
+        rated_temperature_class="T4",
+        measured_max_surface_temp_c=118.5,
+        flameproof_gap_measured_mm=0.12,
+        ingress_protection_rating="IP66"
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['compliance'] == 'PASS_ATEX_IECEX_CERTIFIED'
+    assert result['temperature_class_compliant'] is True
+    assert result['gap_integrity_pass'] is True
+    print(f"  [+] Equipment: {result['tag']} ({result['hazardous_zone']}, Gas Group {result['gas_group']} - {result['protection_method']})")
+    print(f"  [+] Temperature Class: {result['rated_temperature_class']} (Limit: {result['temperature_class_limit_c']} °C, Surface: {result['measured_surface_temp_c']} °C, Compliant: {result['temperature_class_compliant']})")
+    print(f"  [+] Thermal Ignition Safety Margin: {result['thermal_safety_margin_c']} °C below AIT ({result['auto_ignition_temp_c']} °C)")
+    print(f"  [+] Flameproof Gap (MESG): Measured={result['flameproof_gap_measured_mm']} mm vs Max Allowable={result['max_allowable_gap_mm']} mm (Margin: {result['flameproof_gap_margin_pct']}%)")
+    print(f"  [+] Hermetic Ingress Protection: {result['ingress_protection']} (Verified: {result['ip_rating_verified']})")
+    print('  PASS')
+
+
+def test_card_35_isa182_alarm_triage_engine():
+    print('\n--- TEST 35: ANSI/ISA-18.2 & EEMUA 191 Alarm Rationalization & Suppression ---')
+    from agents.triage_engine import alarm_triage_engine
+    sample_alarms = [
+        {"alarm_id": "A-1", "tag": "K-102", "timestamp_s": 10.0, "unit": "HCU", "severity": "P1", "description": "Compressor High-High Lube Oil Pressure Trip"},
+        {"alarm_id": "A-2", "tag": "P-101", "timestamp_s": 11.2, "unit": "HCU", "severity": "P2", "description": "Feed Pump Discharge Flow Low (Consequential)"},
+        {"alarm_id": "A-3", "tag": "V-101", "timestamp_s": 12.0, "unit": "HCU", "severity": "P2", "description": "Feed Drum Level High (Consequential)"},
+        {"alarm_id": "A-4", "tag": "TIC-201", "timestamp_s": 15.0, "unit": "CDU", "severity": "P3", "is_oscillation": True, "description": "Column Temp High-Low Chattering"},
+        {"alarm_id": "A-5", "tag": "TIC-201", "timestamp_s": 25.0, "unit": "CDU", "severity": "P3", "is_oscillation": True, "description": "Column Temp High-Low Chattering"},
+        {"alarm_id": "A-6", "tag": "TIC-201", "timestamp_s": 35.0, "unit": "CDU", "severity": "P3", "is_oscillation": True, "description": "Column Temp High-Low Chattering"},
+        {"alarm_id": "A-7", "tag": "TIC-201", "timestamp_s": 45.0, "unit": "CDU", "severity": "P3", "is_oscillation": True, "description": "Column Temp High-Low Chattering"}
+    ]
+    triage = alarm_triage_engine.triage_alarm_stream(sample_alarms, window_duration_seconds=300.0)
+    assert triage['total_alarms_received'] == 7
+    assert triage['root_cause_initiator']['tag'] == 'K-102'
+    assert triage['suppressed_cascade_count'] >= 1
+    assert triage['suppressed_chattering_count'] >= 1
+    assert len(triage['triage_digest_sha256']) == 64
+    print(f"  [+] Total Alarms Processed: {triage['total_alarms_received']} -> Actionable: {triage['actionable_alarms_count']}")
+    print(f"  [+] First-Out Root Cause Trigger: Tag '{triage['root_cause_initiator']['tag']}' — {triage['root_cause_initiator']['description']}")
+    print(f"  [+] Consequential Cascade Alarms Suppressed: {triage['suppressed_cascade_count']} alarms")
+    print(f"  [+] Chattering Alarms Debounced & Suppressed: {triage['suppressed_chattering_count']} alarms (Tag: TIC-201)")
+    print(f"  [+] EEMUA 191 Alarm Rate: {triage['alarm_rate_per_10min']} alarms/10-min ({triage['eemua191_flood_status']})")
+    print(f"  [+] Tamper-Evident Triage Digest: {triage['triage_digest_sha256'][:24]}...")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -875,8 +973,12 @@ if __name__ == "__main__":
     test_card_29_joukowsky_water_hammer_surge()
     test_card_30_iso5167_orifice_flowmeter()
     test_card_31_api581_rbi_risk_matrix()
+    test_card_32_cryogenic_blowdown_depressurization()
+    test_card_33_rotor_dynamics_critical_speeds()
+    test_card_34_iec60079_hazardous_area_ex()
+    test_card_35_isa182_alarm_triage_engine()
     print("\n================================================================")
-    print("ALL 31 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 35 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 

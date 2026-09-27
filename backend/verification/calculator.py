@@ -3013,6 +3013,209 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {"error": str(e)}
 
+    @staticmethod
+    def calculate_cryogenic_blowdown_depressurization(
+        vessel_tag: str = "BDV-201",
+        vessel_volume_m3: float = 45.0,
+        initial_pressure_bar_a: float = 85.0,
+        initial_temp_c: float = 40.0,
+        gas_molecular_weight: float = 18.5,
+        gas_cp_cv_ratio: float = 1.28,
+        blowdown_orifice_diameter_mm: float = 38.0,
+        vessel_metal_spec: str = "ASTM A516 Grade 70 (Normalized)",
+        vessel_asme_mdmt_c: float = -29.0,
+        target_depressure_time_minutes: float = 15.0
+    ) -> Dict[str, Any]:
+        """
+        API 521 § 5.7 Emergency Vapor Depressuring & ASME Section VIII Div 1 UCS-66 MDMT Engine.
+        Calculates choked orifice mass flow, isenthalpic Joule-Thomson real-gas chilling,
+        transient vessel wall minimum metal temperature, and brittle fracture prevention.
+        """
+        try:
+            p0_pa = initial_pressure_bar_a * 1e5
+            t0_k = initial_temp_c + 273.15
+            r_gas = 8314.46 / gas_molecular_weight
+            rho0 = p0_pa / (r_gas * t0_k)
+            total_gas_mass_kg = vessel_volume_m3 * rho0
+
+            orifice_area_m2 = (math.pi / 4.0) * ((blowdown_orifice_diameter_mm / 1000.0) ** 2)
+            k = gas_cp_cv_ratio
+            choked_flow_factor = math.sqrt(k * (2.0 / (k + 1.0)) ** ((k + 1.0) / (k - 1.0)))
+            cd = 0.82
+            qm0_kg_s = cd * orifice_area_m2 * p0_pa * math.sqrt(1.0 / (r_gas * t0_k)) * choked_flow_factor
+
+            tau_s = total_gas_mass_kg / max(0.1, qm0_kg_s)
+            time_15min_s = target_depressure_time_minutes * 60.0
+
+            p_15min_bar_a = initial_pressure_bar_a * ((1.0 + ((k - 1.0) / 2.0) * (time_15min_s / tau_s)) ** (-2.0 * k / (k - 1.0)))
+            p_target_api521_bar_a = max(7.9, initial_pressure_bar_a * 0.50)
+            depressuring_criterion_met = p_15min_bar_a <= p_target_api521_bar_a
+
+            p_ratio = max(0.01, p_15min_bar_a / initial_pressure_bar_a)
+            exponent = ((k - 1.0) / k) * 0.35
+            t_fluid_k = t0_k * (p_ratio ** exponent)
+            min_fluid_temp_c = t_fluid_k - 273.15
+
+            thermal_lag_factor = 0.65
+            min_metal_temp_c = initial_temp_c - (initial_temp_c - min_fluid_temp_c) * thermal_lag_factor
+
+            brittle_fracture_risk = min_metal_temp_c < vessel_asme_mdmt_c
+            impact_test_mandate = "MANDATORY_CHARPY_VNOTCH_AT_MIN_TEMP" if brittle_fracture_risk else "EXEMPT_UCS66_CURVE_B"
+
+            return {
+                "vessel_tag": vessel_tag,
+                "vessel_volume_m3": vessel_volume_m3,
+                "initial_pressure_bar_a": initial_pressure_bar_a,
+                "blowdown_orifice_dia_mm": blowdown_orifice_diameter_mm,
+                "depressure_time_minutes": target_depressure_time_minutes,
+                "pressure_at_15min_bar_a": round(p_15min_bar_a, 1),
+                "api521_target_pressure_bar_a": round(p_target_api521_bar_a, 1),
+                "api521_depressuring_rate_met": depressuring_criterion_met,
+                "minimum_cryogenic_fluid_temp_c": round(min_fluid_temp_c, 1),
+                "minimum_wall_metal_temp_c": round(min_metal_temp_c, 1),
+                "vessel_design_mdmt_c": vessel_asme_mdmt_c,
+                "brittle_fracture_risk": brittle_fracture_risk,
+                "asme_ucs66_impact_test": impact_test_mandate,
+                "standard": "API 521 § 5.7 / ASME Section VIII Div 1 UCS-66 (MDMT)",
+                "compliance": "PASS_SAFE_MDMT_MARGIN" if not brittle_fracture_risk and depressuring_criterion_met else "REVIEW_COLD_TEMPERATURE_OR_ORIFICE"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_rotor_dynamics_critical_speeds(
+        machine_tag: str = "TG-502",
+        operating_speed_rpm: float = 5400.0,
+        first_critical_speed_rpm: float = 2450.0,
+        second_critical_speed_rpm: float = 7800.0,
+        impeller_blade_count: int = 17,
+        radial_vibration_1x_mms: float = 2.10,
+        radial_vibration_2x_mms: float = 0.85,
+        axial_vibration_1x_mms: float = 0.90
+    ) -> Dict[str, Any]:
+        """
+        API 684 / API 617 / ISO 10816-7 Rotor Dynamics & Critical Speed Separation Engine.
+        Evaluates Campbell diagram frequency interference, lateral critical speed margins,
+        shaft misalignment severity, and ISO 281 bearing fatigue life derating.
+        """
+        try:
+            n_op = operating_speed_rpm
+            nc1 = first_critical_speed_rpm
+            nc2 = second_critical_speed_rpm
+
+            sm_nc1_pct = ((n_op - nc1) / n_op) * 100.0
+            sm_nc2_pct = ((nc2 - n_op) / n_op) * 100.0
+
+            api_nc1_pass = sm_nc1_pct >= 16.0
+            api_nc2_pass = sm_nc2_pct >= 26.0
+
+            f_1x_hz = n_op / 60.0
+            f_2x_hz = 2.0 * f_1x_hz
+            f_vpf_hz = impeller_blade_count * f_1x_hz
+            fn1_hz = nc1 / 60.0
+            fn2_hz = nc2 / 60.0
+
+            harmonic_interference = (abs(f_2x_hz - fn1_hz) / fn1_hz < 0.10) or (abs(f_vpf_hz - fn2_hz) / fn2_hz < 0.10)
+
+            misalignment_ratio = radial_vibration_2x_mms / max(0.1, radial_vibration_1x_mms)
+            axial_to_radial_ratio = axial_vibration_1x_mms / max(0.1, radial_vibration_1x_mms)
+
+            if misalignment_ratio > 0.75 or axial_to_radial_ratio > 0.60:
+                misalignment_severity = "MODERATE_SHAFT_MISALIGNMENT"
+                life_derate_factor = 0.62
+            elif misalignment_ratio > 1.20:
+                misalignment_severity = "SEVERE_ANGULAR_PARALLEL_MISALIGNMENT"
+                life_derate_factor = 0.35
+            else:
+                misalignment_severity = "NOMINAL_SHAFT_ALIGNMENT"
+                life_derate_factor = 0.98
+
+            compliance = "PASS_API_684_COMPLIANT" if (api_nc1_pass and api_nc2_pass and not harmonic_interference) else "RESONANCE_SEPARATION_MARGIN_BREACH"
+
+            return {
+                "machine_tag": machine_tag,
+                "operating_speed_rpm": n_op,
+                "first_critical_speed_rpm": nc1,
+                "second_critical_speed_rpm": nc2,
+                "separation_margin_nc1_pct": round(sm_nc1_pct, 1),
+                "separation_margin_nc2_pct": round(sm_nc2_pct, 1),
+                "api684_margin_nc1_pass": api_nc1_pass,
+                "api684_margin_nc2_pass": api_nc2_pass,
+                "fundamental_frequency_1x_hz": round(f_1x_hz, 1),
+                "vane_pass_frequency_hz": round(f_vpf_hz, 1),
+                "campbell_harmonic_interference": harmonic_interference,
+                "misalignment_ratio_2x_1x": round(misalignment_ratio, 2),
+                "misalignment_diagnostic": misalignment_severity,
+                "bearing_l10h_derate_factor": life_derate_factor,
+                "standard": "API 684 / API 617 / ISO 10816-7 Rotordynamics",
+                "compliance": compliance
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_iec60079_hazardous_area_ex(
+        tag: str = "JB-101",
+        hazardous_zone: str = "Zone 1",
+        gas_group: str = "IIC",
+        auto_ignition_temp_c: float = 560.0,
+        rated_temperature_class: str = "T4",
+        measured_max_surface_temp_c: float = 118.5,
+        ambient_design_max_c: float = 55.0,
+        protection_method: str = "Ex d (Flameproof Enclosure)",
+        flameproof_gap_measured_mm: float = 0.12,
+        ingress_protection_rating: str = "IP66"
+    ) -> Dict[str, Any]:
+        """
+        IEC 60079 / API RP 500 Explosive Atmosphere Hazardous Area Equipment Integrity Engine.
+        Verifies gas group MESG flameproof gap, T-Class surface temperature threshold,
+        AIT thermal ignition margin, and IP ingress protection.
+        """
+        try:
+            t_class_limits = {
+                "T1": 450.0,
+                "T2": 300.0,
+                "T3": 200.0,
+                "T4": 135.0,
+                "T5": 100.0,
+                "T6": 85.0
+            }
+            t_limit = t_class_limits.get(rated_temperature_class, 135.0)
+            t_class_compliant = measured_max_surface_temp_c <= t_limit
+
+            thermal_margin_to_ait_c = auto_ignition_temp_c - measured_max_surface_temp_c
+            ait_safe = thermal_margin_to_ait_c >= 50.0
+
+            max_permitted_flameproof_gap_mm = 0.15 if gas_group == "IIC" else (0.20 if gas_group == "IIB" else 0.40)
+            gap_compliant = flameproof_gap_measured_mm <= max_permitted_flameproof_gap_mm
+            gap_margin_pct = ((max_permitted_flameproof_gap_mm - flameproof_gap_measured_mm) / max_permitted_flameproof_gap_mm) * 100.0
+
+            ip_valid = ingress_protection_rating in ["IP66", "IP67", "IP68"]
+            overall_pass = t_class_compliant and ait_safe and gap_compliant and ip_valid
+
+            return {
+                "tag": tag,
+                "hazardous_zone": hazardous_zone,
+                "gas_group": gas_group,
+                "protection_method": protection_method,
+                "rated_temperature_class": rated_temperature_class,
+                "temperature_class_limit_c": t_limit,
+                "measured_surface_temp_c": measured_max_surface_temp_c,
+                "temperature_class_compliant": t_class_compliant,
+                "auto_ignition_temp_c": auto_ignition_temp_c,
+                "thermal_safety_margin_c": round(thermal_margin_to_ait_c, 1),
+                "flameproof_gap_measured_mm": flameproof_gap_measured_mm,
+                "max_allowable_gap_mm": max_permitted_flameproof_gap_mm,
+                "flameproof_gap_margin_pct": round(gap_margin_pct, 1),
+                "gap_integrity_pass": gap_compliant,
+                "ingress_protection": ingress_protection_rating,
+                "ip_rating_verified": ip_valid,
+                "standard": "IEC 60079-0 / IEC 60079-1 (Flameproof 'd') / API RP 500",
+                "compliance": "PASS_ATEX_IECEX_CERTIFIED" if overall_pass else "FAIL_EXPLOSION_HAZARD"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
 engineering_tools = EngineeringSandbox()
 
 

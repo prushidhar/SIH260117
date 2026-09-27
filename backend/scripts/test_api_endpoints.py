@@ -123,8 +123,32 @@ def main():
     assert len(rbi_data.get("portfolio")) == 3
     print(f"[+] /api/rbi/portfolio: OK (Evaluated: {rbi_data.get('total_assets_evaluated')} assets, Distribution: {rbi_data.get('matrix_distribution')})")
 
+    # 11. Alarm Triage & Flood Suppression Endpoint
+    res_triage = client.post("/api/alarms/triage", json={
+        "alarms": [
+            {"alarm_id": "ALM-1", "tag": "K-102", "timestamp_s": 5.0, "unit": "HCU", "severity": "P1", "description": "Trip"},
+            {"alarm_id": "ALM-2", "tag": "P-101", "timestamp_s": 6.0, "unit": "HCU", "severity": "P2", "description": "Cascade"}
+        ]
+    })
+    assert res_triage.status_code == 200
+    triage_data = res_triage.json()
+    assert triage_data.get("total_alarms_received") == 2
+    assert triage_data.get("root_cause_initiator", {}).get("tag") == "K-102"
+    print(f"[+] /api/alarms/triage: OK (Root Cause: {triage_data.get('root_cause_initiator', {}).get('tag')}, Flood Status: {triage_data.get('eemua191_flood_status')})")
+
+    # 12. Cryogenic Blowdown Simulation Endpoint
+    res_blowdown = client.post("/api/blowdown/simulate", json={
+        "vessel_tag": "BDV-201",
+        "initial_pressure_bar_a": 85.0,
+        "orifice_diameter_mm": 38.0
+    })
+    assert res_blowdown.status_code == 200
+    bd_data = res_blowdown.json()
+    assert bd_data.get("api521_depressuring_rate_met") is True
+    print(f"[+] /api/blowdown/simulate: OK (Tag: {bd_data.get('vessel_tag')}, 15min P: {bd_data.get('pressure_at_15min_bar_a')} bar, Metal T: {bd_data.get('minimum_wall_metal_temp_c')} C)")
+
     print("\n" + "=" * 65)
-    print("ALL 10 PHASE 4 REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 12 PHASE 4 REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

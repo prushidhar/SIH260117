@@ -1847,5 +1847,120 @@
       "governor_valve_position_pct": 78.5,
       "grid_synchronization": "LOCKED_50_HZ"
     }
+  },
+  {
+    "tag": "BDV-201",
+    "name": "High-Pressure Depressuring Blowdown Valve & Restriction Orifice",
+    "unit": "Hydrocracker Reaction Section (HCU)",
+    "type": "Safety / Depressuring Valve",
+    "service": "Emergency Vapor Depressuring (ESD Blowdown to Flare)",
+    "description": "API 521 \u00a7 5.7 compliant fast-acting blowdown valve with calibrated 38mm restriction orifice, evaluated for cryogenic auto-refrigeration down to MDMT -29\u00b0C.",
+    "design_pressure_psig": 1232.8,
+    "design_temp_c": 120.0,
+    "material": "ASTM A516 Grade 70 (Normalized, Curve B)",
+    "asme_rating": "ASME Class 600 RTJ",
+    "status": "ARMED_OPERATIONAL",
+    "telemetry": {
+      "operating_pressure_bar": 85.0,
+      "operating_temp_c": 40.0,
+      "depressure_orifice_dia_mm": 38.0,
+      "pressure_15min_bar": 7.9,
+      "min_fluid_cryogenic_temp_c": -12.1,
+      "min_wall_metal_temp_c": -20.1,
+      "asme_mdmt_c": -29.0,
+      "api521_rate_compliance": "PASS",
+      "interlock_status": "NORMAL"
+    }
+  },
+  {
+    "tag": "TG-502",
+    "name": "Heavy-Duty Cogeneration Gas Turbine Generator Train",
+    "unit": "Utilities & Power Cogeneration Complex",
+    "type": "Gas Turbine Generator",
+    "service": "Power Generation & Combined Heat Recovery",
+    "description": "API 616 / API 684 48 MW heavy-duty gas turbine generator operating at 5,400 RPM with continuous Campbell diagram resonance tracking and critical speed margin verification.",
+    "design_pressure_psig": 250.0,
+    "design_temp_c": 560.0,
+    "material": "Inconel 718 Rotor Discs / Single-Crystal CMSX-4 Blades",
+    "asme_rating": "API 616 / API 684",
+    "status": "BASELOAD_ONLINE",
+    "telemetry": {
+      "operating_speed_rpm": 5400.0,
+      "first_critical_speed_rpm": 2450.0,
+      "second_critical_speed_rpm": 7800.0,
+      "critical_separation_margin_nc1_pct": 54.6,
+      "critical_separation_margin_nc2_pct": 44.4,
+      "vibration_1x_rms_mms": 2.1,
+      "vibration_2x_rms_mms": 0.85,
+      "electrical_output_mw": 46.8,
+      "rotordynamic_status": "API_684_COMPLIANT"
+    }
+  },
+  {
+    "tag": "JB-101",
+    "name": "Hazardous Area Hydrogen Compression Junction Box",
+    "unit": "Hydrogen Purification & Compression Unit (HPU)",
+    "type": "Electrical / Instrumentation",
+    "service": "Zone 1 Hazardous Atmosphere Signal & Power Distribution",
+    "description": "IEC 60079-0/1 certified Ex-d IIC T4 flameproof enclosure with IP66 ingress protection, monitored for surface temperature margin and flameproof joint gap integrity.",
+    "design_pressure_psig": 15.0,
+    "design_temp_c": 85.0,
+    "material": "Marine Grade Copper-Free Aluminum Alloy (LM6)",
+    "asme_rating": "IECEx / ATEX Ex d IIC T4 Gb",
+    "status": "CERTIFIED_ENERGIZED",
+    "telemetry": {
+      "hazardous_zone": "Zone 1",
+      "gas_group": "IIC",
+      "ambient_temp_c": 38.5,
+      "measured_surface_temp_c": 118.5,
+      "t_class_limit_c": 135.0,
+      "flameproof_gap_mm": 0.12,
+      "max_allowable_gap_mm": 0.15,
+      "ingress_protection": "IP66",
+      "explosion_safety_status": "CERTIFIED_SAFE"
+    }
+  },
+  {
+    "tag": "MOV-401",
+    "name": "Trans-Refinery Mainline Emergency Motor-Operated Valve",
+    "unit": "Offsites Pipeline Logistics",
+    "type": "Emergency Isolation Valve (ESD)",
+    "service": "Quick-Acting Crude Pipeline Sectionalizing Isolation",
+    "description": "IEC 61508 / IEC 61511 SIL 3 certified full-bore through-conduit gate valve with electro-hydraulic actuator and flameproof Ex-d motor.",
+    "design_pressure_psig": 928.2,
+    "design_temp_c": 60.0,
+    "material": "ASTM A216 WCC Cast Carbon Steel with Stellited Seats",
+    "asme_rating": "ASME Class 300 RF",
+    "status": "ARMED_READY",
+    "telemetry": {
+      "valve_position_pct": 100.0,
+      "seat_differential_pressure_bar": 0.0,
+      "hydraulic_pressure_bar": 165.0,
+      "full_stroke_time_s": 2.5,
+      "partial_stroke_test_result": "PASS",
+      "sil_proof_test_due_days": 180
+    }
+  },
+  {
+    "tag": "ESD-901",
+    "name": "Triple Modular Redundant (TMR) Safety Instrumented System",
+    "unit": "Central Refinery Control & SIS",
+    "type": "Safety Instrumented System / Controller",
+    "service": "Plant-Wide Emergency Shutdown & Interlock Adjudication",
+    "description": "Triconex IEC 61508 / IEC 61511 SIL 3 2oo3 voting architecture managing high-integrity pressure protection (HIPPS) and refinery-wide emergency depressurization.",
+    "design_pressure_psig": 0.0,
+    "design_temp_c": 45.0,
+    "material": "Industrial Triple Modular Redundant Architecture",
+    "asme_rating": "IEC 61508 SIL 3 Certified",
+    "status": "ONLINE_DUAL_KEY",
+    "telemetry": {
+      "voting_architecture": "2oo3",
+      "active_channels": 3,
+      "scan_cycle_time_ms": 12.5,
+      "system_health": "FAULT_TOLERANT_HEALTHY",
+      "pfd_avg": 2.5e-05,
+      "sil_rating": "SIL 3",
+      "dual_key_armed": true
+    }
   }
 ]

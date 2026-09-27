@@ -1784,6 +1784,44 @@ async def evaluate_rbi_portfolio(req: RBIPortfolioRequest):
     }
 
 
+class AlarmTriageRequest(BaseModel):
+    alarms: List[Dict[str, Any]]
+    window_duration_seconds: Optional[float] = 300.0
+
+
+@app.post("/api/alarms/triage")
+async def triage_industrial_alarms(req: AlarmTriageRequest):
+    """
+    ISA-18.2 / EEMUA 191 Control Room Alarm Flood Suppression & First-Out Root Cause Triage.
+    Suppresses chattering and consequential cascade alarms, yielding prioritized operator directives.
+    """
+    from agents.triage_engine import alarm_triage_engine
+    return alarm_triage_engine.triage_alarm_stream(
+        alarms=req.alarms,
+        window_duration_seconds=req.window_duration_seconds or 300.0
+    )
+
+
+class BlowdownSimRequest(BaseModel):
+    vessel_tag: Optional[str] = "BDV-201"
+    initial_pressure_bar_a: Optional[float] = 85.0
+    orifice_diameter_mm: Optional[float] = 38.0
+
+
+@app.post("/api/blowdown/simulate")
+async def simulate_cryogenic_blowdown(req: BlowdownSimRequest):
+    """
+    API 521 § 5.7 Emergency Depressuring & ASME UCS-66 MDMT Cryogenic Simulation.
+    Calculates 15-minute blowdown pressure, Joule-Thomson chilling, and brittle fracture margin.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_cryogenic_blowdown_depressurization(
+        vessel_tag=req.vessel_tag or "BDV-201",
+        initial_pressure_bar_a=req.initial_pressure_bar_a or 85.0,
+        blowdown_orifice_diameter_mm=req.orifice_diameter_mm or 38.0
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -819,6 +819,63 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_cryogenic_blowdown_depressurization",
+                    "description": "API 521 § 5.7 Emergency Gas Depressuring & ASME Section VIII Div 1 UCS-66 MDMT brittle fracture cryogenic evaluation.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "vessel_tag": {"type": "string", "description": "Vessel tag", "default": "BDV-201"},
+                            "vessel_volume_m3": {"type": "number", "description": "Volume m3", "default": 45.0},
+                            "initial_pressure_bar_a": {"type": "number", "description": "Initial pressure bar absolute", "default": 85.0},
+                            "initial_temp_c": {"type": "number", "description": "Initial temp C", "default": 40.0},
+                            "blowdown_orifice_diameter_mm": {"type": "number", "description": "Orifice dia mm", "default": 38.0},
+                            "vessel_asme_mdmt_c": {"type": "number", "description": "ASME MDMT C", "default": -29.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_rotor_dynamics_critical_speeds",
+                    "description": "API 684 / API 617 Rotordynamics: critical speed separation margins, Campbell diagram harmonic interference, and misalignment diagnosis.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "machine_tag": {"type": "string", "description": "Machine tag", "default": "TG-502"},
+                            "operating_speed_rpm": {"type": "number", "description": "Operating speed RPM", "default": 5400.0},
+                            "first_critical_speed_rpm": {"type": "number", "description": "First critical speed RPM", "default": 2450.0},
+                            "second_critical_speed_rpm": {"type": "number", "description": "Second critical speed RPM", "default": 7800.0},
+                            "radial_vibration_1x_mms": {"type": "number", "description": "1X vibration mm/s", "default": 2.10},
+                            "radial_vibration_2x_mms": {"type": "number", "description": "2X vibration mm/s", "default": 0.85}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_iec60079_hazardous_area_ex",
+                    "description": "IEC 60079 / API RP 500 Hazardous Area Classification: Gas group MESG flameproof gap, T-class temperature threshold, and AIT thermal margin.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tag": {"type": "string", "description": "Equipment tag", "default": "JB-101"},
+                            "hazardous_zone": {"type": "string", "description": "Zone (Zone 0, 1, 2)", "default": "Zone 1"},
+                            "gas_group": {"type": "string", "description": "Gas group (IIA, IIB, IIC)", "default": "IIC"},
+                            "rated_temperature_class": {"type": "string", "description": "T-Class (T1-T6)", "default": "T4"},
+                            "measured_max_surface_temp_c": {"type": "number", "description": "Surface temp C", "default": 118.5},
+                            "flameproof_gap_measured_mm": {"type": "number", "description": "Flameproof gap mm", "default": 0.12}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -863,7 +920,10 @@ class ToolRegistry:
             "calculate_fatigue_cumulative_damage_miner",
             "calculate_joukowsky_water_hammer_surge",
             "calculate_iso5167_orifice_flowmeter",
-            "calculate_api581_rbi_risk_matrix"
+            "calculate_api581_rbi_risk_matrix",
+            "calculate_cryogenic_blowdown_depressurization",
+            "calculate_rotor_dynamics_critical_speeds",
+            "calculate_iec60079_hazardous_area_ex"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)
