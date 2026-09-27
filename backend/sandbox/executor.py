@@ -625,6 +625,78 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_tema_heat_exchanger_rating",
+                    "description": "TEMA Class R shell-and-tube heat exchanger rating per Kern / Bell-Delaware: LMTD, overall U, fouling margin, and shell/tube pressure drops.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "shell_id_mm": {"type": "number", "description": "Shell internal diameter in mm", "default": 1200.0},
+                            "tube_od_mm": {"type": "number", "description": "Tube outside diameter in mm", "default": 25.4},
+                            "tube_wall_thk_mm": {"type": "number", "description": "Tube wall thickness in mm", "default": 2.11},
+                            "tube_length_m": {"type": "number", "description": "Tube bundle length in meters", "default": 6.0},
+                            "tube_count": {"type": "integer", "description": "Total tube count", "default": 680},
+                            "tube_passes": {"type": "integer", "description": "Number of tube passes", "default": 4},
+                            "tube_pitch_mm": {"type": "number", "description": "Tube pitch spacing in mm", "default": 31.75},
+                            "baffle_cut_pct": {"type": "number", "description": "Baffle cut percentage", "default": 25.0},
+                            "baffle_spacing_mm": {"type": "number", "description": "Baffle center-to-center spacing in mm", "default": 300.0},
+                            "hot_fluid_flow_kg_s": {"type": "number", "description": "Hot fluid mass flow rate in kg/s", "default": 45.0},
+                            "hot_fluid_t_in_c": {"type": "number", "description": "Hot fluid inlet temperature in Celsius", "default": 240.0},
+                            "hot_fluid_t_out_c": {"type": "number", "description": "Hot fluid outlet temperature in Celsius", "default": 160.0},
+                            "cold_fluid_flow_kg_s": {"type": "number", "description": "Cold fluid mass flow rate in kg/s", "default": 55.0},
+                            "cold_fluid_t_in_c": {"type": "number", "description": "Cold fluid inlet temperature in Celsius", "default": 90.0},
+                            "cold_fluid_t_out_c": {"type": "number", "description": "Cold fluid outlet temperature in Celsius", "default": 155.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api510_vessel_remaining_life",
+                    "description": "API 510 in-service pressure vessel evaluation: short-term and long-term corrosion rates, remaining life, half-life inspection interval, and MAWPr.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tag": {"type": "string", "description": "Pressure vessel asset tag", "default": "V-301"},
+                            "design_pressure_psig": {"type": "number", "description": "Design pressure in psig", "default": 350.0},
+                            "design_temp_c": {"type": "number", "description": "Design temperature in Celsius", "default": 120.0},
+                            "inside_diameter_in": {"type": "number", "description": "Vessel inside diameter in inches", "default": 72.0},
+                            "nominal_thickness_in": {"type": "number", "description": "Original nominal thickness in inches", "default": 0.875},
+                            "current_thickness_in": {"type": "number", "description": "Current measured thickness in inches", "default": 0.620},
+                            "previous_thickness_in": {"type": "number", "description": "Previous inspection thickness in inches", "default": 0.680},
+                            "elapsed_years_since_previous": {"type": "number", "description": "Elapsed years between inspections", "default": 3.5},
+                            "installation_year": {"type": "integer", "description": "Vessel installation year", "default": 2012},
+                            "current_year": {"type": "integer", "description": "Current evaluation year", "default": 2026}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_nace_mr0175_sour_service_severity",
+                    "description": "NACE MR0175 / ISO 15156 H2S partial pressure, SSC severity regions 0-3, maximum hardness 22 HRC compliance, and sweet/sour corrosion risk.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "total_pressure_psia": {"type": "number", "description": "Total operating system pressure in psia", "default": 350.0},
+                            "h2s_mole_pct": {"type": "number", "description": "H2S mole percentage in gas phase", "default": 2.50},
+                            "co2_mole_pct": {"type": "number", "description": "CO2 mole percentage in gas phase", "default": 4.00},
+                            "in_situ_ph": {"type": "number", "description": "In-situ aqueous phase pH", "default": 5.20},
+                            "chloride_ppm": {"type": "number", "description": "Chloride concentration in ppm", "default": 15000.0},
+                            "operating_temp_c": {"type": "number", "description": "Operating temperature in Celsius", "default": 65.0},
+                            "material_grade": {"type": "string", "description": "Material specification e.g. ASTM A516 Gr 70", "default": "ASTM A516 Gr 70"},
+                            "actual_hardness_hrc": {"type": "number", "description": "Measured base metal / HAZ hardness in HRC", "default": 21.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -660,7 +732,10 @@ class ToolRegistry:
             "calculate_api579_fitness_for_service",
             "calculate_bolted_flange_joint_integrity",
             "calculate_api650_storage_tank_shell",
-            "calculate_asme_ptc4_boiler_efficiency"
+            "calculate_asme_ptc4_boiler_efficiency",
+            "calculate_tema_heat_exchanger_rating",
+            "calculate_api510_vessel_remaining_life",
+            "calculate_nace_mr0175_sour_service_severity"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

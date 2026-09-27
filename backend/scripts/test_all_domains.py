@@ -567,6 +567,136 @@ def test_card_20_asme_ptc4_boiler_efficiency():
     print('  PASS')
 
 
+def test_card_21_tema_heat_exchanger_rating():
+    print('\n--- TEST 21: TEMA Class R Heat Exchanger Thermal & Hydraulic Rating ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_tema_heat_exchanger_rating(
+        tube_count=850,
+        tube_length_m=6.5,
+        baffle_spacing_mm=450.0,
+        hot_fluid_t_in_c=240.0,
+        hot_fluid_t_out_c=160.0,
+        cold_fluid_t_in_c=90.0,
+        cold_fluid_t_out_c=155.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['thermal_duty_mw'] > 5.0
+    assert result['u_clean_w_m2k'] > result['u_service_w_m2k']
+    assert result['compliance'] == 'TEMA_CLASS_R_COMPLIANT'
+    print(f"  [+] Heat Exchanger Duty: {result['thermal_duty_mw']} MW (Corrected MTD: {result['corrected_mtd_c']} °C)")
+    print(f"  [+] Overall U: Clean={result['u_clean_w_m2k']} W/m²K, Service={result['u_service_w_m2k']} W/m²K (Margin: +{result['overdesign_margin_pct']}%)")
+    print(f"  [+] Pressure Drops: Shell={result['pressure_drop_shell_kpa']} kPa, Tube={result['pressure_drop_tube_kpa']} kPa")
+    print(f"  [+] Standard Compliance: {result['compliance']}")
+    print('  PASS')
+
+
+def test_card_22_api510_vessel_remaining_life():
+    print('\n--- TEST 22: API 510 Pressure Vessel Remaining Life & Next Inspection Interval ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api510_vessel_remaining_life(
+        tag="V-301",
+        design_pressure_psig=350.0,
+        inside_diameter_in=72.0,
+        nominal_thickness_in=0.875,
+        current_thickness_in=0.750,
+        previous_thickness_in=0.780,
+        elapsed_years_since_previous=3.5,
+        installation_year=2012,
+        current_year=2026
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['remaining_life_years'] > 5.0
+    assert result['api510_next_inspection_interval_years'] <= 10.0
+    assert result['status'] == 'ACCEPTABLE_FOR_SERVICE'
+    print(f"  [+] ASME UG-27 Minimum Required Thickness: {result['asme_minimum_thickness_in']} in ({result['asme_minimum_thickness_mm']} mm)")
+    print(f"  [+] Governing Corrosion Rate: {result['corrosion_rate_governing_mm_yr']} mm/yr (Wall Loss: {result['wall_loss_pct']}%)")
+    print(f"  [+] API 510 Remaining Service Life: {result['remaining_life_years']} years")
+    print(f"  [+] API 510 Half-Life Inspection Interval: {result['api510_next_inspection_interval_years']} years (Next Due: {result['next_statutory_inspection_year']})")
+    print(f"  [+] Statutory Verdict: {result['statutory_recommendation']}")
+    print('  PASS')
+
+
+def test_card_23_nace_mr0175_sour_service():
+    print('\n--- TEST 23: NACE MR0175 / ISO 15156 Sour Gas Cracking Severity & Metallurgy ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_nace_mr0175_sour_service_severity(
+        total_pressure_psia=350.0,
+        h2s_mole_pct=2.50,
+        co2_mole_pct=4.00,
+        in_situ_ph=5.20,
+        material_grade="ASTM A516 Gr 70",
+        actual_hardness_hrc=21.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['is_sour_service'] is True
+    assert result['hardness_compliance'] == 'PASS'
+    assert result['pwht_mandatory'] is True
+    print(f"  [+] H2S Partial Pressure: {result['p_h2s_psia']} psia ({result['p_h2s_kpa']} kPa) — Sour Trigger: {result['is_sour_service']}")
+    print(f"  [+] NACE Severity Region: {result['nace_severity_region']} (SSC Risk: {result['ssc_risk_level']})")
+    print(f"  [+] Material Hardness: {result['actual_hardness_hrc']} HRC vs Limit 22.0 HRC ({result['hardness_compliance']}, Margin: {result['hardness_margin_hrc']} HRC)")
+    print(f"  [+] Metallurgical Mandate: PWHT Required={result['pwht_mandatory']}, HIC Testing Required={result['hic_testing_nace_tm0284_mandatory']}")
+    print('  PASS')
+
+
+def test_card_24_multi_agent_engineering_consensus():
+    print('\n--- TEST 24: Multi-Discipline Engineering Consensus Panel & Tamper-Evident Seal ---')
+    from agents.consensus_orchestrator import consensus_orchestrator
+    cert = consensus_orchestrator.adjudicate(
+        task_id="task-cogen-tar-evaluation",
+        asset_tag="HEX-301",
+        telemetry={"vibration_rms_mms": 2.1, "vibration_limit_mms": 4.5},
+        calculation_results={
+            "remaining_life_years": 12.69,
+            "pressure_drop_shell_kpa": 47.89,
+            "pressure_drop_tube_kpa": 15.97,
+            "overdesign_margin_pct": 4.7,
+            "target_sil": "SIL 2",
+            "risk_acceptable": True
+        }
+    )
+    assert cert["overall_verdict"] == "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE"
+    assert cert["consensus_score_pct"] == 100.0
+    assert len(cert["specialist_panel"]) == 4
+    assert len(cert["cryptographic_seal_sha256"]) == 64
+    print(f"  [+] Specialists Adjudicated: {len(cert['specialist_panel'])} authorities")
+    for sp in cert["specialist_panel"]:
+        print(f"      - {sp['discipline']}: {sp['vote']} (Risk: {sp['risk_score']}) by {sp['specialist']}")
+    print(f"  [+] Consensus Agreement Score: {cert['consensus_score_pct']}%")
+    print(f"  [+] Panel Verdict: {cert['overall_verdict']}")
+    print(f"  [+] Tamper-Evident SHA-256 Certificate Seal: {cert['cryptographic_seal_sha256'][:24]}...")
+    print('  PASS')
+
+
+def test_card_25_rag_multidomain_standards_retrieval():
+    print('\n--- TEST 25: Local Air-Gapped RAG Knowledge Base Multi-Domain Retrieval ---')
+    from rag.vectorstore import kb
+    stats = kb.get_collection_stats()
+    assert stats["document_count"] >= 25, f"Expected >= 25 docs, got {stats['document_count']}"
+    assert stats["is_air_gapped"] is True
+
+    test_queries = [
+        ("ASME B31.3 straight pipe thickness formula", "std-asme-b313"),
+        ("API 617 compressor anti surge control line margin", "std-api-617"),
+        ("API 579 fitness for service local thin area RSF", "std-api-579"),
+        ("TEMA Class R heat exchanger fouling factor", "std-tema-class-r"),
+        ("NACE MR0175 sour service H2S partial pressure hardness 22 HRC", "std-nace-mr0175"),
+        ("API 650 tank shell 1-foot method hydrotest", "std-api-650"),
+        ("ASME PTC 4 fired heater thermal efficiency excess oxygen", "std-asme-ptc4"),
+        ("API 510 pressure vessel remaining life half life inspection interval", "std-api-510"),
+    ]
+
+    for q, expected_id in test_queries:
+        hits = kb.search(q, top_k=1)
+        assert len(hits) > 0, f"No hits for query: {q}"
+        top = hits[0]
+        assert top["relevance_score"] > 0, f"Zero relevance for {q}"
+        assert expected_id in top["id"], f"Expected {expected_id} in top result id, got {top['id']}"
+        print(f"  [+] Query: '{q[:35]}...' -> Matched: {top['title']} (Score: {top['relevance_score']})")
+
+    print(f"  [+] Total Indexed Documents: {stats['document_count']} standards verified.")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -591,8 +721,13 @@ if __name__ == "__main__":
     test_card_18_bolted_flange_joint()
     test_card_19_api650_storage_tank()
     test_card_20_asme_ptc4_boiler_efficiency()
+    test_card_21_tema_heat_exchanger_rating()
+    test_card_22_api510_vessel_remaining_life()
+    test_card_23_nace_mr0175_sour_service()
+    test_card_24_multi_agent_engineering_consensus()
+    test_card_25_rag_multidomain_standards_retrieval()
     print("\n================================================================")
-    print("ALL 20 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 25 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 

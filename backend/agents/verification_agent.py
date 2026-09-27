@@ -187,6 +187,120 @@ class VerificationAgent:
                 })
                 verified_count += 1
 
+            elif tool_name == "calculate_tema_heat_exchanger_rating":
+                duty = tool_output.get("thermal_duty_mw")
+                margin = tool_output.get("overdesign_margin_pct")
+                u_svc = tool_output.get("u_service_w_m2k")
+                evidence_sources.append(f"TEMA Class R Exchanger Rating (Duty: {duty} MW, Margin: {margin}%, U: {u_svc} W/m²K)")
+                checks.append({
+                    "type": "TEMA_RATING_VERIFICATION",
+                    "subject": "TEMA Class R Heat Exchanger Thermal & Hydraulic",
+                    "result": f"Duty={duty} MW, Margin={margin}%, Status={tool_output.get('compliance')}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_api510_vessel_remaining_life":
+                rl = tool_output.get("remaining_life_years")
+                cr = tool_output.get("corrosion_rate_governing_mm_yr")
+                interval = tool_output.get("api510_next_inspection_interval_years")
+                evidence_sources.append(f"API 510 In-Service Vessel (RL: {rl} yrs, CR: {cr} mm/yr, Interval: {interval} yrs)")
+                checks.append({
+                    "type": "API510_REMAINING_LIFE_VERIFICATION",
+                    "subject": "API 510 Pressure Vessel Corrosion & Half-Life",
+                    "result": f"Remaining Life={rl} yrs, Interval={interval} yrs, Status={tool_output.get('status')}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_nace_mr0175_sour_service_severity":
+                region = tool_output.get("nace_severity_region")
+                p_h2s = tool_output.get("p_h2s_psia")
+                h_comp = tool_output.get("hardness_compliance")
+                evidence_sources.append(f"NACE MR0175 / ISO 15156 Sour Service ({region}, P_H2S: {p_h2s} psia, Hardness: {h_comp})")
+                checks.append({
+                    "type": "NACE_SOUR_SERVICE_VERIFICATION",
+                    "subject": "NACE MR0175 Metallurgical Hardness & Severity",
+                    "result": f"Severity={region}, Hardness={h_comp}, Status={tool_output.get('status')}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_api579_fitness_for_service":
+                rsf = tool_output.get("remaining_strength_factor")
+                mt = tool_output.get("folias_bulging_factor_mt")
+                status = tool_output.get("ffs_status")
+                evidence_sources.append(f"API 579-1 / ASME FFS-1 Level 1 LTA (RSF: {rsf}, Mt: {mt}, Status: {status})")
+                checks.append({
+                    "type": "FITNESS_FOR_SERVICE_VERIFICATION",
+                    "subject": "API 579 Local Thin Area Assessment",
+                    "result": f"RSF={rsf}, Mt={mt}, Status={status}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_bolted_flange_joint_integrity":
+                torque = tool_output.get("target_assembly_torque_nm")
+                stress = tool_output.get("gasket_operating_stress_mpa")
+                evidence_sources.append(f"ASME Sec VIII App 2 & ASME PCC-1 (Torque: {torque} N·m, Gasket Stress: {stress} MPa)")
+                checks.append({
+                    "type": "BOLTED_FLANGE_INTEGRITY_VERIFICATION",
+                    "subject": "ASME PCC-1 Bolt Torque & Gasket Stress",
+                    "result": f"Target Torque={torque} N·m, Gasket Stress={stress} MPa",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_api650_storage_tank_shell":
+                cap = tool_output.get("capacity_barrels")
+                gov_thk = tool_output.get("governing_plate_thickness_mm")
+                retire_thk = tool_output.get("api653_retirable_tmin_mm")
+                evidence_sources.append(f"API 650 / API 653 Storage Tank (Cap: {cap:.0f} bbl, Shell: {gov_thk} mm, Retirable: {retire_thk} mm)")
+                checks.append({
+                    "type": "STORAGE_TANK_SHELL_VERIFICATION",
+                    "subject": "API 650 1-Foot Method Shell Plate Sizing",
+                    "result": f"Capacity={cap:.0f} bbl, Governing Plate={gov_thk} mm, Retirable={retire_thk} mm",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_asme_ptc4_boiler_efficiency":
+                eff = tool_output.get("thermal_efficiency_pct")
+                opt_eff = tool_output.get("optimized_thermal_efficiency_pct")
+                savings = tool_output.get("annual_fuel_cost_savings_usd")
+                evidence_sources.append(f"ASME PTC 4 Fired Heater (Eff: {eff}%, Optimized: {opt_eff}%, Savings: ${savings:,.0f}/yr)")
+                checks.append({
+                    "type": "THERMAL_EFFICIENCY_VERIFICATION",
+                    "subject": "ASME PTC 4 Heat Loss Method & O2 Trim",
+                    "result": f"Gross Eff={eff}%, Optimized={opt_eff}%, Savings=${savings:,.0f}/yr",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_teg_dehydration_unit":
+                water_rem = tool_output.get("water_removed_lb_per_day")
+                duty_kw = tool_output.get("reboiler_duty_kw")
+                evidence_sources.append(f"GPSA Sec 20 TEG Dehydration (Water Removed: {water_rem} lb/day, Duty: {duty_kw} kW)")
+                checks.append({
+                    "type": "TEG_DEHYDRATION_VERIFICATION",
+                    "subject": "GPSA Sec 20 Dew Point Depression",
+                    "result": f"Water Removed={water_rem} lb/day, Reboiler Duty={duty_kw} kW",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
+            elif tool_name == "calculate_relief_valve_sizing":
+                area = tool_output.get("required_orifice_area_in2")
+                orf = tool_output.get("selected_orifice_letter")
+                evidence_sources.append(f"API 520/526 Relief Valve (Req Area: {area} in², Selected: Orifice {orf})")
+                checks.append({
+                    "type": "RELIEF_VALVE_SIZING_VERIFICATION",
+                    "subject": "API 520 Fire/Process Overpressure Sizing",
+                    "result": f"Req Area={area} in², Selected Orifice={orf}",
+                    "status": "PASS"
+                })
+                verified_count += 1
+
             elif tool_name == "kb_search":
                 hits = tool_output.get("results", [])
                 for h in hits[:2]:

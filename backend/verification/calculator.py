@@ -2022,4 +2022,335 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {'error': str(e)}
 
+    @staticmethod
+    def calculate_tema_heat_exchanger_rating(
+        shell_id_mm: float = 1200.0,
+        tube_od_mm: float = 25.4,
+        tube_wall_thk_mm: float = 2.11,
+        tube_length_m: float = 6.0,
+        tube_count: int = 680,
+        tube_passes: int = 4,
+        tube_pitch_mm: float = 31.75,
+        baffle_cut_pct: float = 25.0,
+        baffle_spacing_mm: float = 300.0,
+        hot_fluid_flow_kg_s: float = 45.0,
+        hot_fluid_t_in_c: float = 240.0,
+        hot_fluid_t_out_c: float = 160.0,
+        hot_fluid_cp_kj_kg_k: float = 2.50,
+        hot_fluid_rho_kg_m3: float = 780.0,
+        hot_fluid_visc_cp: float = 1.20,
+        hot_fluid_k_w_m_k: float = 0.125,
+        cold_fluid_flow_kg_s: float = 55.0,
+        cold_fluid_t_in_c: float = 90.0,
+        cold_fluid_t_out_c: float = 155.0,
+        cold_fluid_cp_kj_kg_k: float = 2.40,
+        cold_fluid_rho_kg_m3: float = 810.0,
+        cold_fluid_visc_cp: float = 0.85,
+        cold_fluid_k_w_m_k: float = 0.135,
+        fouling_shell_m2k_w: float = 0.00035,
+        fouling_tube_m2k_w: float = 0.00030,
+        tube_material_k_w_m_k: float = 16.3
+    ) -> dict:
+        """TEMA Class R Heat Exchanger Thermal & Hydraulic Rating per Kern / Bell-Delaware."""
+        try:
+            import math
+
+            # 1. Thermal Duties
+            duty_hot_kw = hot_fluid_flow_kg_s * hot_fluid_cp_kj_kg_k * (hot_fluid_t_in_c - hot_fluid_t_out_c)
+            duty_cold_kw = cold_fluid_flow_kg_s * cold_fluid_cp_kj_kg_k * (cold_fluid_t_out_c - cold_fluid_t_in_c)
+            duty_mean_kw = (duty_hot_kw + duty_cold_kw) / 2.0
+            duty_mw = duty_mean_kw / 1000.0
+
+            # 2. Log Mean Temperature Difference (LMTD)
+            dt1 = max(0.1, hot_fluid_t_in_c - cold_fluid_t_out_c)
+            dt2 = max(0.1, hot_fluid_t_out_c - cold_fluid_t_in_c)
+            if abs(dt1 - dt2) < 0.01:
+                lmtd_c = dt1
+            else:
+                lmtd_c = (dt1 - dt2) / math.log(dt1 / dt2)
+
+            # Multipass correction factor Ft
+            p_ratio = max(0.01, min(0.99, (cold_fluid_t_out_c - cold_fluid_t_in_c) / max(0.1, hot_fluid_t_in_c - cold_fluid_t_in_c)))
+            r_ratio = max(0.01, (hot_fluid_t_in_c - hot_fluid_t_out_c) / max(0.1, cold_fluid_t_out_c - cold_fluid_t_in_c))
+            
+            sq_term = math.sqrt(r_ratio ** 2 + 1.0)
+            denom_term = (2.0 - p_ratio * (r_ratio + 1.0 - sq_term)) / max(0.001, (2.0 - p_ratio * (r_ratio + 1.0 + sq_term)))
+            if denom_term > 0 and (1.0 - p_ratio) > 0 and (1.0 - p_ratio * r_ratio) > 0:
+                ft = (sq_term / max(0.01, r_ratio - 1.0)) * (math.log((1.0 - p_ratio) / (1.0 - p_ratio * r_ratio)) / math.log(denom_term))
+                ft = max(0.75, min(1.0, ft))
+            else:
+                ft = 0.88
+
+            corrected_mtd_c = ft * lmtd_c
+
+            # 3. Heat Transfer Surface Area
+            do_m = tube_od_mm / 1000.0
+            di_m = (tube_od_mm - 2.0 * tube_wall_thk_mm) / 1000.0
+            area_outside_m2 = math.pi * do_m * tube_length_m * tube_count
+
+            # 4. Tube-Side Heat Transfer & Hydraulics
+            tubes_per_pass = max(1, tube_count // tube_passes)
+            tube_flow_area_m2 = tubes_per_pass * (math.pi / 4.0) * (di_m ** 2)
+            tube_velocity_m_s = cold_fluid_flow_kg_s / (cold_fluid_rho_kg_m3 * max(0.0001, tube_flow_area_m2))
+            
+            mu_cold_pa_s = cold_fluid_visc_cp * 1e-3
+            re_tube = (cold_fluid_rho_kg_m3 * tube_velocity_m_s * di_m) / max(1e-6, mu_cold_pa_s)
+            pr_tube = (mu_cold_pa_s * (cold_fluid_cp_kj_kg_k * 1000.0)) / max(1e-4, cold_fluid_k_w_m_k)
+            
+            # Dittus-Boelter Nu
+            nu_tube = 0.023 * (re_tube ** 0.8) * (pr_tube ** 0.4)
+            h_inside_w_m2k = (nu_tube * cold_fluid_k_w_m_k) / di_m
+
+            # 5. Shell-Side Heat Transfer & Hydraulics (Kern's Method)
+            clearance_mm = max(1.0, tube_pitch_mm - tube_od_mm)
+            shell_flow_area_m2 = (shell_id_mm * clearance_mm * baffle_spacing_mm) / (tube_pitch_mm * 1e6)
+            shell_velocity_m_s = hot_fluid_flow_kg_s / (hot_fluid_rho_kg_m3 * max(0.0001, shell_flow_area_m2))
+            
+            # Equivalent diameter for triangular pitch (Kern Eq. 7.3)
+            area_free_channel = (0.433 * (tube_pitch_mm ** 2)) - (0.3927 * (tube_od_mm ** 2))
+            wetted_perim = 0.5 * math.pi * tube_od_mm
+            de_mm = max(5.0, (4.0 * area_free_channel) / max(0.1, wetted_perim))
+            de_shell_m = de_mm / 1000.0
+            mu_hot_pa_s = hot_fluid_visc_cp * 1e-3
+            re_shell = (hot_fluid_rho_kg_m3 * shell_velocity_m_s * de_shell_m) / max(1e-6, mu_hot_pa_s)
+            pr_shell = (mu_hot_pa_s * (hot_fluid_cp_kj_kg_k * 1000.0)) / max(1e-4, hot_fluid_k_w_m_k)
+            
+            nu_shell = 0.36 * (re_shell ** 0.55) * (pr_shell ** 0.33)
+            h_outside_w_m2k = (nu_shell * hot_fluid_k_w_m_k) / max(1e-4, de_shell_m)
+
+            # 6. Overall Heat Transfer Coefficients (Clean & Service)
+            wall_resistance = (do_m * math.log(do_m / di_m)) / (2.0 * tube_material_k_w_m_k)
+            r_clean = (1.0 / h_outside_w_m2k) + wall_resistance + (do_m / di_m) * (1.0 / h_inside_w_m2k)
+            u_clean = 1.0 / max(1e-5, r_clean)
+
+            r_service = r_clean + fouling_shell_m2k_w + (do_m / di_m) * fouling_tube_m2k_w
+            u_service = 1.0 / max(1e-5, r_service)
+
+            # Required Design U
+            u_required = (duty_mean_kw * 1000.0) / (area_outside_m2 * corrected_mtd_c)
+            overdesign_margin_pct = ((u_service - u_required) / u_required) * 100.0
+
+            # 7. Pressure Drops (kPa)
+            # Tube side: Darcy friction factor + return losses
+            f_tube = 0.046 * (re_tube ** -0.2)
+            dp_tube_friction = 4.0 * f_tube * (tube_length_m * tube_passes / di_m) * (cold_fluid_rho_kg_m3 * (tube_velocity_m_s ** 2) / 2.0)
+            dp_tube_returns = 4.0 * tube_passes * (cold_fluid_rho_kg_m3 * (tube_velocity_m_s ** 2) / 2.0)
+            dp_tube_kpa = (dp_tube_friction + dp_tube_returns) / 1000.0
+
+            # Shell side: Kern formula
+            nb_baffles = max(1, int(tube_length_m / (baffle_spacing_mm / 1000.0)) - 1)
+            f_shell = 1.75 * (re_shell ** -0.15)
+            dp_shell_pa = f_shell * ((hot_fluid_flow_kg_s / max(0.0001, shell_flow_area_m2)) ** 2) * (nb_baffles + 1) * (shell_id_mm / 1000.0) / (2.0 * hot_fluid_rho_kg_m3 * de_shell_m)
+            dp_shell_kpa = dp_shell_pa / 1000.0
+
+            compliance_status = "TEMA_CLASS_R_COMPLIANT" if (overdesign_margin_pct >= 0.0 and dp_shell_kpa <= 80.0 and dp_tube_kpa <= 100.0) else "REVIEW_HYDRAULIC_OR_SURFACE_AREA"
+
+            return {
+                'thermal_duty_mw': round(duty_mw, 2),
+                'counterflow_lmtd_c': round(lmtd_c, 1),
+                'multipass_correction_ft': round(ft, 3),
+                'corrected_mtd_c': round(corrected_mtd_c, 1),
+                'heat_transfer_area_m2': round(area_outside_m2, 1),
+                'tube_velocity_m_s': round(tube_velocity_m_s, 2),
+                'tube_reynolds': round(re_tube, 0),
+                'h_inside_w_m2k': round(h_inside_w_m2k, 1),
+                'shell_velocity_m_s': round(shell_velocity_m_s, 2),
+                'shell_reynolds': round(re_shell, 0),
+                'h_outside_w_m2k': round(h_outside_w_m2k, 1),
+                'u_clean_w_m2k': round(u_clean, 1),
+                'u_service_w_m2k': round(u_service, 1),
+                'u_required_w_m2k': round(u_required, 1),
+                'overdesign_margin_pct': round(overdesign_margin_pct, 1),
+                'pressure_drop_shell_kpa': round(dp_shell_kpa, 2),
+                'pressure_drop_tube_kpa': round(dp_tube_kpa, 2),
+                'fouling_factor_shell': fouling_shell_m2k_w,
+                'fouling_factor_tube': fouling_tube_m2k_w,
+                'standard': 'TEMA Class R (10th Edition) / API 660',
+                'compliance': compliance_status
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_api510_vessel_remaining_life(
+        tag: str = "V-301",
+        design_pressure_psig: float = 350.0,
+        design_temp_c: float = 120.0,
+        inside_diameter_in: float = 72.0,
+        nominal_thickness_in: float = 0.875,
+        current_thickness_in: float = 0.620,
+        previous_thickness_in: float = 0.680,
+        elapsed_years_since_previous: float = 3.5,
+        installation_year: int = 2012,
+        current_year: int = 2026,
+        allowable_stress_psi: float = 20000.0,
+        joint_efficiency: float = 1.0,
+        corrosion_allowance_design_in: float = 0.125
+    ) -> dict:
+        """API Standard 510 Pressure Vessel Remaining Life and Half-Life Inspection Interval."""
+        try:
+            radius_in = inside_diameter_in / 2.0
+            
+            # ASME VIII Div 1 UG-27 Minimum required thickness (circumferential stress)
+            denom = (allowable_stress_psi * joint_efficiency) - (0.6 * design_pressure_psig)
+            t_min_in = (design_pressure_psig * radius_in) / max(1.0, denom)
+            t_min_mm = t_min_in * 25.4
+
+            # Elapsed times
+            total_service_years = max(1.0, float(current_year - installation_year))
+            delta_years = max(0.1, float(elapsed_years_since_previous))
+
+            # Corrosion rates (inches/year and mm/year)
+            cr_short_term_in_yr = max(0.0, (previous_thickness_in - current_thickness_in) / delta_years)
+            cr_long_term_in_yr = max(0.0, (nominal_thickness_in - current_thickness_in) / total_service_years)
+            cr_governing_in_yr = max(cr_short_term_in_yr, cr_long_term_in_yr, 0.001)
+
+            cr_gov_mm_yr = cr_governing_in_yr * 25.4
+
+            # Metal loss
+            total_metal_loss_in = nominal_thickness_in - current_thickness_in
+            total_metal_loss_mm = total_metal_loss_in * 25.4
+            loss_percentage = (total_metal_loss_in / max(0.001, nominal_thickness_in)) * 100.0
+
+            # Remaining usable corrosion allowance
+            ca_remaining_in = max(0.0, current_thickness_in - t_min_in)
+            ca_remaining_mm = ca_remaining_in * 25.4
+
+            # API 510 Remaining Life (years)
+            remaining_life_years = ca_remaining_in / cr_governing_in_yr
+
+            # API 510 Clause 7.1.1: Inspection Interval is max(min(RL/2, 10.0), 1.0)
+            max_inspection_interval_years = min(max(1.0, remaining_life_years / 2.0), 10.0)
+            next_inspection_year = current_year + int(round(max_inspection_interval_years))
+
+            # Reduced allowable MAWP at current thickness
+            mawp_current_psig = (allowable_stress_psi * joint_efficiency * current_thickness_in) / (radius_in + 0.6 * current_thickness_in)
+
+            # Statutory Verdict
+            if remaining_life_years < 2.0:
+                statutory_action = "CRITICAL: MANDATORY REPAIR / DE-RATE BEFORE NEXT CYCLE"
+                status = "CRITICAL_ACTION_REQUIRED"
+            elif remaining_life_years < 5.0:
+                statutory_action = "ELEVATED MONITORING: ANNUAL ULTRASONIC INSPECTION PROTOCOL"
+                status = "ELEVATED_MONITORING"
+            else:
+                statutory_action = "CONTINUED COMMERCIAL OPERATION UNDER ROUTINE API 510 SCHEDULE"
+                status = "ACCEPTABLE_FOR_SERVICE"
+
+            return {
+                'tag': tag,
+                'design_pressure_psig': design_pressure_psig,
+                'asme_minimum_thickness_in': round(t_min_in, 4),
+                'asme_minimum_thickness_mm': round(t_min_mm, 2),
+                'current_thickness_in': round(current_thickness_in, 4),
+                'current_thickness_mm': round(current_thickness_in * 25.4, 2),
+                'cumulative_metal_loss_in': round(total_metal_loss_in, 4),
+                'cumulative_metal_loss_mm': round(total_metal_loss_mm, 2),
+                'wall_loss_pct': round(loss_percentage, 1),
+                'corrosion_rate_short_term_mm_yr': round(cr_short_term_in_yr * 25.4, 3),
+                'corrosion_rate_long_term_mm_yr': round(cr_long_term_in_yr * 25.4, 3),
+                'corrosion_rate_governing_mm_yr': round(cr_gov_mm_yr, 3),
+                'usable_corrosion_margin_mm': round(ca_remaining_mm, 2),
+                'remaining_life_years': round(remaining_life_years, 2),
+                'api510_next_inspection_interval_years': round(max_inspection_interval_years, 1),
+                'next_statutory_inspection_year': next_inspection_year,
+                'current_allowable_mawp_psig': round(mawp_current_psig, 1),
+                'statutory_recommendation': statutory_action,
+                'standard': 'API 510 (10th Ed.) / ASME Section VIII Div 1',
+                'status': status
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_nace_mr0175_sour_service_severity(
+        total_pressure_psia: float = 350.0,
+        h2s_mole_pct: float = 2.50,
+        co2_mole_pct: float = 4.00,
+        in_situ_ph: float = 5.20,
+        chloride_ppm: float = 15000.0,
+        operating_temp_c: float = 65.0,
+        material_grade: str = "ASTM A516 Gr 70",
+        actual_hardness_hrc: float = 21.0
+    ) -> dict:
+        """NACE MR0175 / ISO 15156 Sour Gas Cracking Severity & Metallurgy Assessment."""
+        try:
+            import math
+
+            # 1. Partial Pressures
+            p_h2s_psia = total_pressure_psia * (h2s_mole_pct / 100.0)
+            p_h2s_kpa = p_h2s_psia * 6.89476
+            p_co2_psia = total_pressure_psia * (co2_mole_pct / 100.0)
+            p_co2_bar = p_co2_psia * 0.0689476
+
+            # 2. NACE Sour Service Trigger Threshold (0.05 psia / 0.35 kPa)
+            is_sour_service = p_h2s_psia >= 0.05
+
+            # 3. SSC Severity Region (ISO 15156-2 Figure 1)
+            if not is_sour_service:
+                severity_region = "Region 0 (Non-Sour Environment)"
+                ssc_risk = "NEGLIGIBLE"
+            elif in_situ_ph >= 5.5 and p_h2s_psia <= 0.5:
+                severity_region = "Region 1 (Low SSC Severity)"
+                ssc_risk = "LOW"
+            elif in_situ_ph >= 4.5 and p_h2s_psia <= 1.5:
+                severity_region = "Region 2 (Moderate SSC Severity)"
+                ssc_risk = "MODERATE"
+            else:
+                severity_region = "Region 3 (Severe SSC Severity)"
+                ssc_risk = "SEVERE"
+
+            # 4. Hardness Assessment (NACE Table A.1: Max 22.0 HRC / 248 HV)
+            max_allowable_hrc = 22.0
+            hardness_margin = max_allowable_hrc - actual_hardness_hrc
+            hardness_pass = actual_hardness_hrc <= max_allowable_hrc
+
+            # 5. CO2 Sweet Corrosion Baseline (De Waard-Milliams modified)
+            temp_k = operating_temp_c + 273.15
+            log_v_corr = 5.8 - (1710.0 / temp_k) + 0.67 * math.log10(max(0.01, p_co2_bar))
+            v_corr_mm_yr = 10.0 ** log_v_corr
+            # pH scale factor
+            ph_factor = min(1.0, 10.0 ** (0.4 * (5.5 - in_situ_ph))) if in_situ_ph < 5.5 else 1.0
+            sweet_corrosion_rate_mm_yr = v_corr_mm_yr * ph_factor
+
+            # 6. Metallurgical Mandates
+            pwht_required = is_sour_service and ("A516" in material_grade or "A106" in material_grade or "CS" in material_grade)
+            hic_testing_required = severity_region in ("Region 2 (Moderate SSC Severity)", "Region 3 (Severe SSC Severity)")
+            nickel_limit_wt_pct = 1.0
+
+            if not hardness_pass:
+                compliance_status = "NON_COMPLIANT_EXCEEDS_MAX_HARDNESS_22HRC"
+            elif ssc_risk == "SEVERE":
+                compliance_status = "SOUR_SERVICE_PWHT_AND_HIC_TESTING_MANDATORY"
+            elif is_sour_service:
+                compliance_status = "COMPLIANT_WITH_NACE_MR0175_LIMITATIONS"
+            else:
+                compliance_status = "STANDARD_SERVICE_NON_SOUR"
+
+            return {
+                'total_pressure_psia': round(total_pressure_psia, 1),
+                'h2s_mole_pct': round(h2s_mole_pct, 2),
+                'p_h2s_psia': round(p_h2s_psia, 3),
+                'p_h2s_kpa': round(p_h2s_kpa, 2),
+                'p_co2_bar': round(p_co2_bar, 2),
+                'in_situ_ph': round(in_situ_ph, 2),
+                'is_sour_service': is_sour_service,
+                'nace_severity_region': severity_region,
+                'ssc_risk_level': ssc_risk,
+                'material_grade': material_grade,
+                'actual_hardness_hrc': round(actual_hardness_hrc, 1),
+                'max_allowable_hardness_hrc': max_allowable_hrc,
+                'hardness_compliance': 'PASS' if hardness_pass else 'FAIL',
+                'hardness_margin_hrc': round(hardness_margin, 1),
+                'co2_sweet_corrosion_rate_mm_yr': round(sweet_corrosion_rate_mm_yr, 2),
+                'pwht_mandatory': pwht_required,
+                'hic_testing_nace_tm0284_mandatory': hic_testing_required,
+                'max_nickel_wt_pct': nickel_limit_wt_pct,
+                'standard': 'NACE MR0175 / ISO 15156-2 Table A.1',
+                'status': compliance_status
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
 engineering_tools = EngineeringSandbox()
+
