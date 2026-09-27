@@ -235,16 +235,43 @@ def test_deliverables_and_airgap():
     assert os.path.exists(ppt_path), f"PPTX file not created: {ppt_path}"
     print(f"  [+] Executive PPTX generated: {os.path.basename(ppt_path)} ({os.path.getsize(ppt_path)} bytes)")
 
-    # 3b. Test Compliance Bundle Packaging (.zip)
-    import zipfile
-    bundle_path = os.path.join(out_dir, "test-task_Compliance_Bundle.zip")
-    with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.write(docx_res["file_path"], os.path.basename(docx_res["file_path"]))
-        zf.write(xlsx_res["file_path"], os.path.basename(xlsx_res["file_path"]))
-        zf.write(ppt_path, os.path.basename(ppt_path))
-        zf.writestr("MANIFEST_SHA256.txt", "INDRA SOVEREIGN STATUTORY COMPLIANCE MANIFEST\nALL DELIVERABLES SEALED.")
-    assert os.path.exists(bundle_path), "Bundle ZIP not created"
-    print(f"  [+] Sealed Compliance Bundle ZIP generated: {os.path.basename(bundle_path)} ({os.path.getsize(bundle_path)} bytes)")
+    # 4. Build Statutory Inspection PDF
+    pdf_res = deliverable_builder.build_statutory_inspection_pdf(
+        task_id="test-task",
+        title="Statutory Piping Inspection Certificate — CDU-Pipe-104",
+        equipment_tag="CDU-Pipe-104",
+        domain="pipe_thickness",
+        tool_results=[{
+            "tool": "calculate_pipe_thickness_asme_b313",
+            "output": {
+                "design_pressure_psig": 464.1,
+                "outer_diameter_inches": 10.75,
+                "t_design_inches": 0.1236,
+                "t_minimum_required_inches": 0.2486,
+                "status": "success"
+            }
+        }],
+        output_dir=out_dir,
+        prompt="Statutory ultrasonic wall thickness compliance assessment"
+    )
+    assert os.path.exists(pdf_res["file_path"]), f"PDF file not created: {pdf_res}"
+    print(f"  [+] Statutory PDF generated: {pdf_res['filename']} ({os.path.getsize(pdf_res['file_path'])} bytes)")
+
+    # 5. Build Cryptographically Sealed Compliance Bundle (.zip)
+    bundle_res = deliverable_builder.build_compliance_bundle(
+        task_id="test-task",
+        equipment_tag="CDU-Pipe-104",
+        deliverable_files=[
+            docx_res["file_path"],
+            xlsx_res["file_path"],
+            ppt_path,
+            pdf_res["file_path"]
+        ],
+        output_dir=out_dir
+    )
+    assert os.path.exists(bundle_res["file_path"]), "Bundle ZIP not created"
+    print(f"  [+] Sealed 4-Artifact Compliance Bundle generated: {bundle_res['filename']} ({os.path.getsize(bundle_res['file_path'])} bytes, SHA-256: {bundle_res['sha256'][:16]}...)")
+
 
     # 4. Test NetworkMonitor Air-Gap
     airgap_audit = network_monitor.audit_active_connections()
