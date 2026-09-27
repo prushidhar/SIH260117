@@ -457,6 +457,42 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_cathodic_protection_and_cui_risk",
+                    "description": "Calculates NACE SP0169 pipe-to-soil cathodic protection potential, sacrificial anode consumption life, CUI sweating vulnerability, and API 581 Risk-Based Inspection (RBI) POF x COF matrix ranking.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "pipe_tag": {"type": "string", "description": "Pipe tag e.g. L-101"},
+                            "pipe_to_soil_potential_mv": {"type": "number", "description": "Pipe-to-soil potential in mV CSE"},
+                            "anode_type": {"type": "string", "description": "Anode material: Zinc, Magnesium, Aluminium"},
+                            "installed_anode_mass_kg": {"type": "number", "description": "Initial installed sacrificial anode mass in kg"},
+                            "operating_temp_c": {"type": "number", "description": "Operating line temperature in Celsius"}
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_cooling_tower_performance",
+                    "description": "Calculates CTI ATC-105 & ASHRAE cooling tower approach, range, thermal heat rejection duty in MWth, evaporation rate, blowdown rate, and makeup water demand.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tower_tag": {"type": "string", "description": "Cooling tower tag e.g. CT-101"},
+                            "circulating_flow_m3_h": {"type": "number", "description": "Circulating water flow rate in m3/h"},
+                            "hot_water_temp_c": {"type": "number", "description": "Hot water return temperature in Celsius"},
+                            "cold_water_temp_c": {"type": "number", "description": "Cold water basin temperature in Celsius"},
+                            "ambient_dry_bulb_c": {"type": "number", "description": "Ambient dry bulb air temperature in Celsius"},
+                            "ambient_relative_humidity_pct": {"type": "number", "description": "Ambient relative humidity %"},
+                            "cycles_of_concentration": {"type": "number", "description": "Water cycles of concentration (COC)"}
+                        }
+                    }
+                }
             }
         ]
 
@@ -484,7 +520,9 @@ class ToolRegistry:
             "calculate_api521_flare_radiation_and_dispersion",
             "calculate_turnaround_critical_path",
             "calculate_compressor_anti_surge_map",
-            "calculate_steam_turbine_cogen_balance"
+            "calculate_steam_turbine_cogen_balance",
+            "calculate_cathodic_protection_and_cui_risk",
+            "calculate_cooling_tower_performance"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

@@ -18,6 +18,8 @@ import { FlareNetworkEmissionWidget } from './components/FlareNetworkEmissionWid
 import { TurnaroundSchedulerWidget } from './components/TurnaroundSchedulerWidget';
 import { CompressorAntiSurgeWidget } from './components/CompressorAntiSurgeWidget';
 import { SteamTurbineCogenWidget } from './components/SteamTurbineCogenWidget';
+import { CathodicProtectionCuiWidget } from './components/CathodicProtectionCuiWidget';
+import { CoolingTowerPsychrometricWidget } from './components/CoolingTowerPsychrometricWidget';
 
 interface RegistryProps {
   component: string;
@@ -110,6 +112,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 17. ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Enthalpy-Entropy Engine
   if (compKey.includes('steamturbine') || compKey.includes('turbine') || compKey.includes('cogen') || compKey.includes('mollier') || compKey === 'steamturbinecogenwidget') {
     return <SteamTurbineCogenWidget {...props} />;
+  }
+
+  // 18. NACE SP0169 & API 581 Cathodic Protection & CUI Risk Matrix
+  if (compKey.includes('cathodic') || compKey.includes('cui') || compKey.includes('rbi') || compKey.includes('anode') || compKey === 'cathodicprotectioncuiwidget') {
+    return <CathodicProtectionCuiWidget {...props} />;
+  }
+
+  // 19. CTI ATC-105 / ASHRAE Cooling Tower Psychrometrics & Water Balance
+  if (compKey.includes('coolingtower') || compKey.includes('psychrometric') || compKey.includes('wetbulb') || compKey.includes('blowdown') || compKey === 'coolingtowerpsychrometricwidget') {
+    return <CoolingTowerPsychrometricWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar, RotateCw, Zap } from 'lucide-react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar, RotateCw, Zap, Layers, Waves } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
@@ -9,6 +9,20 @@ import AgentMessage from './AgentMessage';
 import ChatInput from './ChatInput';
 
 const verifiedWorkflows = [
+  {
+    title: 'NACE SP0169 Cathodic Protection & CUI RBI',
+    desc: 'Sub-surface pipe-to-soil potential (-850 to -1200 mV CSE), sacrificial anode depletion, and API 581 CUI risk matrix',
+    query: 'Evaluate cathodic protection and CUI vulnerability for crude transfer header L-101: pipe-to-soil potential -920 mV, zinc anode bed 45 kg, operating temperature 85 C in calcium silicate insulation. Display API 581 5x5 RBI risk heatmap.',
+    icon: Layers,
+    badge: 'NACE / API 581 CUI',
+  },
+  {
+    title: 'CTI ATC-105 Cooling Tower Heat Rejection',
+    desc: 'Wet-bulb psychrometrics, cooling approach and range, evaporation and drift losses, and cycles of concentration (COC)',
+    query: 'Analyze plant induced draft cooling tower CT-101 thermodynamic balance: circulating flow 12500 m3/h, hot return 42.5 C, cold basin 31.0 C, dry-bulb 36 C, RH 55%. Compute approach, heat duty, and makeup water balance.',
+    icon: Waves,
+    badge: 'CTI ATC-105 Cooling',
+  },
   {
     title: 'API 617 Compressor Anti-Surge Envelope',
     desc: 'Aerodynamic head-capacity map, 10% Surge Control Line (SCL), and <0.9s fast-opening ASV hot-gas recirculation',

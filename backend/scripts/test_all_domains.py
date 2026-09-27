@@ -381,6 +381,40 @@ def test_card_12_steam_turbine_cogen():
     print(f"  [+] Steam Turbine Cogen Engine: electrical_power={stg_res.get('gross_electrical_power_mw')} MW, thermal_export={stg_res.get('process_thermal_export_mwth')} MWth, cogen_eff={stg_res.get('overall_cogen_efficiency_pct')}%, CO2_offset={stg_res.get('carbon_offset_t_co2_per_hr')} t/hr")
 
 
+def test_card_13_cathodic_protection_and_cui():
+    print("\n--- [TEST 13] Card 13: NACE SP0169 & API 581 Cathodic Protection & CUI RBI Matrix ---")
+    cui_res = tool_registry.execute_tool("calculate_cathodic_protection_and_cui_risk", {
+        "pipe_tag": "L-101",
+        "pipe_to_soil_potential_mv": -920.0,
+        "anode_type": "Zinc",
+        "installed_anode_mass_kg": 45.0,
+        "operating_temp_c": 85.0
+    })
+    assert cui_res.get("status") == "success", f"CUI calc failed: {cui_res}"
+    assert cui_res.get("nace_criterion_satisfied") is True, "NACE CP criteria should be met"
+    assert cui_res.get("cui_sweating_zone") is True, "85C should be in sweating zone"
+    assert cui_res.get("api_581_pof_score", 0) >= 3, "Expected elevated POF due to CUI sweating"
+    print(f"  [+] NACE / API 581 CUI Engine: potential={cui_res.get('pipe_to_soil_potential_mv')} mV, status='{cui_res.get('cathodic_protection_status')}', POF={cui_res.get('api_581_pof_score')}, risk_rank='{cui_res.get('rbi_risk_rank')}'")
+
+
+def test_card_14_cooling_tower_performance():
+    print("\n--- [TEST 14] Card 14: CTI ATC-105 & ASHRAE Cooling Tower Psychrometric Heat Rejection ---")
+    ct_res = tool_registry.execute_tool("calculate_cooling_tower_performance", {
+        "tower_tag": "CT-101",
+        "circulating_flow_m3_h": 12500.0,
+        "hot_water_temp_c": 42.5,
+        "cold_water_temp_c": 31.0,
+        "ambient_dry_bulb_c": 36.0,
+        "ambient_relative_humidity_pct": 55.0,
+        "cycles_of_concentration": 4.5
+    })
+    assert ct_res.get("status") == "success", f"Cooling tower calc failed: {ct_res}"
+    assert ct_res.get("heat_rejection_duty_mwth", 0) > 100.0, "Heat rejection duty too low"
+    assert ct_res.get("cooling_range_c", 0) > 5.0, "Cooling range error"
+    assert ct_res.get("makeup_water_demand_m3_h", 0) > 100.0, "Makeup water calculation error"
+    print(f"  [+] CTI ATC-105 Cooling Engine: duty={ct_res.get('heat_rejection_duty_mwth')} MWth, range={ct_res.get('cooling_range_c')} C, approach={ct_res.get('cooling_approach_c')} C, makeup={ct_res.get('makeup_water_demand_m3_h')} m3/h")
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -397,6 +431,8 @@ if __name__ == "__main__":
     test_card_10_turnaround_critical_path()
     test_card_11_compressor_anti_surge()
     test_card_12_steam_turbine_cogen()
+    test_card_13_cathodic_protection_and_cui()
+    test_card_14_cooling_tower_performance()
     print("\n================================================================")
-    print("ALL 12 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 14 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
