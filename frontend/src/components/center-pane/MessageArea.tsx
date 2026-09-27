@@ -1,14 +1,131 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar, RotateCw, Zap, Layers, Waves } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { FileText, Terminal, ScanEye, Activity, Gauge, Flame, Sparkles, AlertTriangle, ShieldCheck, Users, BellOff, Factory, ShieldAlert, Calendar, RotateCw, Zap, Layers, Waves, RotateCcw, ChevronDown, ChevronUp, Cpu, BarChart2 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import UserMessage from './UserMessage';
 import AgentMessage from './AgentMessage';
 import ChatInput from './ChatInput';
 
+// ─── Streaming dots placeholder ───────────────────────────────────────────────
+const StreamingDots = () => (
+  <div className="flex items-center gap-1 py-2 px-4">
+    {[0, 1, 2].map((i) => (
+      <div
+        key={i}
+        className="w-2 h-2 rounded-full bg-violet-500 animate-bounce"
+        style={{ animationDelay: `${i * 0.15}s` }}
+      />
+    ))}
+  </div>
+);
+
+// ─── Relative timestamp helper ─────────────────────────────────────────────────
+function relativeTime(isoOrEpoch?: string | number): string {
+  if (!isoOrEpoch) return '';
+  const ts = typeof isoOrEpoch === 'number' ? isoOrEpoch : Date.parse(isoOrEpoch as string);
+  if (isNaN(ts)) return '';
+  const diffSec = Math.floor((Date.now() - ts) / 1000);
+  if (diffSec < 5) return 'just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.floor(diffHr / 24)}d ago`;
+}
+
+// ─── Collapsible tool-call disclosure ─────────────────────────────────────────
+function ToolCallDisclosure({ data }: { data: unknown }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden text-xs font-mono">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 w-full px-3 py-1.5 bg-slate-50 dark:bg-zinc-900 text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+      >
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        <span>{open ? 'Hide' : 'Show'} Tool Call</span>
+      </button>
+      {open && (
+        <pre className="p-3 text-[11px] bg-zinc-950 text-emerald-300 overflow-x-auto max-h-64 scrollbar-thin">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+// ─── Wrapper for user message with replay + timestamp ─────────────────────────
+function UserMessageWrapper({ message, onReplay }: { message: Message; onReplay: (content: string) => void }) {
+  const ts = relativeTime((message as any).createdAt || (message as any).timestamp);
+  return (
+    <div className="relative group">
+      <UserMessage message={message} />
+      {/* Replay button */}
+      <button
+        onClick={() => onReplay(message.content)}
+        title="Replay this message"
+        className="opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-5 right-2 flex items-center gap-1 text-[10px] text-slate-400 dark:text-zinc-500 hover:text-violet-500 dark:hover:text-violet-400 cursor-pointer"
+      >
+        <RotateCcw className="w-3 h-3" />
+        <span>Replay</span>
+      </button>
+      {ts && (
+        <div className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 text-right pr-1 font-mono">{ts}</div>
+      )}
+    </div>
+  );
+}
+
+// ─── Wrapper for agent message with timestamp + tool call disclosure ──────────
+function AgentMessageWrapper({ message }: { message: Message }) {
+  const ts = relativeTime((message as any).createdAt || (message as any).timestamp);
+  const toolCalls = (message as any).tool_calls || (message as any).toolCalls;
+  return (
+    <div>
+      <AgentMessage message={message} />
+      {toolCalls && <ToolCallDisclosure data={toolCalls} />}
+      {ts && (
+        <div className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 pl-1 font-mono">{ts}</div>
+      )}
+    </div>
+  );
+}
+
+// ─── Verified workflows ────────────────────────────────────────────────────────
 const verifiedWorkflows = [
+  // ── 4 NEW cards (prepended) ──
+  {
+    title: 'TEG Glycol Dehydration',
+    desc: 'TEG dehydration unit performance, dew point target, contactor sizing per GPSA Engineering Data Book',
+    query: 'Calculate TEG dehydration unit performance for 50 MMSCFD gas stream at 1000 psia, 40°C inlet, targeting -70°C dew point per GPSA Engineering Data Book',
+    icon: Cpu,
+    badge: 'TEG / GPSA',
+  },
+  {
+    title: 'Relief Valve Sizing',
+    desc: 'API 520 fire-case PRV sizing: design pressure, heat input, fluid properties, and required orifice area',
+    query: 'Size pressure relief valve per API 520 for vessel with design pressure 350 psig, fire case heat input 2.5 MMBTU/hr, fluid naphtha SG 0.72',
+    icon: Zap,
+    badge: 'API 520 Relief',
+  },
+  {
+    title: 'FMEA Risk Matrix',
+    desc: 'IEC 60812 FMEA for centrifugal pump: top failure modes, severity/occurrence/detection scores, RPN ranking',
+    query: 'Generate FMEA risk matrix for centrifugal pump P-101 per IEC 60812: identify top 8 failure modes with severity, occurrence, detection scores and RPN rankings',
+    icon: Activity,
+    badge: 'IEC 60812 FMEA',
+  },
+  {
+    title: 'Pump Curve Intersection',
+    desc: 'System curve vs API 610 BB2 pump curve BEP intersection, static head, friction losses at rated flow',
+    query: 'Calculate system curve and pump curve intersection for P-101 API 610 BB2 pump: rated 280 GPM 95m head, system static head 45m, friction losses at rated flow',
+    icon: BarChart2,
+    badge: 'API 610 Hydraulics',
+  },
+  // ── existing cards ──
   {
     title: 'NACE SP0169 Cathodic Protection & CUI RBI',
     desc: 'Sub-surface pipe-to-soil potential (-850 to -1200 mV CSE), sacrificial anode depletion, and API 581 CUI risk matrix',
@@ -192,7 +309,7 @@ export default function MessageArea() {
               Industrial AI Co-Pilot
             </h1>
             <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-              Multi-step reasoning, ASME & P&ID verification, and deterministic engineering calculations.
+              Multi-step reasoning, ASME &amp; P&amp;ID verification, and deterministic engineering calculations.
             </p>
           </div>
 
@@ -241,14 +358,22 @@ export default function MessageArea() {
   const orderedMessages = normalizeMessageOrder(messages);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-36 space-y-4">
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-36 space-y-6">
       {orderedMessages.map((msg) =>
         msg.role === 'user' ? (
-          <UserMessage key={msg.id} message={msg} />
+          <UserMessageWrapper
+            key={msg.id}
+            message={msg}
+            onReplay={(content) => setInputValue(content)}
+          />
         ) : (
-          <AgentMessage key={msg.id} message={msg} />
+          <AgentMessageWrapper key={msg.id} message={msg} />
         )
       )}
+
+      {/* Streaming indicator */}
+      {isAgentWorking && <StreamingDots />}
+
       <div ref={bottomRef} />
     </div>
   );

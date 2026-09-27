@@ -493,6 +493,49 @@ class ToolRegistry:
                         }
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_teg_dehydration_unit",
+                    "description": "GPSA Sec 20 TEG glycol dehydration unit: dew point depression, circulation rate, reboiler duty, contactor sizing",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "gas_flow_mmscfd": {"type": "number", "description": "Gas flow in MMSCFD", "default": 50.0},
+                            "inlet_pressure_psia": {"type": "number", "description": "Contactor inlet pressure psia", "default": 1000.0},
+                            "inlet_temp_c": {"type": "number", "description": "Inlet temperature deg C", "default": 40.0},
+                            "lean_teg_concentration": {"type": "number", "description": "Lean TEG concentration wt%", "default": 99.5},
+                            "teg_circulation_rate_liter_per_kg": {"type": "number", "description": "TEG circ rate L/kg H2O removed", "default": 25.0},
+                            "target_dewpoint_c": {"type": "number", "description": "Target outlet dew point deg C", "default": -70.0},
+                            "contactor_trays": {"type": "integer", "description": "Number of contactor trays", "default": 4}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_relief_valve_sizing",
+                    "description": "API 520/526 pressure relief valve sizing for fire case and process case scenarios",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "scenario": {"type": "string", "description": "fire_case or process_upset", "default": "fire_case"},
+                            "vessel_design_pressure_psig": {"type": "number", "description": "Vessel design pressure psig", "default": 350.0},
+                            "set_pressure_psig": {"type": "number", "description": "PRV set pressure psig", "default": 340.0},
+                            "fluid": {"type": "string", "description": "Fluid name", "default": "naphtha"},
+                            "fluid_sg": {"type": "number", "description": "Fluid specific gravity", "default": 0.72},
+                            "fluid_mw": {"type": "number", "description": "Fluid molecular weight", "default": 100.0},
+                            "fluid_k": {"type": "number", "description": "Cp/Cv ratio", "default": 1.05},
+                            "inlet_temp_k": {"type": "number", "description": "Relieving temperature K", "default": 673.15},
+                            "fire_heat_input_btu_per_hr": {"type": "number", "description": "Fire case heat input BTU/hr", "default": 2500000.0},
+                            "back_pressure_psig": {"type": "number", "description": "Back pressure psig", "default": 15.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -522,7 +565,9 @@ class ToolRegistry:
             "calculate_compressor_anti_surge_map",
             "calculate_steam_turbine_cogen_balance",
             "calculate_cathodic_protection_and_cui_risk",
-            "calculate_cooling_tower_performance"
+            "calculate_cooling_tower_performance",
+            "calculate_teg_dehydration_unit",
+            "calculate_relief_valve_sizing"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

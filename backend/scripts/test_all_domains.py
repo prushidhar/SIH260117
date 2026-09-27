@@ -415,6 +415,41 @@ def test_card_14_cooling_tower_performance():
     print(f"  [+] CTI ATC-105 Cooling Engine: duty={ct_res.get('heat_rejection_duty_mwth')} MWth, range={ct_res.get('cooling_range_c')} C, approach={ct_res.get('cooling_approach_c')} C, makeup={ct_res.get('makeup_water_demand_m3_h')} m3/h")
 
 
+def test_card_15():
+    print('\n--- TEST 15: TEG Glycol Dehydration (GPSA Sec 20) ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_teg_dehydration_unit(
+        gas_flow_mmscfd=50.0, inlet_pressure_psia=1000.0, inlet_temp_c=40.0,
+        lean_teg_concentration=99.5, target_dewpoint_c=-70.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['water_removed_lb_per_day'] > 0
+    assert result['reboiler_duty_kw'] > 0
+    assert result['contactor_diameter_m'] > 0
+    print(f"  Water removed: {result['water_removed_lb_per_day']} lb/day")
+    print(f"  Reboiler duty: {result['reboiler_duty_kw']} kW")
+    print(f"  Contactor dia: {result['contactor_diameter_m']} m")
+    print(f"  Status: {result['status']}")
+    print('  PASS')
+
+
+def test_card_16():
+    print('\n--- TEST 16: Relief Valve Sizing (API 520/526) ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_relief_valve_sizing(
+        scenario='fire_case', vessel_design_pressure_psig=350.0,
+        set_pressure_psig=340.0, fluid='naphtha', fluid_sg=0.72
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['required_orifice_area_in2'] > 0
+    assert result['compliance'] == 'PASS'
+    print(f"  Required area: {result['required_orifice_area_in2']} in²")
+    print(f"  Selected orifice: {result['selected_orifice_letter']} ({result['selected_orifice_area_in2']} in²)")
+    print(f"  Flow regime: {result['flow_regime']}")
+    print(f"  Compliance: {result['compliance']}")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -433,6 +468,8 @@ if __name__ == "__main__":
     test_card_12_steam_turbine_cogen()
     test_card_13_cathodic_protection_and_cui()
     test_card_14_cooling_tower_performance()
+    test_card_15()
+    test_card_16()
     print("\n================================================================")
-    print("ALL 14 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 16 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")

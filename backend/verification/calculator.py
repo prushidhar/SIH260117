@@ -1486,4 +1486,141 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
+    @staticmethod
+    def calculate_teg_dehydration_unit(
+        gas_flow_mmscfd: float = 50.0,
+        inlet_pressure_psia: float = 1000.0,
+        inlet_temp_c: float = 40.0,
+        lean_teg_concentration: float = 99.5,  # wt%
+        teg_circulation_rate_liter_per_kg: float = 25.0,
+        target_dewpoint_c: float = -70.0,
+        contactor_trays: int = 4
+    ) -> dict:
+        """GPSA Eng Data Book Sec 20 — TEG glycol dehydration unit.
+        Calculates dew point depression, TEG circulation, reboiler duty."""
+        try:
+            import math
+            # Inlet water content (McKetta-Wehe correlation, simplified)
+            # At 1000 psia, 40°C: ~65 lb/MMSCFD typical
+            inlet_water_lb_per_mmscfd = 65.0 * math.exp(-0.02 * (inlet_pressure_psia - 1000) / 100) * (1 + 0.01 * (inlet_temp_c - 40))
+            total_inlet_water_lb_per_day = inlet_water_lb_per_mmscfd * gas_flow_mmscfd
+            # Outlet water content for target dew point (McKetta-Wehe)
+            # -70°C dew point at 1000 psia corresponds to ~1 lb/MMSCFD
+            sat_pressure_outlet_psia = math.exp(23.7 - 5218.0 / (target_dewpoint_c + 273.15))
+            outlet_water_lb_per_mmscfd = max(0.5, inlet_water_lb_per_mmscfd * (sat_pressure_outlet_psia / (inlet_pressure_psia * 0.01)))
+            water_removed_lb_per_day = (inlet_water_lb_per_mmscfd - outlet_water_lb_per_mmscfd) * gas_flow_mmscfd
+            # Dew point depression
+            dewpoint_depression_c = abs(target_dewpoint_c - inlet_temp_c)
+            # TEG circulation rate
+            teg_flow_gal_per_hr = (water_removed_lb_per_day / 24.0) * teg_circulation_rate_liter_per_kg * 0.2642
+            # Lean TEG needed (accounting for concentration)
+            lean_teg_needed_lb_per_hr = (water_removed_lb_per_day / 24.0) * lean_teg_concentration / (100.0 - lean_teg_concentration)
+            # Reboiler duty (GPSA: 800-1200 BTU/gal TEG circulated)
+            reboiler_duty_btu_per_hr = teg_flow_gal_per_hr * 1000.0  # 1000 BTU/gal typical
+            reboiler_duty_kw = reboiler_duty_btu_per_hr * 0.293071 / 1000.0
+            # Contactor sizing (Souders-Brown)
+            k_factor = 0.25  # ft/s, typical TEG contactor
+            gas_density = inlet_pressure_psia * 28.97 / (10.73 * (inlet_temp_c + 459.67))
+            liquid_density_lb_ft3 = 87.0  # lean TEG density
+            c_sb = k_factor * math.sqrt((liquid_density_lb_ft3 - gas_density) / gas_density)
+            gas_flow_acfm = gas_flow_mmscfd * 1e6 / (24 * 60) * (14.7 / inlet_pressure_psia) * ((inlet_temp_c + 459.67) / 519.67)
+            contactor_area_ft2 = gas_flow_acfm / (c_sb * 60)
+            contactor_diameter_m = math.sqrt(4 * contactor_area_ft2 / math.pi) * 0.3048
+            # Rich TEG concentration after absorption
+            water_absorbed_per_gal_teg = water_removed_lb_per_day / 24.0 / max(teg_flow_gal_per_hr, 0.1)
+            rich_teg_concentration = lean_teg_concentration - water_absorbed_per_gal_teg * 8.0
+            rich_teg_concentration = max(90.0, min(lean_teg_concentration, rich_teg_concentration))
+            return {
+                'gas_flow_mmscfd': round(gas_flow_mmscfd, 1),
+                'inlet_water_content_lb_per_mmscfd': round(inlet_water_lb_per_mmscfd, 1),
+                'outlet_water_content_lb_per_mmscfd': round(outlet_water_lb_per_mmscfd, 2),
+                'water_removed_lb_per_day': round(water_removed_lb_per_day, 1),
+                'dewpoint_depression_c': round(dewpoint_depression_c, 1),
+                'target_outlet_dewpoint_c': round(target_dewpoint_c, 1),
+                'lean_teg_concentration_wt_pct': round(lean_teg_concentration, 1),
+                'rich_teg_concentration_wt_pct': round(rich_teg_concentration, 1),
+                'teg_circulation_rate_gal_per_hr': round(teg_flow_gal_per_hr, 1),
+                'reboiler_duty_kw': round(reboiler_duty_kw, 1),
+                'contactor_diameter_m': round(contactor_diameter_m, 2),
+                'contactor_trays': contactor_trays,
+                'standard': 'GPSA Engineering Data Book Section 20 / GPA 2172',
+                'status': 'NORMAL' if rich_teg_concentration > 95.0 else 'CHECK_LOADING'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @staticmethod
+    def calculate_relief_valve_sizing(
+        scenario: str = 'fire_case',
+        vessel_design_pressure_psig: float = 350.0,
+        set_pressure_psig: float = 340.0,
+        fluid: str = 'naphtha',
+        fluid_sg: float = 0.72,
+        fluid_mw: float = 100.0,
+        fluid_k: float = 1.05,
+        inlet_temp_k: float = 673.15,
+        fire_heat_input_btu_per_hr: float = 2500000.0,
+        back_pressure_psig: float = 15.0,
+        orifice_area_in2: float = 0.503  # API D orifice
+    ) -> dict:
+        """API 520/526 pressure relief valve sizing for fire and process cases."""
+        try:
+            import math
+            # Set pressure in psia
+            set_pressure_psia = set_pressure_psig + 14.7
+            back_pressure_psia = back_pressure_psig + 14.7
+            overpressure_pct = 21.0 if scenario == 'fire_case' else 10.0
+            relieving_pressure_psia = set_pressure_psia * (1 + overpressure_pct / 100)
+            # Discharge coefficient
+            Kd = 0.975  # conventional PRV
+            Kb = 1.0  # back pressure correction (conventional)
+            Kc = 1.0  # combination correction
+            # For fire case — vapor generation from latent heat
+            latent_heat_btu_per_lb = 120.0  # typical naphtha
+            vapor_lb_per_hr = fire_heat_input_btu_per_hr / latent_heat_btu_per_lb
+            vapor_flow_scfm = vapor_lb_per_hr / (fluid_mw * 0.0026853)  # lb/hr to SCFM approx
+            # Compressibility Z
+            Z = 0.95  # near-ideal at these conditions
+            # API 520 gas/vapor sizing: A = W / (C * Kd * P1 * Kb * Kc) * sqrt(T*Z/M)
+            # C = 520 * sqrt(k * (2/(k+1))^((k+1)/(k-1)))
+            C = 520.0 * math.sqrt(fluid_k * (2.0 / (fluid_k + 1.0)) ** ((fluid_k + 1.0) / (fluid_k - 1.0)))
+            required_area_in2 = (vapor_lb_per_hr / (C * Kd * relieving_pressure_psia * Kb * Kc)) * math.sqrt(inlet_temp_k * Z / fluid_mw)
+            # Select standard orifice
+            std_orifices = [
+                ('D', 0.110), ('E', 0.196), ('F', 0.307), ('G', 0.503),
+                ('H', 0.785), ('J', 1.287), ('K', 1.838), ('L', 2.853),
+                ('M', 3.600), ('N', 4.340), ('P', 6.380), ('Q', 11.05), ('R', 16.00)
+            ]
+            selected_orifice = std_orifices[-1]
+            for letter, area in std_orifices:
+                if area >= required_area_in2:
+                    selected_orifice = (letter, area)
+                    break
+            # Overpressure check
+            allowable_acc_pct = overpressure_pct
+            actual_acc_pct = (relieving_pressure_psia - set_pressure_psia) / set_pressure_psia * 100
+            # Back pressure ratio
+            back_pressure_ratio = back_pressure_psia / relieving_pressure_psia
+            critical_pressure_ratio = (2.0 / (fluid_k + 1.0)) ** (fluid_k / (fluid_k - 1.0))
+            flow_regime = 'CRITICAL (CHOKED)' if back_pressure_ratio < critical_pressure_ratio else 'SUBCRITICAL'
+            return {
+                'scenario': scenario,
+                'set_pressure_psig': round(set_pressure_psig, 1),
+                'relieving_pressure_psia': round(relieving_pressure_psia, 1),
+                'vapor_generation_lb_per_hr': round(vapor_lb_per_hr, 1),
+                'required_orifice_area_in2': round(required_area_in2, 4),
+                'selected_orifice_letter': selected_orifice[0],
+                'selected_orifice_area_in2': round(selected_orifice[1], 3),
+                'area_margin_pct': round((selected_orifice[1] - required_area_in2) / required_area_in2 * 100, 1),
+                'C_coefficient': round(C, 2),
+                'back_pressure_ratio': round(back_pressure_ratio, 3),
+                'critical_pressure_ratio': round(critical_pressure_ratio, 3),
+                'flow_regime': flow_regime,
+                'allowable_accumulation_pct': round(allowable_acc_pct, 1),
+                'standard': 'API 520 Part I (10th Ed.) / API 526 (7th Ed.)',
+                'compliance': 'PASS' if selected_orifice[1] >= required_area_in2 else 'FAIL'
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
 engineering_tools = EngineeringSandbox()

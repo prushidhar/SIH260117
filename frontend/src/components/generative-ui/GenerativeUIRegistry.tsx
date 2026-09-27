@@ -20,6 +20,8 @@ import { CompressorAntiSurgeWidget } from './components/CompressorAntiSurgeWidge
 import { SteamTurbineCogenWidget } from './components/SteamTurbineCogenWidget';
 import { CathodicProtectionCuiWidget } from './components/CathodicProtectionCuiWidget';
 import { CoolingTowerPsychrometricWidget } from './components/CoolingTowerPsychrometricWidget';
+import TegDehydrationWidget from './components/TegDehydrationWidget';
+import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
 
 interface RegistryProps {
   component: string;
@@ -122,6 +124,16 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 19. CTI ATC-105 / ASHRAE Cooling Tower Psychrometrics & Water Balance
   if (compKey.includes('coolingtower') || compKey.includes('psychrometric') || compKey.includes('wetbulb') || compKey.includes('blowdown') || compKey === 'coolingtowerpsychrometricwidget') {
     return <CoolingTowerPsychrometricWidget {...props} />;
+  }
+
+  // 20. GPSA Sec 20 TEG Glycol Dehydration Unit
+  if (compKey.includes('teg') || compKey.includes('glycol') || compKey.includes('dehydrat')) {
+    return <TegDehydrationWidget {...props} />;
+  }
+
+  // 21. API 520/526 Pressure Relief Valve Sizing
+  if (compKey.includes('relief') || compKey.includes('prv') || compKey.includes('psv') || compKey.includes('api520')) {
+    return <ReliefValveSizingWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

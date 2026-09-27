@@ -9,20 +9,22 @@ import { useIndraStore } from '@/store/indra-store';
 import { useApprovalsQuery, useModelsQuery } from '@/lib/queries';
 import { useNativeBridge } from '@/hooks/useNativeBridge';
 import { sendNativeNotification } from '@/lib/native-bridge';
-import { 
-  PanelLeft, 
+import {
+  PanelLeft,
   PanelRight,
-  X, 
-  Lock, 
-  ShieldCheck, 
-  Sun, 
+  X,
+  Lock,
+  ShieldCheck,
+  Sun,
   Moon,
   Presentation,
   Volume2,
   VolumeX,
   Bot,
   Network,
-  Database
+  Database,
+  Circle,
+  Radio,
 } from 'lucide-react';
 import { isSoundEnabled, toggleSound, playSuccessChirp } from '@/lib/sound/sovereign-audio';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -47,9 +49,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { data: pendingApprovals = [] } = useApprovalsQuery();
   const { data: loadedModels = [] } = useModelsQuery();
 
-  const { 
-    isSidebarOpen, 
-    toggleSidebar, 
+  const {
+    isSidebarOpen,
+    toggleSidebar,
     isRightPaneOpen,
     toggleRightPane,
     deliverables,
@@ -68,6 +70,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   } = useIndraStore();
 
   const [soundOn, setSoundOn] = useState(true);
+
+  // ── NEW: Live UTC clock ────────────────────────────────────────────────────
+  const [utcTime, setUtcTime] = useState('');
+  useEffect(() => {
+    const tick = () =>
+      setUtcTime(new Date().toUTCString().slice(17, 25));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── NEW: Recording mode toggle ─────────────────────────────────────────────
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     setSoundOn(isSoundEnabled());
@@ -124,10 +139,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Left: App Title & Logo */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-            <img 
-              src="/logo.png" 
-              alt="INDRA" 
-              className="w-full h-full object-contain" 
+            <img
+              src="/logo.png"
+              alt="INDRA"
+              className="w-full h-full object-contain"
             />
           </div>
           <div>
@@ -137,12 +152,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 SYSTEM ONLINE
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-zinc-400">Industrial Neural Decision & Reasoning Assistant</div>
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400">Industrial Neural Decision &amp; Reasoning Assistant</div>
           </div>
         </div>
 
-        {/* Right: Theme Toggle & Voice & Status */}
+        {/* Centre: Live UTC Clock */}
+        <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 dark:text-slate-500 select-none">
+          <span className="text-slate-300 dark:text-slate-400">{utcTime}</span>
+          <span className="text-slate-500">UTC</span>
+        </div>
+
+        {/* Right: System Health + Recording + Theme + Audio + Voice + Status */}
         <div className="flex items-center gap-3 text-xs">
+
+          {/* System Health Indicator */}
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
+            <span className="flex items-center gap-1 text-[10px] font-mono">
+              <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500" />
+              <span className="text-slate-500 dark:text-zinc-500">API</span>
+            </span>
+            <span className="flex items-center gap-1 text-[10px] font-mono">
+              <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500" />
+              <span className="text-slate-500 dark:text-zinc-500">DB</span>
+            </span>
+            <span className="flex items-center gap-1 text-[10px] font-mono">
+              <Circle className="w-2 h-2 fill-amber-400 text-amber-400" />
+              <span className="text-slate-500 dark:text-zinc-500">GPU</span>
+            </span>
+          </div>
+
+          {/* Recording mode toggle */}
+          <button
+            onClick={() => setIsRecording((r) => !r)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
+              isRecording
+                ? 'bg-rose-600 text-white animate-pulse'
+                : 'bg-zinc-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-white' : 'bg-slate-500'}`} />
+            {isRecording ? 'REC' : 'IDLE'}
+          </button>
+
           {/* Theme Switcher Toggle */}
           <button
             onClick={toggleTheme}
@@ -205,7 +256,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="h-10 bg-white/75 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200/70 dark:border-zinc-800/70 flex items-center justify-between px-4 text-xs">
         {/* Left: Sidebar toggle & Active View Label */}
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={toggleSidebar}
             className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-lg text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
             title="Toggle Left Sidebar"
@@ -299,7 +350,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <img src="/logo.png" alt="INDRA" className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(124,58,237,0.2)]" />
               </div>
               <DialogTitle className="text-base">
-                INDRA Sovereign Architecture & Security Telemetry
+                INDRA Sovereign Architecture &amp; Security Telemetry
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -401,7 +452,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button 
+            <Button
               onClick={() => setSettingsOpen(false)}
               size="sm"
             >
