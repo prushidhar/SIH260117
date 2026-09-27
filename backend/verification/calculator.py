@@ -2709,6 +2709,310 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {'error': str(e)}
 
+    @staticmethod
+    def calculate_joukowsky_water_hammer_surge(
+        asset_tag: str = "PL-204",
+        pipe_outer_diameter_mm: float = 610.0,
+        wall_thickness_mm: float = 14.3,
+        pipe_length_m: float = 12500.0,
+        steady_flow_velocity_m_s: float = 2.40,
+        steady_operating_pressure_bar: float = 38.5,
+        pipe_design_mawp_bar: float = 64.0,
+        fluid_density_kg_m3: float = 850.0,
+        fluid_bulk_modulus_gpa: float = 1.50,
+        pipe_youngs_modulus_gpa: float = 207.0,
+        poisson_ratio: float = 0.30,
+        valve_closure_time_s: float = 3.5,
+        pipe_restraint_condition: str = "anchored_both_ends"
+    ) -> Dict[str, Any]:
+        """
+        Hydraulic Transient Water Hammer & Acoustic Surge Pressure Analysis
+        via Joukowsky Shock Theory, Korteweg Elastic Wave Equation, and ASME B31.4 § 404.3.4.
+        """
+        try:
+            d_o_m = pipe_outer_diameter_mm / 1000.0
+            t_m = wall_thickness_mm / 1000.0
+            d_i_m = d_o_m - 2.0 * t_m
+
+            if pipe_restraint_condition == "anchored_both_ends":
+                c1 = 1.0 - (poisson_ratio ** 2)
+            elif pipe_restraint_condition == "anchored_upstream":
+                c1 = 1.0 - 0.5 * poisson_ratio
+            else:
+                c1 = 1.0
+
+            k_bulk_pa = fluid_bulk_modulus_gpa * 1e9
+            e_pipe_pa = pipe_youngs_modulus_gpa * 1e9
+            denom = 1.0 + (k_bulk_pa / e_pipe_pa) * (d_i_m / t_m) * c1
+            wave_speed_m_s = math.sqrt((k_bulk_pa / fluid_density_kg_m3) / denom)
+
+            critical_closure_time_s = (2.0 * pipe_length_m) / wave_speed_m_s
+
+            delta_v = steady_flow_velocity_m_s
+            if valve_closure_time_s <= critical_closure_time_s:
+                delta_p_pa = fluid_density_kg_m3 * wave_speed_m_s * delta_v
+                regime = "RAPID_CLOSURE_FULL_JOUKOWSKY_SURGE"
+            else:
+                delta_p_pa = (2.0 * fluid_density_kg_m3 * pipe_length_m * delta_v) / valve_closure_time_s
+                regime = "GRADUAL_CLOSURE_ATTENUATED_SURGE"
+
+            delta_p_bar = delta_p_pa / 1e5
+            peak_surge_pressure_bar = steady_operating_pressure_bar + delta_p_bar
+
+            asme_allowable_surge_bar = pipe_design_mawp_bar * 1.10
+            surge_margin_pct = ((asme_allowable_surge_bar - peak_surge_pressure_bar) / asme_allowable_surge_bar) * 100.0
+
+            flow_area_m2 = (math.pi / 4.0) * (d_i_m ** 2)
+            allowable_delta_p_pa = max(1e5, (asme_allowable_surge_bar - steady_operating_pressure_bar) * 1e5)
+            kinetic_energy_joules = 0.5 * (fluid_density_kg_m3 * flow_area_m2 * pipe_length_m) * (steady_flow_velocity_m_s ** 2)
+            v_accumulator_m3 = (kinetic_energy_joules / allowable_delta_p_pa)
+
+            compliance = "PASS" if peak_surge_pressure_bar <= asme_allowable_surge_bar else "FAIL_SURGE_OVERPRESSURE"
+
+            return {
+                "asset_tag": asset_tag,
+                "pipe_outer_diameter_mm": pipe_outer_diameter_mm,
+                "wall_thickness_mm": wall_thickness_mm,
+                "pipeline_length_km": round(pipe_length_m / 1000.0, 2),
+                "flow_velocity_m_s": round(steady_flow_velocity_m_s, 2),
+                "acoustic_wave_speed_m_s": round(wave_speed_m_s, 1),
+                "critical_pipe_period_s": round(critical_closure_time_s, 2),
+                "valve_closure_time_s": round(valve_closure_time_s, 2),
+                "closure_regime": regime,
+                "joukowsky_surge_pressure_rise_bar": round(delta_p_bar, 2),
+                "steady_operating_pressure_bar": round(steady_operating_pressure_bar, 2),
+                "maximum_peak_surge_pressure_bar": round(peak_surge_pressure_bar, 2),
+                "pipe_design_mawp_bar": round(pipe_design_mawp_bar, 2),
+                "asme_allowable_surge_bar": round(asme_allowable_surge_bar, 2),
+                "surge_margin_pct": round(surge_margin_pct, 1),
+                "recommended_min_closure_time_s": round(critical_closure_time_s * 1.5, 1),
+                "surge_bladder_volume_required_m3": round(v_accumulator_m3, 2),
+                "kinetic_energy_megajoules": round(kinetic_energy_joules / 1e6, 2),
+                "standard": "ASME B31.4 § 404.3.4 / Joukowsky Elastic Transient Theory",
+                "compliance": compliance
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_iso5167_orifice_flowmeter(
+        meter_tag: str = "FE-101",
+        pipe_internal_diameter_mm: float = 202.7,
+        orifice_bore_diameter_mm: float = 117.566,
+        differential_pressure_mbar: float = 250.0,
+        upstream_pressure_bar_a: float = 28.5,
+        fluid_density_kg_m3: float = 825.0,
+        fluid_dynamic_viscosity_cp: float = 1.25,
+        fluid_isentropic_exponent: float = 1.30,
+        tapping_type: str = "flange"
+    ) -> Dict[str, Any]:
+        """
+        ISO 5167-2 / AGA Report No. 3 Orifice Differential Pressure Metrology Engine.
+        Reader-Harris/Gallagher (1998) discharge coefficient, expansibility, mass flow rate,
+        Reynolds number, and permanent pressure dissipation.
+        """
+        try:
+            D = pipe_internal_diameter_mm / 1000.0
+            d = orifice_bore_diameter_mm / 1000.0
+            beta = d / D
+
+            ev = 1.0 / math.sqrt(1.0 - (beta ** 4))
+
+            l1 = 25.4 / pipe_internal_diameter_mm
+            cd_base = 0.5961 + 0.0261 * (beta ** 2) - 0.216 * (beta ** 8)
+            tap_term = (0.043 + 0.080 * math.exp(-10.0 * l1) - 0.123 * math.exp(-7.0 * l1)) * (beta ** 4 / (1.0 - beta ** 4))
+            cd = cd_base + tap_term
+
+            dp_pa = differential_pressure_mbar * 100.0
+            p1_pa = upstream_pressure_bar_a * 1e5
+
+            if fluid_density_kg_m3 > 200.0:
+                epsilon = 1.0000
+            else:
+                k = max(1.1, fluid_isentropic_exponent)
+                p_ratio = max(0.5, (p1_pa - dp_pa) / p1_pa)
+                epsilon = 1.0 - (0.351 + 0.256 * (beta ** 4) + 0.93 * (beta ** 8)) * (1.0 - (p_ratio ** (1.0 / k)))
+
+            orifice_area_m2 = (math.pi / 4.0) * (d ** 2)
+            qm_kg_s = cd * ev * epsilon * orifice_area_m2 * math.sqrt(2.0 * fluid_density_kg_m3 * dp_pa)
+
+            mu_pa_s = fluid_dynamic_viscosity_cp * 1e-3
+            pipe_velocity_m_s = (4.0 * qm_kg_s) / (math.pi * (D ** 2) * fluid_density_kg_m3)
+            re_d = (fluid_density_kg_m3 * pipe_velocity_m_s * D) / mu_pa_s
+
+            re_term = 0.000521 * ((1e6 * beta / re_d) ** 0.7) + 0.0188 * (beta ** 3.5) * ((1e6 / re_d) ** 0.3)
+            cd_refined = cd + re_term
+
+            qm_kg_s = cd_refined * ev * epsilon * orifice_area_m2 * math.sqrt(2.0 * fluid_density_kg_m3 * dp_pa)
+            qm_tonne_h = (qm_kg_s * 3600.0) / 1000.0
+            qv_m3_h = (qm_kg_s / fluid_density_kg_m3) * 3600.0
+
+            loss_ratio = (math.sqrt(1.0 - (beta ** 4) * (1.0 - (cd_refined ** 2))) - cd_refined * (beta ** 2)) / \
+                         (math.sqrt(1.0 - (beta ** 4) * (1.0 - (cd_refined ** 2))) + cd_refined * (beta ** 2))
+            perm_loss_mbar = differential_pressure_mbar * loss_ratio
+            perm_loss_kpa = perm_loss_mbar / 10.0
+            dissipated_power_kw = (qv_m3_h / 3600.0) * (perm_loss_kpa * 1000.0) / 1000.0
+
+            beta_valid = 0.10 <= beta <= 0.75
+            re_valid = re_d >= 5000.0
+            dp_ratio_valid = (dp_pa / p1_pa) <= 0.25
+            compliance = "PASS_METROLOGICALLY_COMPLIANT" if (beta_valid and re_valid and dp_ratio_valid) else "CHECK_APPLICATION_LIMITS"
+
+            return {
+                "meter_tag": meter_tag,
+                "pipe_internal_diameter_mm": pipe_internal_diameter_mm,
+                "orifice_bore_diameter_mm": round(orifice_bore_diameter_mm, 3),
+                "diameter_ratio_beta": round(beta, 4),
+                "discharge_coefficient_cd": round(cd_refined, 4),
+                "velocity_of_approach_ev": round(ev, 4),
+                "expansibility_factor_epsilon": round(epsilon, 4),
+                "differential_pressure_mbar": round(differential_pressure_mbar, 1),
+                "mass_flow_rate_kg_s": round(qm_kg_s, 3),
+                "mass_flow_rate_tonnes_per_hour": round(qm_tonne_h, 2),
+                "volumetric_flow_rate_m3_per_hour": round(qv_m3_h, 2),
+                "pipe_reynolds_number": round(re_d, 0),
+                "pipe_mean_velocity_m_s": round(pipe_velocity_m_s, 2),
+                "permanent_pressure_loss_mbar": round(perm_loss_mbar, 1),
+                "permanent_pressure_loss_kpa": round(perm_loss_kpa, 2),
+                "energy_dissipation_kw": round(dissipated_power_kw, 2),
+                "beta_ratio_valid": beta_valid,
+                "reynolds_conformance": re_valid,
+                "standard": "ISO 5167-2:2003 / AGA Report No. 3 (Orifice Meters)",
+                "compliance": compliance
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api581_rbi_risk_matrix(
+        asset_tag: str = "V-301",
+        asset_type: str = "pressure_vessel",
+        operating_pressure_bar: float = 45.0,
+        operating_temp_c: float = 230.0,
+        component_material: str = "SA-387 Gr 11 Low Alloy Steel",
+        wall_thickness_nominal_mm: float = 38.0,
+        wall_thickness_current_mm: float = 34.2,
+        wall_thickness_minimum_req_mm: float = 28.5,
+        corrosion_rate_mm_year: float = 0.38,
+        years_in_service: float = 10.0,
+        toxic_or_flammable_inventory_kg: float = 8500.0,
+        fluid_phase: str = "gas_vapor",
+        h2s_content_ppm: float = 2500.0,
+        plant_downtime_cost_usd_per_day: float = 120000.0
+    ) -> Dict[str, Any]:
+        """
+        API 580 / API 581 Quantitative Risk-Based Inspection (RBI) 5x5 Matrix Engine.
+        Multi-mechanism damage factor (thinning, SCC, CUI), annual POF, flammable/toxic COF,
+        financial consequence area, and statutory inspection interval assignment.
+        """
+        try:
+            corrosion_loss_mm = wall_thickness_nominal_mm - wall_thickness_current_mm
+            remaining_corrosion_allowance_mm = max(0.1, wall_thickness_current_mm - wall_thickness_minimum_req_mm)
+            ar = (corrosion_rate_mm_year * years_in_service) / remaining_corrosion_allowance_mm
+            df_thin = min(2000.0, max(1.0, 1.0 + 8.5 * (ar ** 1.8)))
+
+            if h2s_content_ppm > 500.0:
+                df_scc = 15.0 if operating_temp_c < 250.0 else 30.0
+            elif h2s_content_ppm > 50.0:
+                df_scc = 5.0
+            else:
+                df_scc = 1.0
+
+            if 50.0 <= operating_temp_c <= 175.0:
+                df_ext = 8.0
+            else:
+                df_ext = 1.0
+
+            df_total = df_thin + df_scc + df_ext
+
+            gff = 3.06e-5
+            f_ms = 0.85
+            pof_annual = gff * f_ms * df_total
+
+            if pof_annual <= 1e-5:
+                pof_category = 1
+            elif pof_annual <= 1e-4:
+                pof_category = 2
+            elif pof_annual <= 1e-3:
+                pof_category = 3
+            elif pof_annual <= 1e-2:
+                pof_category = 4
+            else:
+                pof_category = 5
+
+            pressure_factor = (operating_pressure_bar / 10.0) ** 0.30
+            consequence_area_m2 = round(14.2 * (toxic_or_flammable_inventory_kg ** 0.65) * pressure_factor, 1)
+
+            repair_cost_usd = 450000.0
+            estimated_downtime_days = 12.0 if pof_category < 4 else 21.0
+            downtime_loss_usd = estimated_downtime_days * plant_downtime_cost_usd_per_day
+            environmental_safety_usd = 300000.0 if toxic_or_flammable_inventory_kg > 5000 else 75000.0
+            total_financial_consequence_usd = repair_cost_usd + downtime_loss_usd + environmental_safety_usd
+
+            if consequence_area_m2 <= 9.3 and total_financial_consequence_usd <= 10000:
+                cof_category = "A"
+            elif consequence_area_m2 <= 93.0 and total_financial_consequence_usd <= 100000:
+                cof_category = "B"
+            elif consequence_area_m2 <= 930.0 and total_financial_consequence_usd <= 1000000:
+                cof_category = "C"
+            elif consequence_area_m2 <= 9300.0 and total_financial_consequence_usd <= 10000000:
+                cof_category = "D"
+            else:
+                cof_category = "E"
+
+            risk_matrix_cell = f"{pof_category}{cof_category}"
+
+            high_risk_cells = {"5E", "5D", "5C", "4E", "4D"}
+            med_high_cells = {"5B", "4C", "3E", "3D"}
+            med_cells = {"5A", "4B", "3C", "2E", "2D"}
+            if risk_matrix_cell in high_risk_cells:
+                risk_tier = "HIGH_RISK"
+                risk_color = "RED"
+                target_inspection_interval_years = 1.5
+                inspection_mitigation = "MANDATORY_INTERNAL_SHUTDOWN_INSPECTION_PAUT_TOFD"
+            elif risk_matrix_cell in med_high_cells:
+                risk_tier = "MEDIUM_HIGH_RISK"
+                risk_color = "ORANGE"
+                target_inspection_interval_years = 3.0
+                inspection_mitigation = "ONSTREAM_EXTERNAL_PEC_AND_ULTRASONIC_GRID"
+            elif risk_matrix_cell in med_cells:
+                risk_tier = "MEDIUM_RISK"
+                risk_color = "YELLOW"
+                target_inspection_interval_years = 6.0
+                inspection_mitigation = "ROUTINE_EXTERNAL_VISUAL_AND_SPOT_UT"
+            else:
+                risk_tier = "LOW_RISK"
+                risk_color = "GREEN"
+                target_inspection_interval_years = 10.0
+                inspection_mitigation = "STANDARD_10_YEAR_API_510_CYCLE"
+
+            expected_annual_loss_usd = round(pof_annual * total_financial_consequence_usd, 2)
+
+            return {
+                "asset_tag": asset_tag,
+                "asset_type": asset_type,
+                "component_material": component_material,
+                "total_damage_factor": round(df_total, 1),
+                "thinning_damage_factor": round(df_thin, 1),
+                "scc_damage_factor": round(df_scc, 1),
+                "external_cui_damage_factor": round(df_ext, 1),
+                "annual_probability_of_failure": f"{pof_annual:.3e}",
+                "pof_category": pof_category,
+                "flammable_consequence_area_m2": consequence_area_m2,
+                "total_financial_consequence_usd": round(total_financial_consequence_usd, 0),
+                "cof_category": cof_category,
+                "api_581_matrix_cell": risk_matrix_cell,
+                "risk_tier": risk_tier,
+                "risk_matrix_color": risk_color,
+                "expected_annual_loss_usd": expected_annual_loss_usd,
+                "target_inspection_interval_years": target_inspection_interval_years,
+                "statutory_mitigation_action": inspection_mitigation,
+                "standard": "API 580 / API 581 (Risk-Based Inspection Methodology 3rd Ed.)",
+                "compliance": "ACCEPTABLE_UNDER_PLANNED_RBI" if risk_tier != "HIGH_RISK" else "REJECTED_MANDATORY_INTERVENTION"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
 engineering_tools = EngineeringSandbox()
 
 

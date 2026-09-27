@@ -1723,6 +1723,68 @@ async def get_equipment_integrity_evaluation(tag: str):
     }
 
 
+@app.get("/api/security/airgap/attestation")
+async def get_airgap_cryptographic_attestation():
+    """
+    Returns an immutable cryptographic attestation proof certifying 100% on-premise,
+    zero-WAN execution conforming to IEC 62443-3-3 SL-4.
+    """
+    return network_monitor.generate_airgap_attestation_proof()
+
+
+class RBIPortfolioRequest(BaseModel):
+    asset_tags: Optional[List[str]] = None
+
+
+@app.post("/api/rbi/portfolio")
+async def evaluate_rbi_portfolio(req: RBIPortfolioRequest):
+    """
+    Evaluates multi-asset API 580/581 Risk-Based Inspection (RBI) 5x5 Matrix portfolio.
+    Maps target assets into 5x5 risk cells with financial and safety consequence rankings.
+    """
+    from data.equipment_registry import equipment_registry
+    from verification.calculator import engineering_tools
+    
+    tags = req.asset_tags or ["V-301", "V-101", "V-201", "D-101", "HEX-301"]
+    portfolio = []
+    matrix_distribution = {}
+    high_risk_count = 0
+    
+    for tag in tags:
+        eq = equipment_registry.get_equipment(tag)
+        if not eq:
+            continue
+        tel = eq.get("telemetry", {})
+        rbi_res = engineering_tools.calculate_api581_rbi_risk_matrix(
+            asset_tag=tag,
+            asset_type=eq.get("type", "pressure_vessel"),
+            operating_pressure_bar=tel.get("operating_pressure_bar", eq.get("design_pressure_psig", 150.0) / 14.5038),
+            operating_temp_c=tel.get("operating_temp_c", eq.get("design_temp_c", 150.0)),
+            component_material=eq.get("material", "Carbon Steel"),
+            wall_thickness_nominal_mm=tel.get("nominal_thickness_mm", 30.0),
+            wall_thickness_current_mm=tel.get("current_wall_thickness_mm", 26.5),
+            wall_thickness_minimum_req_mm=tel.get("minimum_required_thickness_mm", 20.0),
+            corrosion_rate_mm_year=tel.get("corrosion_rate_mm_year", 0.35),
+            years_in_service=10.0,
+            toxic_or_flammable_inventory_kg=tel.get("inventory_kg", 5000.0),
+            h2s_content_ppm=tel.get("h2s_content_ppm", 100.0)
+        )
+        cell = rbi_res.get("api_581_matrix_cell", "1A")
+        matrix_distribution[cell] = matrix_distribution.get(cell, 0) + 1
+        if rbi_res.get("risk_tier") == "HIGH_RISK":
+            high_risk_count += 1
+        portfolio.append(rbi_res)
+        
+    return {
+        "total_assets_evaluated": len(portfolio),
+        "matrix_distribution": matrix_distribution,
+        "high_risk_assets_count": high_risk_count,
+        "portfolio": portfolio,
+        "evaluated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

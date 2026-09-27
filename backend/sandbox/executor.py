@@ -751,6 +751,74 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_joukowsky_water_hammer_surge",
+                    "description": "ASME B31.4 § 404.3.4 & Joukowsky Elastic Transient Theory: acoustic wave speed, water hammer shockwave rise, allowable surge margin, and gas bladder sizing.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Pipeline asset tag", "default": "PL-204"},
+                            "pipe_outer_diameter_mm": {"type": "number", "description": "Outer diameter in mm", "default": 610.0},
+                            "wall_thickness_mm": {"type": "number", "description": "Wall thickness in mm", "default": 14.3},
+                            "pipe_length_m": {"type": "number", "description": "Pipeline length in meters", "default": 12500.0},
+                            "steady_flow_velocity_m_s": {"type": "number", "description": "Steady velocity in m/s", "default": 2.40},
+                            "steady_operating_pressure_bar": {"type": "number", "description": "Steady pressure in bar", "default": 38.5},
+                            "pipe_design_mawp_bar": {"type": "number", "description": "Pipe design MAWP in bar", "default": 64.0},
+                            "fluid_density_kg_m3": {"type": "number", "description": "Fluid density kg/m3", "default": 850.0},
+                            "fluid_bulk_modulus_gpa": {"type": "number", "description": "Bulk modulus in GPa", "default": 1.50},
+                            "valve_closure_time_s": {"type": "number", "description": "Valve closure time in seconds", "default": 3.5}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_iso5167_orifice_flowmeter",
+                    "description": "ISO 5167-2 / AGA 3 Orifice Differential Pressure Metrology: Reader-Harris/Gallagher discharge coefficient, mass flow rate, expansibility, and permanent pressure loss.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "meter_tag": {"type": "string", "description": "Meter tag", "default": "FE-101"},
+                            "pipe_internal_diameter_mm": {"type": "number", "description": "Pipe ID in mm", "default": 202.7},
+                            "orifice_bore_diameter_mm": {"type": "number", "description": "Orifice bore diameter in mm", "default": 117.566},
+                            "differential_pressure_mbar": {"type": "number", "description": "Differential pressure in mbar", "default": 250.0},
+                            "upstream_pressure_bar_a": {"type": "number", "description": "Upstream pressure in bar absolute", "default": 28.5},
+                            "fluid_density_kg_m3": {"type": "number", "description": "Fluid density in kg/m3", "default": 825.0},
+                            "fluid_dynamic_viscosity_cp": {"type": "number", "description": "Viscosity in cP", "default": 1.25}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api581_rbi_risk_matrix",
+                    "description": "API 580 / API 581 Quantitative Risk-Based Inspection (RBI) 5x5 Matrix: multi-mechanism damage factor (thinning, SCC, CUI), annual POF, flammable/toxic COF, and statutory interval.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag", "default": "V-301"},
+                            "asset_type": {"type": "string", "description": "Asset type e.g. pressure_vessel", "default": "pressure_vessel"},
+                            "operating_pressure_bar": {"type": "number", "description": "Operating pressure in bar", "default": 45.0},
+                            "operating_temp_c": {"type": "number", "description": "Operating temperature in °C", "default": 230.0},
+                            "component_material": {"type": "string", "description": "Material", "default": "SA-387 Gr 11 Low Alloy Steel"},
+                            "wall_thickness_nominal_mm": {"type": "number", "description": "Nominal thickness mm", "default": 38.0},
+                            "wall_thickness_current_mm": {"type": "number", "description": "Current thickness mm", "default": 34.2},
+                            "wall_thickness_minimum_req_mm": {"type": "number", "description": "Min required thickness mm", "default": 28.5},
+                            "corrosion_rate_mm_year": {"type": "number", "description": "Corrosion rate mm/year", "default": 0.38},
+                            "years_in_service": {"type": "number", "description": "Years in service", "default": 10.0},
+                            "toxic_or_flammable_inventory_kg": {"type": "number", "description": "Inventory in kg", "default": 8500.0},
+                            "h2s_content_ppm": {"type": "number", "description": "H2S content in ppm", "default": 2500.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -792,7 +860,10 @@ class ToolRegistry:
             "calculate_nace_mr0175_sour_service_severity",
             "calculate_weibull_rul_prognostics",
             "calculate_pinch_analysis_heat_network",
-            "calculate_fatigue_cumulative_damage_miner"
+            "calculate_fatigue_cumulative_damage_miner",
+            "calculate_joukowsky_water_hammer_surge",
+            "calculate_iso5167_orifice_flowmeter",
+            "calculate_api581_rbi_risk_matrix"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

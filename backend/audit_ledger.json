@@ -7596,5 +7596,107 @@
     },
     "previous_hash": "87b2e577623ae12e10354f37f29e9e3b8ed5ae53320d7241ef78772abbaf2e1b",
     "hash": "537aebd52e3555d5eae8e66dac76846d0bc0903eb0cec6e43c646dff3b0ba67d"
+  },
+  {
+    "timestamp": 1790523813.893629,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "test-bft",
+      "asset_tag": "PL-204",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "740eb45d91ab4b90294ee4f3d3b128e1c26dd0b6d2bc0106b8baed1ec46ff58d"
+    },
+    "previous_hash": "537aebd52e3555d5eae8e66dac76846d0bc0903eb0cec6e43c646dff3b0ba67d",
+    "hash": "4db32f1ce583be4686a5ece46b16b427cce1c87924a4aa6cb6cb8ce4c55fd650"
+  },
+  {
+    "timestamp": 1790523818.065387,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "test-bft",
+      "asset_tag": "PL-204",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "c4f7189d1cc53b0a8ed59e8971b4cd293f0172f26b01a7884fec712590e320a9"
+    },
+    "previous_hash": "4db32f1ce583be4686a5ece46b16b427cce1c87924a4aa6cb6cb8ce4c55fd650",
+    "hash": "161e9faebf88ee7f5d45f93b591dd353d273af72c453f9e3b9cf04a9d259357f"
+  },
+  {
+    "timestamp": 1790523822.9884577,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "test-bft",
+      "asset_tag": "PL-204",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "c32bad49014f6738fde223fa196f7c11b0bce6f73b3d111515432973950d1ff7"
+    },
+    "previous_hash": "161e9faebf88ee7f5d45f93b591dd353d273af72c453f9e3b9cf04a9d259357f",
+    "hash": "4db232ce1d18e0d459dc9fbd30316df63d842671b15e569b8583d07a52287891"
+  },
+  {
+    "timestamp": 1790523880.9617376,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "603dba1140fbe647a8b43b3ed0bded6796a45bce57b65153e3c2a54c16516b00",
+      "file_count": 4
+    },
+    "previous_hash": "4db232ce1d18e0d459dc9fbd30316df63d842671b15e569b8583d07a52287891",
+    "hash": "7d80da3b7d009ce48c86cd7a6bd561b647067617b190b88165837ca00a6344cc"
+  },
+  {
+    "timestamp": 1790523881.8733902,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "afa5585d568d31bbc32546fc86c0bdcefcb19cf779e509e2ed3547bcffc71d75"
+    },
+    "previous_hash": "7d80da3b7d009ce48c86cd7a6bd561b647067617b190b88165837ca00a6344cc",
+    "hash": "085ae16988b6cd9899cf4024b6bf2f4dcbdc273ef0059354140d8092e1698592"
+  },
+  {
+    "timestamp": 1790523911.4737957,
+    "event_type": "engineering_calculation_executed",
+    "payload": {
+      "tool": "calculate_tema_heat_exchanger_rating",
+      "task_id": "direct_calc",
+      "elapsed_ms": 96.93,
+      "is_error": false
+    },
+    "previous_hash": "085ae16988b6cd9899cf4024b6bf2f4dcbdc273ef0059354140d8092e1698592",
+    "hash": "582c35534f4d9f4eb5490854c477f4ba322a9b86704d61c62df46aac3a406e4c"
+  },
+  {
+    "timestamp": 1790523911.4941947,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "consensus_task",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "355029d450c617e113fc7144ea6b7b68264fd2a17beb64b30931f51f6a21ac84"
+    },
+    "previous_hash": "582c35534f4d9f4eb5490854c477f4ba322a9b86704d61c62df46aac3a406e4c",
+    "hash": "3513da4b3f043ff73fe82c30c716fe9913f563dd687c6d191d5aedcb84063973"
+  },
+  {
+    "timestamp": 1790523911.6072824,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "eval-HEX-301",
+      "asset_tag": "HEX-301",
+      "verdict": "REJECTED_SAFETY_HOLD",
+      "consensus_score_pct": 75.0,
+      "cert_hash": "82e2b98d0911eac7910b3ebf2503ad1c3cdf771ad3f0ed8e1f53f6463acd28e7"
+    },
+    "previous_hash": "3513da4b3f043ff73fe82c30c716fe9913f563dd687c6d191d5aedcb84063973",
+    "hash": "b5867d2e9ebd2afe72bc7e86cbb0618c0c7e90726ac9a33faa0b87ee142e9bb1"
   }
 ]

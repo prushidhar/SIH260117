@@ -90,6 +90,28 @@ class ConsensusSpecialist:
             elif fatigue_d is not None:
                 findings.append(f"Palmgren-Miner fatigue ratio D={fatigue_d:.4f} within allowable limits (Fatigue margin: {100.0 - fatigue_d * 100.0:.1f}%).")
 
+            # Joukowsky Water Hammer Surge check
+            surge_peak = calculation_results.get("maximum_peak_surge_pressure_bar")
+            surge_allowable = calculation_results.get("asme_allowable_surge_bar")
+            if surge_peak and surge_allowable:
+                if surge_peak > surge_allowable:
+                    vote = "REJECT"
+                    risk_score = 0.95
+                    concerns.append(f"Acoustic water hammer transient ({surge_peak:.1f} bar) exceeds ASME allowable surge limit ({surge_allowable:.1f} bar). Risk of pipe rupture.")
+                else:
+                    findings.append(f"Joukowsky transient surge analysis verified: peak surge ({surge_peak:.1f} bar) within ASME B31.4 allowable boundary ({surge_allowable:.1f} bar).")
+
+            # ISO 5167 Orifice Metering check
+            orifice_beta = calculation_results.get("diameter_ratio_beta")
+            beta_valid = calculation_results.get("beta_ratio_valid")
+            if orifice_beta is not None:
+                if beta_valid is False:
+                    vote = "APPROVE_WITH_RESERVATIONS"
+                    risk_score += 0.25
+                    concerns.append(f"Orifice beta ratio ({orifice_beta:.4f}) outside ISO 5167 recommended boundaries [0.10, 0.75]. Metrological uncertainty elevated.")
+                else:
+                    findings.append(f"ISO 5167 primary element geometry compliant: beta={orifice_beta:.4f} meets standard metrological criteria.")
+
         elif self.discipline == "PROCESS_THERMODYNAMICS":
             # Flow, duty, pressure drop, and efficiency checks
             dp_shell = calculation_results.get("pressure_drop_shell_kpa", 45.0)
@@ -122,6 +144,8 @@ class ConsensusSpecialist:
             hardness = calculation_results.get("actual_hardness_hrc") or telemetry.get("measured_hardness_hrc", 20.0)
             sil_target = calculation_results.get("target_sil", "SIL 2")
             risk_acceptable = calculation_results.get("risk_acceptable", True)
+            rbi_risk_tier = calculation_results.get("risk_tier")
+            rbi_cell = calculation_results.get("api_581_matrix_cell")
 
             if h2s_psia >= 0.05 and hardness > 22.0:
                 vote = "REJECT"
@@ -129,6 +153,18 @@ class ConsensusSpecialist:
                 concerns.append(f"Sour service (H2S={h2s_psia:.2f} psia) with hardness {hardness} HRC breaches NACE MR0175 limit (22.0 HRC). Immediate SSC risk.")
             elif h2s_psia >= 0.05:
                 findings.append(f"NACE MR0175 sour service requirements satisfied: hardness {hardness} HRC <= 22.0 HRC threshold.")
+
+            if rbi_risk_tier:
+                if rbi_risk_tier == "HIGH_RISK":
+                    vote = "REJECT"
+                    risk_score = 0.95
+                    concerns.append(f"API 581 Risk Matrix cell {rbi_cell} ranks as HIGH RISK. Statutory mandate requires immediate internal inspection / shutdown.")
+                elif rbi_risk_tier == "MEDIUM_HIGH_RISK":
+                    vote = "APPROVE_WITH_RESERVATIONS"
+                    risk_score += 0.30
+                    findings.append(f"API 581 Risk Matrix cell {rbi_cell} (Medium-High Risk). Onstream NDT screening plan required.")
+                else:
+                    findings.append(f"API 581 Risk Matrix cell {rbi_cell} categorized as {rbi_risk_tier} (acceptable under routine RBI inspection schedule).")
 
             if not risk_acceptable:
                 vote = "REJECT"

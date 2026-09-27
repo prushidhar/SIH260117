@@ -759,6 +759,87 @@ def test_card_28_fatigue_cumulative_damage_miner():
     print('  PASS')
 
 
+def test_card_29_joukowsky_water_hammer_surge():
+    print('\n--- TEST 29: Joukowsky Water Hammer & Acoustic Surge (ASME B31.4 § 404.3.4) ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_joukowsky_water_hammer_surge(
+        asset_tag="PL-204",
+        pipe_outer_diameter_mm=610.0,
+        wall_thickness_mm=14.3,
+        pipe_length_m=12500.0,
+        steady_flow_velocity_m_s=2.40,
+        steady_operating_pressure_bar=38.5,
+        pipe_design_mawp_bar=64.0,
+        valve_closure_time_s=3.5
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['compliance'] == 'PASS'
+    assert result['maximum_peak_surge_pressure_bar'] < result['asme_allowable_surge_bar']
+    assert result['acoustic_wave_speed_m_s'] > 1000.0
+    print(f"  [+] Asset: {result['asset_tag']} (NPS 24, Length: {result['pipeline_length_km']} km, Steady Velocity: {result['flow_velocity_m_s']} m/s)")
+    print(f"  [+] Acoustic Wave Speed: {result['acoustic_wave_speed_m_s']} m/s (Critical Period: {result['critical_pipe_period_s']} s)")
+    print(f"  [+] Closure Regime: {result['closure_regime']} (Valve Time: {result['valve_closure_time_s']} s)")
+    print(f"  [+] Joukowsky Surge Rise: +{result['joukowsky_surge_pressure_rise_bar']} bar -> Peak Pressure: {result['maximum_peak_surge_pressure_bar']} bar")
+    print(f"  [+] ASME B31.4 Allowable Surge Limit: {result['asme_allowable_surge_bar']} bar (Surge Margin: {result['surge_margin_pct']}%)")
+    print(f"  [+] Gas Bladder Accumulator Sizing: {result['surge_bladder_volume_required_m3']} m³ (Kinetic Energy: {result['kinetic_energy_megajoules']} MJ)")
+    print('  PASS')
+
+
+def test_card_30_iso5167_orifice_flowmeter():
+    print('\n--- TEST 30: ISO 5167-2 / AGA 3 Orifice Differential Pressure Metrology ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_iso5167_orifice_flowmeter(
+        meter_tag="FE-101",
+        pipe_internal_diameter_mm=202.7,
+        orifice_bore_diameter_mm=117.566,
+        differential_pressure_mbar=250.0,
+        upstream_pressure_bar_a=28.5,
+        fluid_density_kg_m3=825.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['compliance'] == 'PASS_METROLOGICALLY_COMPLIANT'
+    assert 0.10 <= result['diameter_ratio_beta'] <= 0.75
+    assert result['mass_flow_rate_tonnes_per_hour'] > 100.0
+    print(f"  [+] Orifice Primary Element: {result['meter_tag']} (Pipe ID: {result['pipe_internal_diameter_mm']} mm, Bore: {result['orifice_bore_diameter_mm']} mm)")
+    print(f"  [+] Diameter Ratio Beta: {result['diameter_ratio_beta']} (ISO 5167 Beta Valid: {result['beta_ratio_valid']})")
+    print(f"  [+] Reader-Harris/Gallagher Cd: {result['discharge_coefficient_cd']} (Approach Factor Ev: {result['velocity_of_approach_ev']})")
+    print(f"  [+] Metrological Flow Rate: {result['mass_flow_rate_tonnes_per_hour']} tonnes/hr ({result['volumetric_flow_rate_m3_per_hour']} m³/hr)")
+    print(f"  [+] Pipe Reynolds Number: {result['pipe_reynolds_number']:,.0f} (Mean Velocity: {result['pipe_mean_velocity_m_s']} m/s)")
+    print(f"  [+] Permanent Pressure Loss: {result['permanent_pressure_loss_kpa']} kPa (Energy Dissipation: {result['energy_dissipation_kw']} kW)")
+    print('  PASS')
+
+
+def test_card_31_api581_rbi_risk_matrix():
+    print('\n--- TEST 31: API 580 / API 581 Quantitative Risk-Based Inspection (RBI) 5x5 Matrix ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api581_rbi_risk_matrix(
+        asset_tag="V-301",
+        asset_type="pressure_vessel",
+        operating_pressure_bar=45.0,
+        operating_temp_c=230.0,
+        component_material="SA-387 Gr 11 Low Alloy Steel",
+        wall_thickness_nominal_mm=38.0,
+        wall_thickness_current_mm=34.2,
+        wall_thickness_minimum_req_mm=28.5,
+        corrosion_rate_mm_year=0.38,
+        years_in_service=10.0,
+        toxic_or_flammable_inventory_kg=8500.0,
+        h2s_content_ppm=2500.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['compliance'] == 'ACCEPTABLE_UNDER_PLANNED_RBI'
+    assert result['api_581_matrix_cell'] in ['3D', '3C', '2D', '4C']
+    assert result['target_inspection_interval_years'] > 0
+    print(f"  [+] Asset: {result['asset_tag']} ({result['component_material']}, Type: {result['asset_type']})")
+    print(f"  [+] Multi-Mechanism Damage Factor: {result['total_damage_factor']} (Thinning: {result['thinning_damage_factor']}, SCC: {result['scc_damage_factor']}, CUI: {result['external_cui_damage_factor']})")
+    print(f"  [+] Probability of Failure (POF): {result['annual_probability_of_failure']} /yr (POF Category: {result['pof_category']})")
+    print(f"  [+] Consequence of Failure (COF): Flammable Area={result['flammable_consequence_area_m2']} m², Financial=${result['total_financial_consequence_usd']:,.0f} USD (COF Category: {result['cof_category']})")
+    print(f"  [+] API 581 5x5 Matrix Cell: {result['api_581_matrix_cell']} -> Risk Tier: {result['risk_tier']} ({result['risk_matrix_color']})")
+    print(f"  [+] Expected Annual Loss: ${result['expected_annual_loss_usd']:,.2f} USD/yr")
+    print(f"  [+] Statutory Inspection Interval: {result['target_inspection_interval_years']} years (Action: {result['statutory_mitigation_action']})")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -791,8 +872,11 @@ if __name__ == "__main__":
     test_card_26_weibull_rul_prognostics()
     test_card_27_pinch_analysis_heat_network()
     test_card_28_fatigue_cumulative_damage_miner()
+    test_card_29_joukowsky_water_hammer_surge()
+    test_card_30_iso5167_orifice_flowmeter()
+    test_card_31_api581_rbi_risk_matrix()
     print("\n================================================================")
-    print("ALL 28 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 31 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 

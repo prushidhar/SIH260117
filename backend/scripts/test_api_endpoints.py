@@ -105,8 +105,26 @@ def main():
     assert "consensus_adjudication" in integ_data
     print(f"[+] /api/equipment/HEX-301/integrity: OK (Verdict: {integ_data.get('consensus_adjudication', {}).get('overall_verdict')})")
 
+    # 9. Air-Gap Cryptographic Attestation Endpoint
+    res_attest = client.get("/api/security/airgap/attestation")
+    assert res_attest.status_code == 200
+    attest_data = res_attest.json()
+    assert attest_data.get("airgap_certified") is True
+    assert len(attest_data.get("hmac_signature_sha256")) == 64
+    print(f"[+] /api/security/airgap/attestation: OK (ID: {attest_data.get('attestation_id')}, Airgap: {attest_data.get('airgap_certified')}, Level: {attest_data.get('security_level')})")
+
+    # 10. Multi-Asset RBI Portfolio Endpoint
+    res_rbi = client.post("/api/rbi/portfolio", json={
+        "asset_tags": ["V-301", "V-101", "V-201"]
+    })
+    assert res_rbi.status_code == 200
+    rbi_data = res_rbi.json()
+    assert rbi_data.get("total_assets_evaluated") == 3
+    assert len(rbi_data.get("portfolio")) == 3
+    print(f"[+] /api/rbi/portfolio: OK (Evaluated: {rbi_data.get('total_assets_evaluated')} assets, Distribution: {rbi_data.get('matrix_distribution')})")
+
     print("\n" + "=" * 65)
-    print("ALL 8 PHASE 4 API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 10 PHASE 4 REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":
