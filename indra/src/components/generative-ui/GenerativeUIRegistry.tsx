@@ -37,6 +37,7 @@ import ProximityProbeCard from './components/ProximityProbeCard';
 import PipingFlexibilityCard from './components/PipingFlexibilityCard';
 import FinFanCoolerCard from './components/FinFanCoolerCard';
 import HazardousAreaCard from './components/HazardousAreaCard';
+import RgdSealCard from './components/RgdSealCard';
 
 interface RegistryProps {
   component: string;
@@ -224,6 +225,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 35. API Standard 661 / ISO 13706 Air-Cooled Heat Exchanger (Fin-Fan Cooler)
   if (compKey.includes('fin_fan') || compKey.includes('finfan') || compKey.includes('air_cooler') || compKey.includes('air_cooled_exchanger') || compKey.includes('api661') || compKey === 'finfancoolercard') {
     return <FinFanCoolerCard {...props} />;
+  }
+
+  // 37. NORSOK M-710 Rev 3 & ISO 23936-2 Rapid Gas Decompression (RGD) Elastomer Seal Integrity
+  if (compKey.includes('rgd') || compKey.includes('norsok_m710') || compKey.includes('iso23936') || compKey.includes('explosive_decompression') || compKey === 'rgdsealcard') {
+    return <RgdSealCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

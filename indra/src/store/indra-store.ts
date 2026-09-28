@@ -984,6 +984,7 @@ export const useIndraStore = create<IndraState>()(
         const isPipingFlexibilityQuery = /piping[\s_-]?flexibility|expansion[\s_-]?loop|asme\s*b31\.?3\s*(§|sec(tion)?)?\s*319|thermal[\s_-]?expansion|exp-pipe|anchor[\s_-]?thrust|stress[\s_-]?range|displacement[\s_-]?stress/i.test(promptText);
         const isFinFanQuery = /fin[\s_-]?fan|air[\s_-]?cooler|api\s*661|afc-101|air[\s_-]?cooled|induced[\s_-]?draft|forced[\s_-]?draft|tube[\s_-]?bundle\s*gradient|ambient\s*dry[\s_-]?bulb/i.test(promptText);
         const isHazardousAreaDispersionQuery = /dispersion|contour|iec\s*60079-10|api\s*(rp\s*)?505|hac|hac-cell|zone\s*[012]|gas\s*group|t-class|leak\s*hole|operating\s*pressure.*ventilation|flammable\s*gas\s*mixture/i.test(promptText);
+        const isRgdSealQuery = /rgd|explosive[\s_-]?decompression|norsok[\s_-]?m[\s_-]?710|iso\s*23936|rgd-seal|gent[\s_-]?lindley|cavitation\s*stress|elastomer\s*seal|void\s*nucleation|ffkm\s*90|decompression\s*rate/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1368,6 +1369,29 @@ Quantitative flammable gas release and dispersion contour analysis for compresso
 \`\`\`
 
 - **Area Classification Verdict:** Choked sonic release rate $W_g = 13.92\\text{ g/s}$ ($50.1\\text{ kg/h}$). In a ventilated enclosure cell ($u_w = 0.65\\text{ m/s}$, $18.5\\text{ ACH}$), hazardous boundary distance to $20\\%\\text{ LEL}$ is $r_z = 3.82\\text{ m}$. Secondary grade release with medium dilution yields **Zone 2** (NEC / API RP 505 equivalent: **Class I, Division 2 / Class I, Zone 2**). Electrical apparatus specification mandate: **Group IIC, T4 Gb** (IP66).`;
+        } else if (isRgdSealQuery) {
+          finalMarkdown = `### NORSOK M-710 Rev 3 / ISO 23936-2 Rapid Gas Decompression (RGD) Seal Assessment
+          
+Finite-difference dissolved gas diffusion and Gent-Lindley internal cavitation stress modeling for high-pressure gas seal **RGD-SEAL-101** (**FFKM 90 Shore A**) per NORSOK M-710 Rev 3 and ISO 23936-2.
+
+\`\`\`gen-ui
+{
+  "component": "RgdSealCard",
+  "props": {
+    "sealTag": "RGD-SEAL-101",
+    "elastomerCompound": "FFKM 90 Shore A",
+    "title": "NORSOK M-710 / ISO 23936-2 RAPID GAS DECOMPRESSION (RGD) SEAL INTEGRITY",
+    "systemPressureBar": 150.0,
+    "decompressionRateBarMin": 35.0,
+    "testTemperatureC": 100.0,
+    "oringSectionDiameterMm": 5.33,
+    "gasComposition": "100% CO2 (Supercritical)",
+    "standardCode": "NORSOK M-710 Rev 3 / ISO 23936-2"
+  }
+}
+\`\`\`
+
+- **RGD Qualification Verdict:** At 150.0 bar g system pressure and 35.0 bar/min decompression rate (100% CO2), internal gas cavitation stress is $\\sigma_{\\text{cav}} = 8.84\\text{ MPa}$, remaining below the Gent-Lindley bubble nucleation limit $P_{\\text{crit}} = 12.00\\text{ MPa}$ ($1.36\\times$ safety margin). Evaluated cross-sections confirm NORSOK M-710 damage rating **'1000'** with compliant micro-voids ($< 0.1\\times$ cross-section). **PASS_NORSOK_M710_CONFIRMED**.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

@@ -39,6 +39,7 @@ export type GenerativeUIComponentType =
   | 'PipingFlexibilityCard'
   | 'FinFanCoolerCard'
   | 'HazardousAreaCard'
+  | 'RgdSealCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -699,4 +700,17 @@ export interface HazardousAreaCardProps {
   releaseGrade?: 'Secondary' | 'Primary' | 'Continuous'; // Default: 'Secondary'
   enclosureVolumeM3?: number; // Default: 240.0 m³
   standardCode?: string; // Default: 'IEC 60079-10-1:2020 / API RP 505 / NFPA 497'
+}
+
+// 37. NORSOK M-710 Rev 3 / ISO 23936-2 Rapid Gas Decompression (RGD) Elastomer Seal Integrity
+export interface RgdSealCardProps {
+  sealTag?: string; // Default: 'RGD-SEAL-101'
+  elastomerCompound?: string; // Default: 'FFKM 90 Shore A'
+  title?: string;
+  systemPressureBar?: number; // Default: 150.0 bar g
+  decompressionRateBarMin?: number; // Default: 35.0 bar/min
+  testTemperatureC?: number; // Default: 100.0 °C
+  oringSectionDiameterMm?: number; // Default: 5.33 mm
+  gasComposition?: string; // Default: '100% CO2 (Supercritical)'
+  standardCode?: string; // Default: 'NORSOK M-710 Rev 3 / ISO 23936-2'
 }

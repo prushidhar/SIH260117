@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Volume2,
   Radio,
-  Wind
+  Wind,
+  Disc
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -182,6 +183,13 @@ const industrialWorkflows = [
     query: 'Execute IEC 60079-10-1 and API RP 505 hazardous area classification for compressor enclosure HAC-CELL-101: flammable gas Hydrogen/Methane mix (70/30 mol%), operating pressure 24.0 bar g, leak orifice 3.0 mm, mechanical ventilation velocity 0.65 m/s. Render top-down LEL mass concentration dispersion contour, determine hazardous boundary distance r_z, classify Zone 1/2 vs Class I Div 1/2, and specify electrical apparatus Group IIC T4 rating.',
     icon: Flame,
     badge: 'IEC 60079-10 / API 505',
+  },
+  {
+    title: 'NORSOK M-710 / ISO 23936-2 Rapid Gas Decompression (RGD)',
+    desc: 'O-ring dissolved gas gradient, Gent-Lindley cavitation limit (2.5·G), NORSOK rating 0000/1000, and decompression rate.',
+    query: 'Evaluate NORSOK M-710 Rev 3 and ISO 23936-2 rapid gas decompression (RGD) seal integrity for high-pressure gas seal RGD-SEAL-101: compound FFKM 90 Shore A (G = 4.80 MPa), system pressure 150.0 bar g, decompression rate 35.0 bar/min, 100% supercritical CO2 at 100°C. Render O-ring cross-section dissolved gas gradient, compute effective cavitation stress vs Gent-Lindley limit, and verify NORSOK 4-digit damage rating.',
+    icon: Disc,
+    badge: 'NORSOK M-710 / RGD',
   },
 ];
 
