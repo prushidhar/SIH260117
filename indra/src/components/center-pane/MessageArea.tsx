@@ -13,7 +13,8 @@ import {
   ChevronUp, 
   Sparkles,
   Zap,
-  Thermometer
+  Thermometer,
+  ShieldCheck
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -136,6 +137,13 @@ const industrialWorkflows = [
     query: 'Model API 617 multi-stage flash gas centrifugal compressor train K-103: suction pressure 2.2 bar a, discharge pressure 15.4 bar a (overall ratio 7.0:1), mass flow 42.5 t/h, intercooler exit temperature 40.0°C. Generate 3-stage process flow schematic, calculate interstage temperatures, and verify API 617 § 4.3 thermal limit (≤ 135.0°C).',
     icon: Activity,
     badge: 'API 617 / Turbomachine',
+  },
+  {
+    title: 'ISO 13849-1 Machinery Functional Safety Integrity',
+    desc: 'Category 4 dual-channel architecture, symmetrized MTTFd, diagnostic coverage DCavg, and Performance Level PL e verification.',
+    query: 'Evaluate ISO 13849-1 and IEC 62061 machinery functional safety integrity for ESD Loop SIS-ESDV-401: Category 4 dual-channel architecture, Channel 1 MTTFd 48.0 yrs, Channel 2 MTTFd 42.0 yrs, Diagnostic Coverage DCavg 99.0%, Annex F CCF score 75/100. Compute symmetrized MTTFd, PFHd, and verify achieved Performance Level PL e.',
+    icon: ShieldCheck,
+    badge: 'ISO 13849 / SIL 3',
   },
 ];
 

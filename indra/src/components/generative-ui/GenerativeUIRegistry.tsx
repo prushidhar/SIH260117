@@ -31,6 +31,7 @@ import HazopMatrixWidget from './components/HazopMatrixWidget';
 import ArcFlashHazardCard from './components/ArcFlashHazardCard';
 import AcidDewPointMeter from './components/AcidDewPointMeter';
 import CompressorTrainCard from './components/CompressorTrainCard';
+import FunctionalSafetyCard from './components/FunctionalSafetyCard';
 
 interface RegistryProps {
   component: string;
@@ -188,6 +189,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 30. API 617 Multi-Stage Centrifugal Compressor Train Performance
   if (compKey.includes('multistage_compressor') || compKey.includes('compressor_train') || compKey.includes('api617_train') || compKey.includes('compressortrain') || compKey === 'compressortraincard') {
     return <CompressorTrainCard {...props} />;
+  }
+
+  // 31. ISO 13849-1 Machinery Functional Safety Integrity
+  if (compKey.includes('iso13849') || compKey.includes('functional_safety_pl') || compKey.includes('functional_safety') || compKey.includes('iec62061') || compKey.includes('functionalsafety') || compKey === 'functionalsafetycard') {
+    return <FunctionalSafetyCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

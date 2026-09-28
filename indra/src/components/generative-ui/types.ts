@@ -33,6 +33,7 @@ export type GenerativeUIComponentType =
   | 'ArcFlashHazardCard'
   | 'AcidDewPointMeter'
   | 'CompressorTrainCard'
+  | 'FunctionalSafetyCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -597,6 +598,21 @@ export interface CompressorTrainCardProps {
   gasMolecularWeight?: number; // 28.5 kg/kmol
   specificHeatRatio?: number; // 1.26
   maxAllowableTempC?: number; // 135.0 °C per API 617
+}
+
+// 31. ISO 13849-1 Machinery Functional Safety Integrity
+export interface FunctionalSafetyCardProps {
+  assetTag?: string; // Default: 'SIS-ESDV-401'
+  safetyFunction?: string; // Default: 'High-High Pressure Emergency Shutdown Loop'
+  title?: string;
+  architectureCategory?: 'B' | '1' | '2' | '3' | '4'; // Default: '4'
+  mttfdYearsCh1?: number; // Default: 48.0 years
+  mttfdYearsCh2?: number; // Default: 42.0 years
+  diagnosticCoveragePct?: number; // Default: 99.0 %
+  ccfScorePoints?: number; // Default: 75 (min 65)
+  missionTimeYears?: number; // Default: 20 years
+  proofTestIntervalHrs?: number; // Default: 8760 hrs (1 yr)
+  requiredPl?: 'a' | 'b' | 'c' | 'd' | 'e'; // Default: 'e'
 }
 
 

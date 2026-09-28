@@ -978,6 +978,7 @@ export const useIndraStore = create<IndraState>()(
         const isArcFlashQuery = /arc[\s_-]?flash|ieee[\s_-]?1584|nfpa[\s_-]?70e|incident\s*energy|shock\s*hazard|electrical\s*safety|arcflash/i.test(promptText);
         const isAcidDewPointQuery = /acid[\s_-]?dew[\s_-]?point|ptc[\s_-]?4\.?3|aph-101|air[\s_-]?preheater|cold[\s_-]?end|sulfuric\s*acid\s*condensation/i.test(promptText);
         const isCompressorTrainQuery = /compressor[\s_-]?train|api[\s_-]?617[\s_-]?train|k-103|multi[\s_-]?stage[\s_-]?compressor|stage[\s_-]?casing|intercooler\s*duty/i.test(promptText);
+        const isFunctionalSafetyQuery = /functional\s*safety|iso\s*13849|iec\s*62061|performance\s*level|mttfd|diagnostic\s*coverage|common\s*cause|ccf|pfhd/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1208,6 +1209,29 @@ Three-stage centrifugal flash gas compressor train evaluation for **K-103 FLASH 
 \`\`\`
 
 - **Train Performance Summary:** Overall pressure ratio 7.00:1 (average stage ratio 1.91:1) across 3 stages with total polytropic head of 218.4 kJ/kg and 3.42 MW shaft power demand. Maximum discharge temperature is 98.2 °C (PASS: well below API 617 135.0 °C statutory limit with +36.8 °C safety margin). Total intercooler thermal duty is 2.15 MWth.`;
+        } else if (isFunctionalSafetyQuery) {
+          finalMarkdown = `### ISO 13849-1 Machinery Functional Safety & PL Verification
+
+Comprehensive Category 4 / SIL 3 safety instrumented function assessment for **SIS-ESDV-401** (High-High Pressure Emergency Shutdown Loop) per EN ISO 13849-1:2023 and IEC 62061:2021 standards.
+
+\`\`\`gen-ui
+{
+  "component": "FunctionalSafetyCard",
+  "props": {
+    "assetTag": "SIS-ESDV-401",
+    "safetyFunction": "High-High Pressure Emergency Shutdown Loop",
+    "title": "ISO 13849-1 MACHINERY FUNCTIONAL SAFETY INTEGRITY",
+    "architectureCategory": "4",
+    "mttfdYearsCh1": 48.0,
+    "mttfdYearsCh2": 42.0,
+    "diagnosticCoveragePct": 99.0,
+    "ccfScorePoints": 75,
+    "requiredPl": "e"
+  }
+}
+\`\`\`
+
+- **Safety Integrity Assessment:** Dual-channel Category 4 architecture verified. Symmetrized MTTFd computed at 45.0 Years (HIGH), Diagnostic Coverage DCavg at 99.0% (HIGH), and Annex F CCF score at 75/100 (PASS ≥ 65). Achieved Performance Level: **PL e** with PFHd = 2.47e-08 /hr (IEC 62061 SIL 3 claim equivalent).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 
