@@ -115,3 +115,12 @@ body {
 .emerald-glow {
   box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.25);
 }
+
+@keyframes processFlowAnimation {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
