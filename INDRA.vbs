@@ -1,9 +1,11 @@
 ' INDRA — Sovereign AI Workbench Silent Launcher
+On Error Resume Next
 Dim WshShell
 Set WshShell = CreateObject("WScript.Shell")
 
 ' 1. Ensure virtual drive D: is mapped for local model access
 WshShell.Run "subst D: C:\", 0, True
+Err.Clear
 
 ' 2. Launch master desktop supervisor via pythonw (zero console flash)
 Dim pythonExe, launcherScript

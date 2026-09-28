@@ -18,7 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
 
 _KATTY_FRONTEND = Path(r"C:\Users\booya\OneDrive\Desktop\SIH frontend 1\SIH frontend 1\katty\indra")
-FRONTEND_DIR = (BASE_DIR / "frontend") if (BASE_DIR / "frontend" / "node_modules").exists() else _KATTY_FRONTEND
+if (_KATTY_FRONTEND / "node_modules").exists():
+    FRONTEND_DIR = _KATTY_FRONTEND
+elif (BASE_DIR / "frontend" / "node_modules").exists():
+    FRONTEND_DIR = BASE_DIR / "frontend"
+else:
+    FRONTEND_DIR = _KATTY_FRONTEND
 
 MODELS_DIR = Path(r"D:\models")
 PHYSICAL_MODELS_DIR = Path(r"C:\models")
@@ -65,27 +70,30 @@ def kill_tree(pid: int):
     except Exception:
         pass
 
+    no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
     try:
-        subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, check=False)
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, check=False, creationflags=no_window)
     except Exception:
         pass
 
 
 def cleanup_ports(ports):
     """Kills any lingering processes bound to the specified ports."""
+    no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
     for port in ports:
         try:
             out = subprocess.run(
                 f"netstat -ano | findstr :{port}",
                 shell=True,
                 capture_output=True,
-                text=True
+                text=True,
+                creationflags=no_window
             )
             for line in out.stdout.splitlines():
                 parts = line.split()
                 if len(parts) >= 5 and "LISTENING" in parts:
                     pid = parts[-1]
-                    subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True, check=False)
+                    subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True, check=False, creationflags=no_window)
         except Exception:
             pass
 
@@ -210,9 +218,12 @@ def main():
     backend_log_path = BASE_DIR / "backend_launcher.log"
     backend_log_file = open(backend_log_path, "w", encoding="utf-8")
 
+    python_bin = Path(sys.executable).parent / "python.exe"
+    py_exec = str(python_bin) if python_bin.exists() else sys.executable
+
     backend_proc = subprocess.Popen(
         [
-            sys.executable,
+            py_exec,
             "-m",
             "uvicorn",
             "main:app",
@@ -247,8 +258,8 @@ def main():
 
     # 5. Service Readiness Validation
     print("[PRE-FLIGHT 5/6] Validating On-Premise Loopback Bindings...")
-    wait_for_service(BACKEND_PORT, "FastAPI Sovereign Kernel", timeout=25)
-    wait_for_service(FRONTEND_PORT, "Next.js Micro-Frontend UI", timeout=35)
+    backend_ok = wait_for_service(BACKEND_PORT, "FastAPI Sovereign Kernel", timeout=60)
+    frontend_ok = wait_for_service(FRONTEND_PORT, "Next.js Micro-Frontend UI", timeout=60)
 
     # 6. Launch native desktop window (Electron or Edge App Mode)
     print("[PRE-FLIGHT 6/6] Launching Sovereign Desktop Window...")
@@ -296,19 +307,35 @@ def main():
             print(f"  [+] Opening browser window to {target_url}...")
             import webbrowser
             webbrowser.open(target_url)
-            while is_port_listening(FRONTEND_PORT):
-                time.sleep(1)
-            cleanup_all()
-            return
+            app_proc = None
 
     print("\n" + "=" * 80)
     print("  [ONLINE] INDRA Sovereign AI Workbench is active and air-gap certified.")
     print("  Close the application window or press Ctrl+C to terminate services cleanly.")
     print("=" * 80 + "\n")
 
-    # 7. Wait for the desktop application window to close
+    # 7. Wait for the desktop application window to close or supervise background services
     try:
-        app_proc.wait()
+        if launched and app_proc:
+            start_t = time.time()
+            app_proc.wait()
+            # If the process exited in under 2 seconds (e.g. system handoff), switch to persistent supervision
+            if time.time() - start_t < 2.0:
+                print("  [*] Desktop process detached to existing instance. Keeping services active...")
+                import webbrowser
+                webbrowser.open(f"http://localhost:{FRONTEND_PORT}/workbench")
+                while is_port_listening(BACKEND_PORT) and is_port_listening(FRONTEND_PORT):
+                    time.sleep(2)
+        elif app_proc:
+            start_t = time.time()
+            app_proc.wait()
+            if time.time() - start_t < 2.0:
+                print("  [*] Browser process detached. Services remain active in background.")
+                while is_port_listening(BACKEND_PORT) and is_port_listening(FRONTEND_PORT):
+                    time.sleep(2)
+        else:
+            while is_port_listening(BACKEND_PORT) and is_port_listening(FRONTEND_PORT):
+                time.sleep(2)
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:

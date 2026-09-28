@@ -71,18 +71,40 @@ echo  Starting INDRA Backend (FastAPI :8000)...
 start "INDRA Backend" cmd /k "title INDRA Backend && cd /d "%PROJECT%\backend" && "%PYTHON%" -m uvicorn main:app --host 0.0.0.0 --port 8000"
 
 :: Wait for backend to initialize
-echo  Waiting 4s for backend to initialize...
-timeout /t 4 /nobreak >nul
+echo  Waiting for backend (127.0.0.1:8000) to initialize...
+:wait_backend
+timeout /t 2 /nobreak >nul
+netstat -ano | findstr ":8000" | findstr "LISTENING" >nul 2>&1
+if errorlevel 1 (
+    <nul set /p=.
+    goto wait_backend
+)
+echo.
+echo  [OK] Backend online on http://127.0.0.1:8000
 
 :: ─── Start Frontend ────────────────────────────────────────────────────────
 if defined NPM_CMD (
     echo  Starting INDRA Frontend (Next.js :3000)...
     start "INDRA Frontend" cmd /k "title INDRA Frontend && cd /d "%FRONTEND_DIR%" && set "PATH=%NODE_DIR%;%%PATH%%" && "%NPM_CMD%" run dev"
     
-    echo  Waiting 6s for frontend server to bind...
-    timeout /t 6 /nobreak >nul
-    echo  Opening INDRA Workbench in browser...
-    start "" "http://localhost:3000/workbench"
+    echo  Waiting for frontend (127.0.0.1:3000) to bind...
+    :wait_frontend
+    timeout /t 2 /nobreak >nul
+    netstat -ano | findstr ":3000" | findstr "LISTENING" >nul 2>&1
+    if errorlevel 1 (
+        <nul set /p=.
+        goto wait_frontend
+    )
+    echo.
+    echo  [OK] Frontend online on http://127.0.0.1:3000
+
+    if exist "%FRONTEND_DIR%\node_modules\electron\dist\electron.exe" (
+        echo  [OK] Launching Native Electron Desktop Shell...
+        start "" "%FRONTEND_DIR%\node_modules\electron\dist\electron.exe" "%FRONTEND_DIR%\electron\main.js"
+    ) else (
+        echo  Opening INDRA Workbench in browser...
+        start "" "http://localhost:3000/workbench"
+    )
 ) else (
     echo  [WARN] Frontend skipped - Node.js not found
     echo  [INFO] Backend API available at: http://localhost:8000/docs
