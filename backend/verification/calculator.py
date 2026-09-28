@@ -4001,6 +4001,272 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
             return {"error": str(e)}
 
     @staticmethod
+    def calculate_iso13849_functional_safety_pl(
+        safety_function_name: str = "High-Pressure Quench Trip Interlock",
+        architecture_category: str = "Category 4",
+        mttf_d_years_channel_1: float = 45.0,
+        mttf_d_years_channel_2: float = 45.0,
+        dc_avg_pct: float = 99.0,
+        common_cause_failure_score: int = 75,
+        required_performance_level: str = "PLe"
+    ) -> Dict[str, Any]:
+        """
+        ISO 13849-1:2023 & IEC 62061 Machinery Functional Safety Performance Level (PL) Engine.
+        Evaluates Architecture Categories (B, 1-4), Symmetrized MTTFd, Diagnostic Coverage (DCavg),
+        Common Cause Failures (CCF), Achieved PL, and SIL Claim Limits.
+        """
+        try:
+            import math
+
+            cat = str(architecture_category).strip()
+            max_mttf_d = 10.0 if cat in ("Category B", "Category 1") else 100.0
+
+            t1 = min(max_mttf_d, max(1.0, float(mttf_d_years_channel_1)))
+            t2 = min(max_mttf_d, max(1.0, float(mttf_d_years_channel_2)))
+
+            if "Category 3" in cat or "Category 4" in cat:
+                inv_sum = (1.0 / t1) + (1.0 / t2)
+                mttf_d_symmetrized = (2.0 / 3.0) * (t1 + t2 - (1.0 / inv_sum))
+                mttf_d_symmetrized = min(max_mttf_d, mttf_d_symmetrized)
+            else:
+                mttf_d_symmetrized = t1
+
+            if mttf_d_symmetrized < 10.0:
+                mttf_d_level = "LOW (3 to < 10 years)"
+            elif mttf_d_symmetrized < 30.0:
+                mttf_d_level = "MEDIUM (10 to < 30 years)"
+            else:
+                mttf_d_level = "HIGH (30 to 100 years)"
+
+            dc = float(dc_avg_pct)
+            if dc < 60.0:
+                dc_level = "NONE (< 60%)"
+            elif dc < 90.0:
+                dc_level = "LOW (60% to < 90%)"
+            elif dc < 99.0:
+                dc_level = "MEDIUM (90% to < 99%)"
+            else:
+                dc_level = "HIGH (>= 99%)"
+
+            ccf_pass = common_cause_failure_score >= 65
+
+            if "Category 4" in cat and "HIGH" in dc_level and "HIGH" in mttf_d_level:
+                achieved_pl = "PLe"
+                pfhd_per_hr = 2.47e-8
+                sil_equivalent = "SIL 3"
+            elif "Category 4" in cat or ("Category 3" in cat and "HIGH" in mttf_d_level and "MEDIUM" in dc_level):
+                achieved_pl = "PLd"
+                pfhd_per_hr = 4.29e-7
+                sil_equivalent = "SIL 2"
+            elif "Category 3" in cat or ("Category 2" in cat and "HIGH" in mttf_d_level):
+                achieved_pl = "PLd"
+                pfhd_per_hr = 8.15e-7
+                sil_equivalent = "SIL 2"
+            elif "Category 2" in cat or ("Category 1" in cat and "HIGH" in mttf_d_level):
+                achieved_pl = "PLc"
+                pfhd_per_hr = 2.1e-6
+                sil_equivalent = "SIL 1"
+            elif "Category 1" in cat:
+                achieved_pl = "PLb"
+                pfhd_per_hr = 6.8e-6
+                sil_equivalent = "SIL 1"
+            else:
+                achieved_pl = "PLa"
+                pfhd_per_hr = 2.5e-5
+                sil_equivalent = "NO_SIL"
+
+            pl_hierarchy = {"PLa": 1, "PLb": 2, "PLc": 3, "PLd": 4, "PLe": 5}
+            req_rank = pl_hierarchy.get(required_performance_level, 4)
+            ach_rank = pl_hierarchy.get(achieved_pl, 1)
+
+            is_compliant = (ach_rank >= req_rank) and ccf_pass
+
+            return {
+                "safety_function_name": safety_function_name,
+                "architecture_category": cat,
+                "mttf_d_years_channel_1": round(t1, 1),
+                "mttf_d_years_channel_2": round(t2, 1),
+                "mttf_d_symmetrized_years": round(mttf_d_symmetrized, 1),
+                "mttf_d_level": mttf_d_level,
+                "diagnostic_coverage_pct": round(dc, 1),
+                "dc_avg_level": dc_level,
+                "common_cause_failure_score": common_cause_failure_score,
+                "ccf_requirement_satisfied": ccf_pass,
+                "achieved_performance_level": achieved_pl,
+                "required_performance_level": required_performance_level,
+                "probability_dangerous_failure_per_hr": f"{pfhd_per_hr:.2e}",
+                "equivalent_sil_claim_limit": sil_equivalent,
+                "standard": "ISO 13849-1:2023 / IEC 62061:2021",
+                "compliance": "PASS_FUNCTIONAL_SAFETY_VALIDATED" if is_compliant else "FAIL_INSUFFICIENT_SAFETY_MARGIN"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api520_flare_piping_aiv(
+        relief_valve_tag: str = "PSV-101",
+        tailpipe_nps_in: float = 6.0,
+        tailpipe_sch: str = "Sch 40",
+        relieving_mass_flow_kg_s: float = 24.5,
+        relieving_temp_c: float = 160.0,
+        fluid_molecular_weight: float = 44.1,
+        gas_k_ratio: float = 1.18,
+        upstream_relieving_pressure_bar_a: float = 24.5,
+        downstream_backpressure_bar_a: float = 2.8
+    ) -> Dict[str, Any]:
+        """
+        API 520 Part II / API 521 / EEMUA 158 Acoustical Induced Vibration (AIV) Assessment.
+        Calculates flare line sound power level (Lw), tailpipe Mach number, and high-cycle fatigue risk.
+        """
+        try:
+            import math
+
+            pipe_wall_mm = 7.11 if tailpipe_sch == "Sch 40" else 10.97
+            outer_dia_mm = tailpipe_nps_in * 25.4 + (20.0 if tailpipe_nps_in >= 4.0 else 10.0)
+            inner_dia_mm = max(25.0, outer_dia_mm - 2.0 * pipe_wall_mm)
+            inner_dia_m = inner_dia_mm / 1000.0
+            flow_area_m2 = (math.pi / 4.0) * (inner_dia_m ** 2)
+
+            t_rel_k = relieving_temp_c + 273.15
+            p_up = upstream_relieving_pressure_bar_a * 1e5
+            p_down = downstream_backpressure_bar_a * 1e5
+
+            r_univ = 8314.46
+            r_gas = r_univ / max(1.0, fluid_molecular_weight)
+            sound_speed_m_s = math.sqrt(gas_k_ratio * r_gas * t_rel_k)
+
+            gas_density_kg_m3 = (p_down * fluid_molecular_weight) / (r_univ * t_rel_k)
+            volumetric_flow_m3_s = relieving_mass_flow_kg_s / max(0.1, gas_density_kg_m3)
+            tailpipe_velocity_m_s = volumetric_flow_m3_s / max(1e-4, flow_area_m2)
+            mach_number = tailpipe_velocity_m_s / max(1.0, sound_speed_m_s)
+
+            delta_p = max(1.0, p_up - p_down)
+            pr_factor = (delta_p / p_up) ** 3.6
+            flow_factor = (relieving_mass_flow_kg_s ** 2)
+            temp_mw_factor = (t_rel_k / max(1.0, fluid_molecular_weight)) ** 0.8
+
+            arg = max(1e-6, pr_factor * flow_factor * temp_mw_factor)
+            sound_power_level_db = round(10.0 * math.log10(arg) + 126.1, 1)
+
+            mach_limit = 0.70
+            mach_pass = mach_number <= mach_limit
+
+            if sound_power_level_db < 155.0:
+                aiv_risk_tier = "LOW_ACOUSTIC_FATIGUE_RISK"
+                recommendation = "Standard piping schedule acceptable. No special acoustical reinforcement required."
+            elif sound_power_level_db < 160.0:
+                aiv_risk_tier = "MODERATE_ACOUSTICAL_VIBRATION_RISK"
+                recommendation = "Install reinforcement pads at branches and full-encirclement tees per EEMUA 158."
+            else:
+                aiv_risk_tier = "CRITICAL_AIV_HIGH_CYCLE_FATIGUE"
+                recommendation = "Mandatory increase in pipe schedule (Sch 80/160), contoured fittings, and acoustic dampeners."
+
+            is_pass = mach_pass and (sound_power_level_db < 160.0)
+
+            return {
+                "relief_valve_tag": relief_valve_tag,
+                "tailpipe_nps_in": tailpipe_nps_in,
+                "tailpipe_schedule": tailpipe_sch,
+                "relieving_mass_flow_kg_s": round(relieving_mass_flow_kg_s, 2),
+                "tailpipe_gas_velocity_m_s": round(tailpipe_velocity_m_s, 1),
+                "sound_speed_m_s": round(sound_speed_m_s, 1),
+                "tailpipe_mach_number": round(mach_number, 2),
+                "max_allowable_tailpipe_mach": mach_limit,
+                "mach_compliance": "PASS" if mach_pass else "FAIL_EXCEEDS_MACH_0_70",
+                "sound_power_level_db": sound_power_level_db,
+                "aiv_screening_limit_db": 155.0,
+                "aiv_risk_tier": aiv_risk_tier,
+                "engineering_recommendation": recommendation,
+                "standard": "API 520 Part II / API 521 § 5.8 / EEMUA 158",
+                "compliance": "PASS_AIV_FATIGUE_SAFE" if is_pass else "REVIEW_AIV_MITIGATION_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api670_vibration_proximity_probe(
+        machine_tag: str = "K-101",
+        probe_channel_x: str = "VT-101X",
+        probe_channel_y: str = "VT-101Y",
+        probe_sensitivity_mv_um: float = 7.87,
+        gap_voltage_dc_v: float = -10.2,
+        peak_to_peak_um_x: float = 38.5,
+        peak_to_peak_um_y: float = 42.0,
+        phase_angle_deg_x: float = 78.0,
+        phase_angle_deg_y: float = 168.0,
+        operating_speed_rpm: float = 10450.0,
+        shaft_diameter_mm: float = 120.0
+    ) -> Dict[str, Any]:
+        """
+        API Standard 670 (5th Edition) Machinery Protection & Proximity Probe Diagnostics.
+        Assesses DC gap voltage health, 2oo2 voting trip logic, orbit eccentricity, and API 617 trip limits.
+        """
+        try:
+            import math
+
+            gap_v = float(gap_voltage_dc_v)
+            if -11.5 <= gap_v <= -8.5:
+                probe_health = "NORMAL_LINEAR_RANGE"
+            elif -18.0 <= gap_v <= -2.0:
+                probe_health = "MARGINAL_GAP_ADJUSTMENT_ADVISED"
+            else:
+                probe_health = "PROBE_FAULT_OR_DISCONNECTED"
+
+            mechanical_gap_um = round(abs(gap_v - (-2.0)) * 1000.0 / max(0.1, probe_sensitivity_mv_um), 1)
+
+            rpm = max(100.0, float(operating_speed_rpm))
+            vibration_alarm_um = min(50.0, round(math.sqrt(12000.0 / rpm) * 25.4, 1))
+            vibration_trip_um = round(1.5 * vibration_alarm_um, 1)
+
+            max_vibration_um = max(peak_to_peak_um_x, peak_to_peak_um_y)
+
+            channel_x_tripped = peak_to_peak_um_x >= vibration_trip_um
+            channel_y_tripped = peak_to_peak_um_y >= vibration_trip_um
+            both_tripped = channel_x_tripped and channel_y_tripped
+
+            if both_tripped and probe_health != "PROBE_FAULT_OR_DISCONNECTED":
+                protection_verdict = "TRIP_COMMAND_ISSUED_2OO2_CONFIRMED"
+                status = "EMERGENCY_SHUTDOWN"
+            elif channel_x_tripped or channel_y_tripped:
+                protection_verdict = "SINGLE_PROBE_TRIP_LEVEL_HOLD_DIAGNOSTIC"
+                status = "ALARM_UNCONFIRMED_TRIP"
+            elif max_vibration_um >= vibration_alarm_um:
+                protection_verdict = "ELEVATED_VIBRATION_ALARM"
+                status = "OPERATIONAL_ALARM"
+            else:
+                protection_verdict = "NORMAL_ROTATING_STABILITY"
+                status = "PASS_WITHIN_LIMITS"
+
+            orbit_major_um = round(math.sqrt(peak_to_peak_um_x**2 + peak_to_peak_um_y**2), 1)
+            orbit_minor_um = round(abs(peak_to_peak_um_x - peak_to_peak_um_y), 1)
+            eccentricity = round(orbit_minor_um / max(0.1, orbit_major_um), 2)
+
+            return {
+                "machine_tag": machine_tag,
+                "operating_speed_rpm": round(rpm, 0),
+                "probe_channels": [probe_channel_x, probe_channel_y],
+                "dc_gap_voltage_v": round(gap_v, 2),
+                "probe_health_state": probe_health,
+                "calculated_gap_um": mechanical_gap_um,
+                "measured_vibration_x_p_p_um": round(peak_to_peak_um_x, 1),
+                "measured_vibration_y_p_p_um": round(peak_to_peak_um_y, 1),
+                "governing_vibration_um": max_vibration_um,
+                "api670_alarm_threshold_um": vibration_alarm_um,
+                "api670_trip_threshold_um": vibration_trip_um,
+                "voting_architecture": "2oo2 (Two-out-of-Two Dual Orthogonal Proximity Probes)",
+                "channel_x_trip_active": channel_x_tripped,
+                "channel_y_trip_active": channel_y_tripped,
+                "protection_system_verdict": protection_verdict,
+                "orbit_major_axis_um": orbit_major_um,
+                "orbit_eccentricity_ratio": eccentricity,
+                "standard": "API 670 (5th Ed.) / API 617 / ISO 7919-2",
+                "status": status,
+                "compliance": "PASS" if status in ("PASS_WITHIN_LIMITS", "OPERATIONAL_ALARM") else "INTERVENTION_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
     def generate_iec61882_hazop_matrix(
         asset_tag: str = "R-401",
         study_node_description: Optional[str] = None

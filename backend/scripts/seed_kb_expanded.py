@@ -680,12 +680,47 @@ Systematic Process Parameter Deviations & Safeguard Evaluation:
   1. Low Risk (1-4): Acceptable with standard engineering controls.
   2. Medium Risk (5-9): Action items required for next turnaround cycle.
   3. High / Critical Risk (10-25): Mandatory high-integrity safety instrumented functions (SIF / SIS per IEC 61511) or independent protection layers (IPL)."""
+    },
+    {
+        "doc_id": "std-iso-13849-functional-safety",
+        "title": "ISO 13849-1 & IEC 62061 Machinery Functional Safety Performance Level (PL)",
+        "text": """ISO 13849-1:2023 Safety of machinery — Safety-related parts of control systems & IEC 62061:
+Machinery Safety Integrity & Performance Level (PL) Verification:
+- Designated Architecture Categories:
+  1. Category B & 1: Single-channel architecture, MTTFd capped at 10 years, no diagnostic coverage required.
+  2. Category 2: Single-channel with periodic testing and check channel.
+  3. Category 3: Dual-channel redundant architecture, single fault does not lead to loss of safety function.
+  4. Category 4: Dual-channel redundant architecture with high diagnostic coverage (DCavg >= 99%) detecting accumulation of faults.
+- Diagnostic Coverage (DCavg): Low (60-90%), Medium (90-99%), High (>= 99%).
+- Common Cause Failure (CCF): Minimum 65 points required on Annex F checklist (separation, diversity, overvoltage protection).
+- Performance Levels (PL a to PL e) and equivalent IEC 62061 SIL claims (SIL 1 to SIL 3)."""
+    },
+    {
+        "doc_id": "std-eemua-158-flare-aiv",
+        "title": "EEMUA 158 & API 520 Part II Acoustical Induced Vibration (AIV) in Flare Piping Systems",
+        "text": """EEMUA Publication 158 / API Standard 520 Part II / API Standard 521 § 5.8:
+Acoustically Induced Vibration (AIV) and High-Cycle Fatigue in Pressure Relief Systems:
+- Sound Power Level (Lw): Calculated per Carucci-Mueller acoustic generation model at pressure-reducing devices and valve trims.
+- Screening Limit: If Lw >= 155 dB, pipe branch junctions and welded attachments are prone to acoustic fatigue cracking.
+- High Risk Boundary: Lw >= 160 dB requires mandatory pipe wall thickening (Schedule 80/160), contoured forged tees, full-encirclement reinforcement pads, or multiple-stage acoustic trim.
+- Gas Velocity & Mach Limit: Tailpipe discharge Mach number must not exceed 0.70; main flare sub-headers and collectors must not exceed Mach 0.50."""
+    },
+    {
+        "doc_id": "std-api-670-machinery-protection",
+        "title": "API Standard 670 Machinery Protection Systems & Proximity Probe Diagnostics",
+        "text": """API Standard 670 (5th Edition) Machinery Protection Systems & ISO 7919-2 Rotating Machines:
+Non-Contacting Proximity Probe System Calibration & Automatic Trip Logic:
+- Transducer Sensitivity: Standard 200 mV/mil (7.874 mV/μm) eddy-current proximity probe systems.
+- DC Gap Voltage: Normal operating linear range is -9.0 V to -11.0 V DC (mechanical gap approx 1.0 mm).
+- Dual Orthogonal Probes: Probes mounted 90° apart (X and Y) at each radial bearing for complete 2D orbit visualization.
+- Two-Out-of-Two (2oo2) Voting: Automatic machinery emergency trip requires confirmation from both orthogonal channels (X and Y) or validated hardware channel health diagnostics to prevent spurious trips.
+- Keyphasor Transducer: Phase reference probe for 1X vibration amplitude and phase lag analysis."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 44 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 46 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)

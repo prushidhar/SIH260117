@@ -247,8 +247,56 @@ def main():
     assert acid_data.get("corrosion_margin_delta_t_c", 0) > 0
     print(f"[+] /api/thermal/acid-dewpoint: OK (Heater: {acid_data.get('heater_tag')}, APH: {acid_data.get('air_preheater_tag')}, H2SO4 Dew Point: {acid_data.get('sulfuric_acid_dew_point_c')} °C, Margin: +{acid_data.get('corrosion_margin_delta_t_c')} °C, Status: {acid_data.get('cold_end_status')})")
 
+    # 21. ISO 13849-1 Machinery Functional Safety Performance Level (PL) Endpoint
+    res_pl = client.post("/api/safety/functional-safety/pl", json={
+        "safety_function_name": "High-Pressure Quench Trip Interlock",
+        "architecture_category": "Category 4",
+        "mttf_d_years_channel_1": 45.0,
+        "mttf_d_years_channel_2": 45.0,
+        "dc_avg_pct": 99.0,
+        "common_cause_failure_score": 75,
+        "required_performance_level": "PLe"
+    })
+    assert res_pl.status_code == 200
+    pl_data = res_pl.json()
+    assert pl_data.get("achieved_performance_level") == "PLe"
+    assert pl_data.get("equivalent_sil_claim_limit") == "SIL 3"
+    assert pl_data.get("compliance") == "PASS_FUNCTIONAL_SAFETY_VALIDATED"
+    print(f"[+] /api/safety/functional-safety/pl: OK (Cat: {pl_data.get('architecture_category')}, Achieved PL: {pl_data.get('achieved_performance_level')}, SIL Claim: {pl_data.get('equivalent_sil_claim_limit')}, PFHd: {pl_data.get('probability_dangerous_failure_per_hr')})")
+
+    # 22. API 520 / EEMUA 158 Acoustical Induced Vibration (AIV) Endpoint
+    res_aiv = client.post("/api/safety/flare/aiv", json={
+        "relief_valve_tag": "PSV-101",
+        "tailpipe_nps_in": 10.0,
+        "tailpipe_sch": "Sch 40",
+        "relieving_mass_flow_kg_s": 24.5,
+        "relieving_temp_c": 160.0
+    })
+    assert res_aiv.status_code == 200
+    aiv_data = res_aiv.json()
+    assert aiv_data.get("relief_valve_tag") == "PSV-101"
+    assert aiv_data.get("mach_compliance") == "PASS"
+    print(f"[+] /api/safety/flare/aiv: OK (Tag: {aiv_data.get('relief_valve_tag')}, NPS: {aiv_data.get('tailpipe_nps_in')}\", Mach: {aiv_data.get('tailpipe_mach_number')}, Lw: {aiv_data.get('sound_power_level_db')} dB, Risk: {aiv_data.get('aiv_risk_tier')})")
+
+    # 23. API 670 Machinery Protection Systems & Proximity Probes Endpoint
+    res_api670 = client.post("/api/machinery/api670/probes", json={
+        "machine_tag": "K-101",
+        "probe_channel_x": "VT-101X",
+        "probe_channel_y": "VT-101Y",
+        "gap_voltage_dc_v": -10.2,
+        "peak_to_peak_um_x": 22.5,
+        "peak_to_peak_um_y": 24.0,
+        "operating_speed_rpm": 10450.0
+    })
+    assert res_api670.status_code == 200
+    api670_data = res_api670.json()
+    assert api670_data.get("machine_tag") == "K-101"
+    assert api670_data.get("probe_health_state") == "NORMAL_LINEAR_RANGE"
+    assert api670_data.get("protection_system_verdict") == "NORMAL_ROTATING_STABILITY"
+    print(f"[+] /api/machinery/api670/probes: OK (Tag: {api670_data.get('machine_tag')}, Probe Health: {api670_data.get('probe_health_state')}, Gap V: {api670_data.get('dc_gap_voltage_v')}V, Governing Vib: {api670_data.get('governing_vibration_um')} um, Verdict: {api670_data.get('protection_system_verdict')})")
+
     print("\n" + "=" * 65)
-    print("ALL 20 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 23 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

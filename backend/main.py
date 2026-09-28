@@ -1990,6 +1990,102 @@ async def evaluate_acid_gas_dew_point(req: AcidDewPointRequest):
     )
 
 
+class FunctionalSafetyRequest(BaseModel):
+    safety_function_name: Optional[str] = "High-Pressure Quench Trip Interlock"
+    architecture_category: Optional[str] = "Category 4"
+    mttf_d_years_channel_1: Optional[float] = 45.0
+    mttf_d_years_channel_2: Optional[float] = 45.0
+    dc_avg_pct: Optional[float] = 99.0
+    common_cause_failure_score: Optional[int] = 75
+    required_performance_level: Optional[str] = "PLe"
+
+
+@app.post("/api/safety/functional-safety/pl")
+async def evaluate_functional_safety_pl(req: FunctionalSafetyRequest):
+    """
+    ISO 13849-1:2023 & IEC 62061 Machinery Functional Safety Performance Level (PL) Engine.
+    Evaluates Architecture Categories, Symmetrized MTTFd, DCavg, CCF, and SIL Claim Limits.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_iso13849_functional_safety_pl(
+        safety_function_name=req.safety_function_name or "High-Pressure Quench Trip Interlock",
+        architecture_category=req.architecture_category or "Category 4",
+        mttf_d_years_channel_1=req.mttf_d_years_channel_1 or 45.0,
+        mttf_d_years_channel_2=req.mttf_d_years_channel_2 or 45.0,
+        dc_avg_pct=req.dc_avg_pct if req.dc_avg_pct is not None else 99.0,
+        common_cause_failure_score=req.common_cause_failure_score if req.common_cause_failure_score is not None else 75,
+        required_performance_level=req.required_performance_level or "PLe"
+    )
+
+
+class FlareAivRequest(BaseModel):
+    relief_valve_tag: Optional[str] = "PSV-101"
+    tailpipe_nps_in: Optional[float] = 6.0
+    tailpipe_sch: Optional[str] = "Sch 40"
+    relieving_mass_flow_kg_s: Optional[float] = 24.5
+    relieving_temp_c: Optional[float] = 160.0
+    fluid_molecular_weight: Optional[float] = 44.1
+    gas_k_ratio: Optional[float] = 1.18
+    upstream_relieving_pressure_bar_a: Optional[float] = 24.5
+    downstream_backpressure_bar_a: Optional[float] = 2.8
+
+
+@app.post("/api/safety/flare/aiv")
+async def evaluate_flare_piping_aiv(req: FlareAivRequest):
+    """
+    API 520 Part II / API 521 / EEMUA 158 Acoustical Induced Vibration (AIV) Assessment.
+    Calculates flare line sound power level (Lw dB), tailpipe Mach number, and high-cycle acoustic fatigue screening.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api520_flare_piping_aiv(
+        relief_valve_tag=req.relief_valve_tag or "PSV-101",
+        tailpipe_nps_in=req.tailpipe_nps_in or 6.0,
+        tailpipe_sch=req.tailpipe_sch or "Sch 40",
+        relieving_mass_flow_kg_s=req.relieving_mass_flow_kg_s or 24.5,
+        relieving_temp_c=req.relieving_temp_c or 160.0,
+        fluid_molecular_weight=req.fluid_molecular_weight or 44.1,
+        gas_k_ratio=req.gas_k_ratio or 1.18,
+        upstream_relieving_pressure_bar_a=req.upstream_relieving_pressure_bar_a or 24.5,
+        downstream_backpressure_bar_a=req.downstream_backpressure_bar_a or 2.8
+    )
+
+
+class MachineryProtectionRequest(BaseModel):
+    machine_tag: Optional[str] = "K-101"
+    probe_channel_x: Optional[str] = "VT-101X"
+    probe_channel_y: Optional[str] = "VT-101Y"
+    probe_sensitivity_mv_um: Optional[float] = 7.87
+    gap_voltage_dc_v: Optional[float] = -10.2
+    peak_to_peak_um_x: Optional[float] = 38.5
+    peak_to_peak_um_y: Optional[float] = 42.0
+    phase_angle_deg_x: Optional[float] = 78.0
+    phase_angle_deg_y: Optional[float] = 168.0
+    operating_speed_rpm: Optional[float] = 10450.0
+    shaft_diameter_mm: Optional[float] = 120.0
+
+
+@app.post("/api/machinery/api670/probes")
+async def evaluate_machinery_protection_probes(req: MachineryProtectionRequest):
+    """
+    API Standard 670 (5th Edition) Machinery Protection & Proximity Probe Diagnostics.
+    Assesses DC gap voltage health, 2oo2 voting trip logic, orbit eccentricity, and API 617 trip limits.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api670_vibration_proximity_probe(
+        machine_tag=req.machine_tag or "K-101",
+        probe_channel_x=req.probe_channel_x or "VT-101X",
+        probe_channel_y=req.probe_channel_y or "VT-101Y",
+        probe_sensitivity_mv_um=req.probe_sensitivity_mv_um or 7.87,
+        gap_voltage_dc_v=req.gap_voltage_dc_v if req.gap_voltage_dc_v is not None else -10.2,
+        peak_to_peak_um_x=req.peak_to_peak_um_x or 38.5,
+        peak_to_peak_um_y=req.peak_to_peak_um_y or 42.0,
+        phase_angle_deg_x=req.phase_angle_deg_x or 78.0,
+        phase_angle_deg_y=req.phase_angle_deg_y or 168.0,
+        operating_speed_rpm=req.operating_speed_rpm or 10450.0,
+        shaft_diameter_mm=req.shaft_diameter_mm or 120.0
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1243,6 +1243,90 @@ def test_card_46_iec61882_hazop_matrix():
     print('  PASS')
 
 
+def test_card_47_iso13849_functional_safety_pl():
+    print('\n--- TEST 47: ISO 13849-1 & IEC 62061 Machinery Functional Safety Performance Level (PL) ---')
+    res = engineering_tools.calculate_iso13849_functional_safety_pl(
+        safety_function_name="High-Pressure Quench Trip Interlock",
+        architecture_category="Category 4",
+        mttf_d_years_channel_1=45.0,
+        mttf_d_years_channel_2=45.0,
+        dc_avg_pct=99.0,
+        common_cause_failure_score=75,
+        required_performance_level="PLe"
+    )
+    assert 'error' not in res
+    assert res['architecture_category'] == 'Category 4'
+    assert res['achieved_performance_level'] == 'PLe'
+    assert res['equivalent_sil_claim_limit'] == 'SIL 3'
+    assert res['ccf_requirement_satisfied'] is True
+    assert res['compliance'] == 'PASS_FUNCTIONAL_SAFETY_VALIDATED'
+    print(f"  [+] Safety Function: {res['safety_function_name']} ({res['architecture_category']})")
+    print(f"  [+] Symmetrized MTTFd: {res['mttf_d_symmetrized_years']} years ({res['mttf_d_level']})")
+    print(f"  [+] Diagnostic Coverage: {res['diagnostic_coverage_pct']}% ({res['dc_avg_level']})")
+    print(f"  [+] Common Cause Failures: Score {res['common_cause_failure_score']}/100 (Pass: {res['ccf_requirement_satisfied']})")
+    print(f"  [+] Achieved Performance Level: {res['achieved_performance_level']} vs Required {res['required_performance_level']}")
+    print(f"  [+] Dangerous Failure Probability (PFHd): {res['probability_dangerous_failure_per_hr']} /hr (Claim: {res['equivalent_sil_claim_limit']})")
+    print(f"  [+] Statutory Verdict: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_48_api520_flare_piping_aiv():
+    print('\n--- TEST 48: API 520 Part II & EEMUA 158 Acoustical Induced Vibration (AIV) Assessment ---')
+    res = engineering_tools.calculate_api520_flare_piping_aiv(
+        relief_valve_tag="PSV-101",
+        tailpipe_nps_in=10.0,
+        tailpipe_sch="Sch 40",
+        relieving_mass_flow_kg_s=24.5,
+        relieving_temp_c=160.0,
+        fluid_molecular_weight=44.1,
+        gas_k_ratio=1.18,
+        upstream_relieving_pressure_bar_a=24.5,
+        downstream_backpressure_bar_a=2.8
+    )
+    assert 'error' not in res
+    assert res['relief_valve_tag'] == 'PSV-101'
+    assert res['tailpipe_mach_number'] <= 0.70
+    assert res['mach_compliance'] == 'PASS'
+    assert res['sound_power_level_db'] > 100.0
+    assert res['compliance'] in ('PASS_AIV_FATIGUE_SAFE', 'REVIEW_AIV_MITIGATION_REQUIRED')
+    print(f"  [+] Relief Valve Tailpipe: {res['relief_valve_tag']} (NPS {res['tailpipe_nps_in']}\", {res['tailpipe_schedule']})")
+    print(f"  [+] Relieving Dynamics: Flow={res['relieving_mass_flow_kg_s']} kg/s, Gas Velocity={res['tailpipe_gas_velocity_m_s']} m/s, Sonic Speed={res['sound_speed_m_s']} m/s")
+    print(f"  [+] Discharge Mach Number: {res['tailpipe_mach_number']} vs Limit {res['max_allowable_tailpipe_mach']} ({res['mach_compliance']})")
+    print(f"  [+] Acoustic Power Level (Lw): {res['sound_power_level_db']} dB (Screening Limit: {res['aiv_screening_limit_db']} dB)")
+    print(f"  [+] Acoustic Fatigue Risk Tier: {res['aiv_risk_tier']}")
+    print(f"  [+] Recommendation: {res['engineering_recommendation'][:65]}...")
+    print(f"  [+] Statutory Compliance: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_49_api670_vibration_proximity_probe():
+    print('\n--- TEST 49: API Standard 670 (5th Ed.) Machinery Protection & 2oo2 Proximity Probes ---')
+    res = engineering_tools.calculate_api670_vibration_proximity_probe(
+        machine_tag="K-101",
+        probe_channel_x="VT-101X",
+        probe_channel_y="VT-101Y",
+        gap_voltage_dc_v=-10.2,
+        peak_to_peak_um_x=22.5,
+        peak_to_peak_um_y=24.0,
+        operating_speed_rpm=10450.0
+    )
+    assert 'error' not in res
+    assert res['machine_tag'] == 'K-101'
+    assert res['probe_health_state'] == 'NORMAL_LINEAR_RANGE'
+    assert res['api670_alarm_threshold_um'] > 0
+    assert res['api670_trip_threshold_um'] > res['api670_alarm_threshold_um']
+    assert res['protection_system_verdict'] == 'NORMAL_ROTATING_STABILITY'
+    assert res['status'] == 'PASS_WITHIN_LIMITS'
+    print(f"  [+] Machine: {res['machine_tag']} ({res['operating_speed_rpm']} RPM, Transducers: {res['probe_channels']})")
+    print(f"  [+] DC Gap Voltage Health: {res['dc_gap_voltage_v']} V -> {res['probe_health_state']} (Calculated Gap: {res['calculated_gap_um']} um)")
+    print(f"  [+] Vibration Amplitudes: X={res['measured_vibration_x_p_p_um']} um p-p, Y={res['measured_vibration_y_p_p_um']} um p-p (Governing: {res['governing_vibration_um']} um)")
+    print(f"  [+] API 670 Thresholds: Alarm={res['api670_alarm_threshold_um']} um, Trip={res['api670_trip_threshold_um']} um")
+    print(f"  [+] Protection Logic: {res['voting_architecture']} -> Verdict: {res['protection_system_verdict']}")
+    print(f"  [+] Orbit Ellipticity: Major Axis={res['orbit_major_axis_um']} um, Eccentricity={res['orbit_eccentricity_ratio']}")
+    print(f"  [+] Operational Status: {res['status']} ({res['compliance']})")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -1293,9 +1377,13 @@ if __name__ == "__main__":
     test_card_44_acid_gas_dew_point()
     test_card_45_multistage_compressor_train()
     test_card_46_iec61882_hazop_matrix()
+    test_card_47_iso13849_functional_safety_pl()
+    test_card_48_api520_flare_piping_aiv()
+    test_card_49_api670_vibration_proximity_probe()
     print("\n================================================================")
-    print("ALL 46 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 49 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+
 
 
 

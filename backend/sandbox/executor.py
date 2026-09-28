@@ -1087,6 +1087,72 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_iso13849_functional_safety_pl",
+                    "description": "ISO 13849-1 / IEC 62061 Machinery Functional Safety Performance Level (PL): Architecture Categories (B, 1-4), Symmetrized MTTFd, Diagnostic Coverage (DCavg), Common Cause Failure (CCF), and SIL Claim Limit.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "safety_function_name": {"type": "string", "description": "Safety function description", "default": "High-Pressure Quench Trip Interlock"},
+                            "architecture_category": {"type": "string", "description": "Category B, Category 1, 2, 3, or 4", "default": "Category 4"},
+                            "mttf_d_years_channel_1": {"type": "number", "description": "Channel 1 MTTFd in years", "default": 45.0},
+                            "mttf_d_years_channel_2": {"type": "number", "description": "Channel 2 MTTFd in years", "default": 45.0},
+                            "dc_avg_pct": {"type": "number", "description": "Average diagnostic coverage %", "default": 99.0},
+                            "common_cause_failure_score": {"type": "integer", "description": "CCF checklist points (min 65)", "default": 75},
+                            "required_performance_level": {"type": "string", "description": "Target PL: PLa, PLb, PLc, PLd, or PLe", "default": "PLe"}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api520_flare_piping_aiv",
+                    "description": "API 520 Part II / API 521 / EEMUA 158 Acoustical Induced Vibration (AIV) Assessment: relief line sound power level (Lw dB), tailpipe Mach number, and high-cycle acoustic fatigue screening.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "relief_valve_tag": {"type": "string", "description": "PSV/PRV tag", "default": "PSV-101"},
+                            "tailpipe_nps_in": {"type": "number", "description": "Tailpipe NPS inches", "default": 6.0},
+                            "tailpipe_sch": {"type": "string", "description": "Pipe schedule e.g. Sch 40 or Sch 80", "default": "Sch 40"},
+                            "relieving_mass_flow_kg_s": {"type": "number", "description": "Relieving flow rate kg/s", "default": 24.5},
+                            "relieving_temp_c": {"type": "number", "description": "Relieving temperature in °C", "default": 160.0},
+                            "fluid_molecular_weight": {"type": "number", "description": "Vapor molecular weight", "default": 44.1},
+                            "gas_k_ratio": {"type": "number", "description": "Gas Cp/Cv ratio", "default": 1.18},
+                            "upstream_relieving_pressure_bar_a": {"type": "number", "description": "Upstream relieving pressure bar a", "default": 24.5},
+                            "downstream_backpressure_bar_a": {"type": "number", "description": "Tailpipe backpressure bar a", "default": 2.8}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api670_vibration_proximity_probe",
+                    "description": "API Standard 670 (5th Edition) Machinery Protection & Proximity Probe Diagnostics: DC gap voltage probe health, 2oo2 voting trip logic, orbit eccentricity, and API 617 trip limits.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "machine_tag": {"type": "string", "description": "Rotating machine tag", "default": "K-101"},
+                            "probe_channel_x": {"type": "string", "description": "X probe channel tag", "default": "VT-101X"},
+                            "probe_channel_y": {"type": "string", "description": "Y probe channel tag", "default": "VT-101Y"},
+                            "probe_sensitivity_mv_um": {"type": "number", "description": "Probe sensitivity mV/um", "default": 7.87},
+                            "gap_voltage_dc_v": {"type": "number", "description": "DC gap voltage in Volts (-9 to -11V ideal)", "default": -10.2},
+                            "peak_to_peak_um_x": {"type": "number", "description": "Peak-to-peak vibration um on X", "default": 38.5},
+                            "peak_to_peak_um_y": {"type": "number", "description": "Peak-to-peak vibration um on Y", "default": 42.0},
+                            "phase_angle_deg_x": {"type": "number", "description": "1X phase angle deg on X", "default": 78.0},
+                            "phase_angle_deg_y": {"type": "number", "description": "1X phase angle deg on Y", "default": 168.0},
+                            "operating_speed_rpm": {"type": "number", "description": "Operating speed in RPM", "default": 10450.0},
+                            "shaft_diameter_mm": {"type": "number", "description": "Shaft journal diameter mm", "default": 120.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -1144,10 +1210,14 @@ class ToolRegistry:
             "calculate_ieee1584_arc_flash_hazard",
             "calculate_acid_gas_dew_point",
             "calculate_multistage_compressor_train",
-            "generate_iec61882_hazop_matrix"
+            "generate_iec61882_hazop_matrix",
+            "calculate_iso13849_functional_safety_pl",
+            "calculate_api520_flare_piping_aiv",
+            "calculate_api670_vibration_proximity_probe"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)
+
         
         if name == "python_sandbox":
             return self._run_sandbox(args.get("code", ""))
