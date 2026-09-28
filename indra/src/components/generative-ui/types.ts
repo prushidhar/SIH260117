@@ -41,6 +41,7 @@ export type GenerativeUIComponentType =
   | 'HazardousAreaCard'
   | 'RgdSealCard'
   | 'Api618ReciprocatingCompressorCard'
+  | 'AsmeSec1BoilerCirculationCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -732,4 +733,20 @@ export interface Api618ReciprocatingCompressorCardProps {
   clearanceVolumePct?: number; // Default: 12.0 %
   standardCode?: string; // Default: 'API Standard 618 (5th Edition) / ISO 13707'
   apiEndpoint?: string; // Default: 'http://localhost:8000/api/compressor/api618/reciprocating'
+}
+
+// 39. ASME Section I / EN 12952-4 Natural Circulation Power Boiler & Evaporator Loop
+export interface AsmeSec1BoilerCirculationCardProps {
+  boilerTag?: string; // Default: 'B-101 / HRSG-102'
+  serviceDescription?: string; // Default: 'High-Pressure Natural Circulation Power Boiler'
+  title?: string;
+  drumPressureBarg?: number; // Default: 95.0 barg (20.0 to 180.0)
+  steamProductionTh?: number; // Default: 120.0 t/h (40.0 to 300.0)
+  averageHeatFluxKwM2?: number; // Default: 145.0 kW/m² (50.0 to 250.0)
+  downcomerHeightM?: number; // Default: 22.0 m (10.0 to 40.0)
+  feedwaterTempC?: number; // Default: 180.0 °C
+  riserTubeOdMm?: number; // Default: 63.5 mm (2.5")
+  riserTubeThicknessMm?: number; // Default: 4.5 mm
+  standardCode?: string; // Default: 'ASME Section I (Power Boilers) / EN 12952-4'
+  apiEndpoint?: string; // Default: 'http://localhost:8000/api/boilers/asme-sec1/circulation'
 }

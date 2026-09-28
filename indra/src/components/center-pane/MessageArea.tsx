@@ -198,6 +198,13 @@ const industrialWorkflows = [
     icon: Activity,
     badge: 'API 618 / Reciprocating',
   },
+  {
+    title: 'ASME Section I Boiler Natural Circulation & DNB Margin',
+    desc: 'Two-phase thermosiphon driving head, Circulation Ratio (CR), void fraction (α), and Departure from Nucleate Boiling (DNBR).',
+    query: 'Evaluate ASME Section I and EN 12952-4 boiler natural circulation for B-101 / HRSG-102 (High-Pressure Natural Circulation Power Boiler): steam drum pressure 95.0 barg, steam production 120.0 t/h, heat flux 145.0 kW/m2, downcomer height 22.0 m. Render two-phase evaporator thermosiphon loop with animated steam bubbles, calculate circulation ratio CR and riser exit void fraction, and verify departure from nucleate boiling margin (DNBR ≥ 1.50).',
+    icon: Droplets,
+    badge: 'ASME Sec I / Boiler',
+  },
 ];
 
 /**

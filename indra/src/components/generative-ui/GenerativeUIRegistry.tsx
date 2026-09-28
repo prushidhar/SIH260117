@@ -39,6 +39,7 @@ import FinFanCoolerCard from './components/FinFanCoolerCard';
 import HazardousAreaCard from './components/HazardousAreaCard';
 import RgdSealCard from './components/RgdSealCard';
 import Api618ReciprocatingCompressorCard from './components/Api618ReciprocatingCompressorCard';
+import AsmeSec1BoilerCirculationCard from './components/AsmeSec1BoilerCirculationCard';
 
 interface RegistryProps {
   component: string;
@@ -236,6 +237,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 38. API Standard 618 (5th Edition) / ISO 13707 Reciprocating Compressor Performance & Pulsation Dampener
   if (compKey.includes('api618') || compKey.includes('reciprocating') || compKey.includes('recip_compressor') || compKey.includes('piston_compressor') || compKey.includes('pulsation_dampener') || compKey === 'api618reciprocatingcompressorcard') {
     return <Api618ReciprocatingCompressorCard {...props} />;
+  }
+
+  // 39. ASME Section I / EN 12952-4 Natural Circulation Boiler & DNB Margin
+  if (compKey.includes('asme_sec1') || compKey.includes('boiler_circulation') || compKey.includes('boiler') || compKey.includes('thermosiphon') || compKey.includes('dnbr') || compKey === 'asmesec1boilercirculationcard') {
+    return <AsmeSec1BoilerCirculationCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card
