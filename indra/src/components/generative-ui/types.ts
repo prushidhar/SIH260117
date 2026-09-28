@@ -37,6 +37,7 @@ export type GenerativeUIComponentType =
   | 'FlareAivCard'
   | 'ProximityProbeCard'
   | 'PipingFlexibilityCard'
+  | 'FinFanCoolerCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -666,6 +667,25 @@ export interface PipingFlexibilityCardProps {
   pipeSchedule?: string; // Default: 'Sch 40'
   materialGrade?: string; // Default: 'ASTM A106 Grade B'
 }
+
+// 35. API Standard 661 / ISO 13706 Air-Cooled Heat Exchanger (Fin-Fan Cooler)
+export interface FinFanCoolerCardProps {
+  exchangerTag?: string; // Default: 'AFC-101'
+  serviceName?: string; // Default: 'DIESEL HYDROTREATER STRIPPER OVERHEAD CONDENSER'
+  title?: string;
+  processInletTempC?: number; // Default: 125.0 °C
+  processOutletTempC?: number; // Default: 45.0 °C
+  ambientTempC?: number; // Default: 32.0 °C
+  processMassFlowTh?: number; // Default: 45.0 t/h
+  heatDutyMw?: number; // Default: 8.45 MWth
+  numberOfBays?: number; // Default: 2
+  fansPerBay?: number; // Default: 1
+  fanDiameterM?: number; // Default: 4.27 m (14 ft)
+  tubePasses?: number; // Default: 4
+  tubeRows?: number; // Default: 6
+  finType?: string; // Default: 'Extruded Aluminum High-Fin (10 FPI)'
+}
+
 
 
 

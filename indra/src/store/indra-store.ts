@@ -982,6 +982,7 @@ export const useIndraStore = create<IndraState>()(
         const isFlareAivQuery = /flare[\s_-]?aiv|aiv|acoustical[\s_-]?vibration|sound\s*power\s*level|eemua\s*158|carucci[\s_-]?mueller|psv-101\s*tailpipe|psv\s*tailpipe|tailpipe\s*mach/i.test(promptText);
         const isProximityProbeQuery = /proximity[\s_-]?probe|api\s*670|shaft[\s_-]?orbit|bently[\s_-]?nevada|2oo2|journal\s*bearing|vt-101|eddy\s*current|keyphasor|dc\s*gap\s*voltage/i.test(promptText);
         const isPipingFlexibilityQuery = /piping[\s_-]?flexibility|expansion[\s_-]?loop|asme\s*b31\.?3\s*(§|sec(tion)?)?\s*319|thermal[\s_-]?expansion|exp-pipe|anchor[\s_-]?thrust|stress[\s_-]?range|displacement[\s_-]?stress/i.test(promptText);
+        const isFinFanQuery = /fin[\s_-]?fan|air[\s_-]?cooler|api\s*661|afc-101|air[\s_-]?cooled|induced[\s_-]?draft|forced[\s_-]?draft|tube[\s_-]?bundle\s*gradient|ambient\s*dry[\s_-]?bulb/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1314,6 +1315,34 @@ Comprehensive thermal displacement stress range, guided expansion U-loop sizing,
 \`\`\`
 
 - **Flexibility & Stress Range Assessment:** Thermal expansion across 80.0m straight run is 356.4 mm at 350.0°C. Symmetrical U-expansion loop (H=5.0m, W=3.5m) absorbs thermal expansion with actual displacement stress range SE = 184.2 MPa, well below allowable stress range SA = 242.0 MPa (76.1% utilization, +57.8 MPa safety margin: **COMPLIANT**). Anchor reaction thrust force is 38.4 kN at Anchor A1 and A2.`;
+        } else if (isFinFanQuery) {
+          finalMarkdown = `### API Standard 661 7th Ed. / ISO 13706 Air-Cooled Heat Exchanger Rating
+
+Comprehensive thermal rating, crossflow tube bundle aerodynamic matrix, and ambient sensitivity evaluation for **AFC-101** (Diesel Hydrotreater Stripper Overhead Condenser) per API Standard 661 7th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "FinFanCoolerCard",
+  "props": {
+    "exchangerTag": "AFC-101",
+    "serviceName": "DIESEL HYDROTREATER STRIPPER OVERHEAD CONDENSER",
+    "title": "API STANDARD 661 7TH ED. AIR-COOLED HEAT EXCHANGER (FIN-FAN)",
+    "processInletTempC": 125.0,
+    "processOutletTempC": 45.0,
+    "ambientTempC": 32.0,
+    "processMassFlowTh": 45.0,
+    "heatDutyMw": 8.45,
+    "numberOfBays": 2,
+    "fansPerBay": 1,
+    "fanDiameterM": 4.27,
+    "tubePasses": 4,
+    "tubeRows": 6,
+    "finType": "Extruded Aluminum High-Fin (10 FPI)"
+  }
+}
+\`\`\`
+
+- **API 661 Performance Rating:** Operating at 8.45 MWth thermal duty across 2 bays. Dual 14-ft induced-draft axial fans deliver 245.0 m³/s total airflow with 74.4 kWe total electric power (37.2 kW/fan). Effective crossflow LMTD is 42.6°C. At design ambient 32.0°C, thermal approach is 13.0°C with +15.2% cooling capacity safety margin (**PASS_API661_THERMAL_CAPACITY_CONFIRMED**).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

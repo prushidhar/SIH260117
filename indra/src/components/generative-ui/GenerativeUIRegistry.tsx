@@ -35,6 +35,7 @@ import FunctionalSafetyCard from './components/FunctionalSafetyCard';
 import FlareAivCard from './components/FlareAivCard';
 import ProximityProbeCard from './components/ProximityProbeCard';
 import PipingFlexibilityCard from './components/PipingFlexibilityCard';
+import FinFanCoolerCard from './components/FinFanCoolerCard';
 
 interface RegistryProps {
   component: string;
@@ -212,6 +213,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 34. ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Loop
   if (compKey.includes('piping_flexibility') || compKey.includes('expansion_loop') || compKey.includes('asme_b313') || compKey.includes('flexibility') || compKey.includes('thermal_expansion') || compKey === 'pipingflexibilitycard') {
     return <PipingFlexibilityCard {...props} />;
+  }
+
+  // 35. API Standard 661 / ISO 13706 Air-Cooled Heat Exchanger (Fin-Fan Cooler)
+  if (compKey.includes('fin_fan') || compKey.includes('finfan') || compKey.includes('air_cooler') || compKey.includes('air_cooled_exchanger') || compKey.includes('api661') || compKey === 'finfancoolercard') {
+    return <FinFanCoolerCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

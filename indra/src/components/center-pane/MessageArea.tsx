@@ -16,7 +16,8 @@ import {
   Thermometer,
   ShieldCheck,
   Volume2,
-  Radio
+  Radio,
+  Wind
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -167,6 +168,13 @@ const industrialWorkflows = [
     query: 'Perform ASME B31.3 § 319 piping flexibility analysis for steam expansion loop EXP-PIPE-101: operating temperature 350°C, anchor-to-anchor run 80m, loop height 5.0m, loop width 3.5m, 12" NPS Sch 40. Render interactive expansion loop schematic, compute actual stress range SE vs allowable SA, and calculate anchor reaction thrust forces.',
     icon: Flame,
     badge: 'ASME B31.3 / Flexibility',
+  },
+  {
+    title: 'API Standard 661 Fin-Fan Air-Cooled Heat Exchanger',
+    desc: '2-bay induced draft axial fan plenum, crossflow bundle temperature gradient (125°C → 45°C), and ambient sensitivity.',
+    query: 'Evaluate API Standard 661 7th Edition air-cooled heat exchanger AFC-101 (Diesel Stripper Overhead Condenser): process inlet 125°C, outlet 45°C, ambient 32°C, duty 8.45 MWth across 2 bays with dual 14-ft axial fans. Render rotating fan aerodynamics, calculate effective LMTD, and simulate 20°C to 48°C ambient temperature sensitivity.',
+    icon: Wind,
+    badge: 'API 661 / Air Cooler',
   },
 ];
 
