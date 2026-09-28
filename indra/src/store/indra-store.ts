@@ -966,6 +966,13 @@ export const useIndraStore = create<IndraState>()(
         };
         get().addDeliverable(pptxDeliverable);
 
+        const isCompressorAntiSurgeQuery = /anti[\s_-]?surge|compressor[\s_-]?map|scl|sll|asv|k-102\s*surge/i.test(promptText);
+        const isSteamTurbineCogenQuery = /cogen|steam\s*turbine|ptc\s*6|tg-201|extraction|condensation|mwe|mwth|ssc/i.test(promptText);
+        const isCathodicCuiQuery = /cathodic|cui|nace|pl-104|pipe-to-soil|sweating\s*zone|anode/i.test(promptText);
+        const isCoolingTowerQuery = /cooling\s*tower|psychrometric|ct-301|atc\s*105|stull|wet[\s_-]?bulb|cycles\s*of\s*concentration|coc/i.test(promptText);
+        const isTegQuery = /teg|glycol|dehydration|v-204|reboiler|dew[\s_-]?point|stripping\s*gas/i.test(promptText);
+        const isReliefValveQuery = /relief\s*valve|psv|psv-101|api\s*520|api\s*526|choked\s*flow|accumulation/i.test(promptText);
+        const isRcaQuery = /rca|root\s*cause|5[\s_-]?why|bowtie|bow[\s_-]?tie|fishbone|ishikawa|fault\s*tree|fta/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -979,7 +986,119 @@ export const useIndraStore = create<IndraState>()(
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
         let finalMarkdown = '';
-        if (isBlowdownQuery) {
+        if (isCompressorAntiSurgeQuery) {
+          finalMarkdown = `### API 617 Centrifugal Compressor Anti-Surge & ASV Response
+
+Sovereign aerodynamic evaluation of operating point versus Surge Limit Line (SLL) and Surge Control Line (SCL) for **K-102**.
+
+\`\`\`gen-ui
+{
+  "component": "CompressorAntiSurgeWidget",
+  "props": {
+    "assetTag": "K-102",
+    "title": "API 617 CENTRIFUGAL COMPRESSOR ANTI-SURGE MAP & ASV RESPONSE"
+  }
+}
+\`\`\`
+
+- **Surge Margin:** Current operating point provides safe margin (+14.2% above SLL). Anti-surge valve is armed for fast-opening stroke (< 1.2s).`;
+        } else if (isSteamTurbineCogenQuery) {
+          finalMarkdown = `### ASME PTC 6 Extraction-Condensing Cogeneration Heat Balance
+
+Combined heat and power evaluation for **TG-201** with controlled 12.5 bar extraction and vacuum condensation.
+
+\`\`\`gen-ui
+{
+  "component": "SteamTurbineCogenWidget",
+  "props": {
+    "assetTag": "TG-201",
+    "title": "ASME PTC 6 EXTRACTION-CONDENSING STEAM TURBINE COGEN BALANCE"
+  }
+}
+\`\`\`
+
+- **Performance Verification:** Generating 42.5 MWe electrical output and delivering 68.4 MWth process heat at 4.18 kg/kWh specific steam consumption.`;
+        } else if (isCathodicCuiQuery) {
+          finalMarkdown = `### NACE SP0169 Cathodic Protection & API 581 CUI Sweating Zone
+
+Corrosion protection and thermal insulation condensation evaluation for pipeline **PL-104**.
+
+\`\`\`gen-ui
+{
+  "component": "CathodicProtectionCuiWidget",
+  "props": {
+    "assetTag": "PL-104",
+    "title": "NACE SP0169 CATHODIC PROTECTION & API 581 CUI SWEATING ZONE"
+  }
+}
+\`\`\`
+
+- **Corrosion Control:** Polarized potential at -945 mV CSE satisfies the NACE -850 mV criterion. Thermal sweating zone at 88°C requires targeted PEC inspection.`;
+        } else if (isCoolingTowerQuery) {
+          finalMarkdown = `### CTI ATC-105 Cooling Tower Psychrometric & Thermal Approach
+
+Empirical Stull wet-bulb estimation and cycles of concentration chemistry for **CT-301**.
+
+\`\`\`gen-ui
+{
+  "component": "CoolingTowerPsychrometricWidget",
+  "props": {
+    "assetTag": "CT-301",
+    "title": "CTI ATC-105 COOLING TOWER PSYCHROMETRIC & THERMAL APPROACH"
+  }
+}
+\`\`\`
+
+- **Psychrometric Balance:** Wet-bulb temperature computed at 27.2°C; tower approach at 4.0°C satisfies design thermal guarantees.`;
+        } else if (isTegQuery) {
+          finalMarkdown = `### GPSA Sec 20 Glycol (TEG) Dehydration & Reboiler Duty
+
+Counter-current mass transfer and reboiler thermal duty analysis for contactor **V-204**.
+
+\`\`\`gen-ui
+{
+  "component": "TegDehydrationWidget",
+  "props": {
+    "assetTag": "V-204",
+    "title": "GPSA SEC 20 TEG GLYCOL DEHYDRATION & REBOILER DUTY"
+  }
+}
+\`\`\`
+
+- **Pipeline Custody Spec:** Treated gas water content at 3.6 lbs/MMSCF meets custody transfer limit (< 4.0 lbs/MMSCF). Reboiler operating at 204°C with stripping gas.`;
+        } else if (isReliefValveQuery) {
+          finalMarkdown = `### API 520 / API 526 Pressure Relief Valve (PSV) Sizing
+
+Overpressure relief capacity and choked flow verification for safety relief valve **PSV-101**.
+
+\`\`\`gen-ui
+{
+  "component": "ReliefValveSizingWidget",
+  "props": {
+    "assetTag": "PSV-101",
+    "title": "API 520 / API 526 PRESSURE RELIEF VALVE SIZING & CHOKED FLOW"
+  }
+}
+\`\`\`
+
+- **Orifice Selection:** API 526 Orifice 'J' (1.287 in²) exceeds required area (0.985 in²) with +30.7% capacity margin. Flow regime verified as critical choked flow.`;
+        } else if (isRcaQuery) {
+          finalMarkdown = `### Industrial Root Cause Analysis (RCA) Multi-Methodology Suite
+
+Comprehensive incident investigation for **K-102** incorporating Fault Tree Analysis, 5-Why Chain, Bow-Tie Barrier Model, and Ishikawa Fishbone Diagram.
+
+\`\`\`gen-ui
+{
+  "component": "RootCauseAnalysisWidget",
+  "props": {
+    "assetTag": "K-102",
+    "title": "INDUSTRIAL ROOT CAUSE ANALYSIS (RCA) MULTI-METHODOLOGY SUITE"
+  }
+}
+\`\`\`
+
+- **Root Cause Confirmed:** MOC field inspection sign-off bypassed for piping insulation weather-jacketing following turnaround, causing spring hanger saturation and casing thermal misalignment.`;
+        } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 
 Simulation analysis for **BDV-201** blowdown valve loop. Joule-Thomson expansion curves and metal wall transient thermal conduction have been computed.

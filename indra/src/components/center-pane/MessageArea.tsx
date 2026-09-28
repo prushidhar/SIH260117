@@ -93,6 +93,13 @@ const industrialWorkflows = [
     icon: ShieldAlert,
     badge: 'API 581 / RBI',
   },
+  {
+    title: 'Root Cause Analysis (RCA) Multi-Methodology Suite',
+    desc: 'Fault Tree Analysis (FTA) with logic gates, 5-Why chain, Bow-Tie barrier model, and Ishikawa 6M fishbone.',
+    query: 'Execute industrial root cause analysis for Compressor K-102 emergency vibration trip INC-2026-0928-01: generate Fault Tree Analysis (FTA) with logic gates, 5-Why causality chain, Bow-Tie barrier model, and Ishikawa 6M fishbone diagram.',
+    icon: Cpu,
+    badge: 'RCA / Incident Investigation',
+  },
 ];
 
 /**

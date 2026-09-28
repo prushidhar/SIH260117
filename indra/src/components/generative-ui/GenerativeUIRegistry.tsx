@@ -19,6 +19,13 @@ import CryogenicBlowdownCard from './components/CryogenicBlowdownCard';
 import RotorDynamicsCard from './components/RotorDynamicsCard';
 import HazardousAreaExCard from './components/HazardousAreaExCard';
 import AlarmTriageWidget from './components/AlarmTriageWidget';
+import CompressorAntiSurgeWidget from './components/CompressorAntiSurgeWidget';
+import SteamTurbineCogenWidget from './components/SteamTurbineCogenWidget';
+import CathodicProtectionCuiWidget from './components/CathodicProtectionCuiWidget';
+import CoolingTowerPsychrometricWidget from './components/CoolingTowerPsychrometricWidget';
+import TegDehydrationWidget from './components/TegDehydrationWidget';
+import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
+import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 
 interface RegistryProps {
   component: string;
@@ -33,7 +40,7 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
     return <IndustrialGauge {...props} value={props.value ?? 78.4} />;
   }
 
-  // 2. Telemetry Line/Area Chart
+  // 2. Telemetry Line/Area Chart & 30Hz FFT Spectrum
   if (compKey.includes('chart') || compKey.includes('telemetry') || compKey.includes('vibration') || compKey === 'telemetrychart') {
     return <TelemetryChart {...props} />;
   }
@@ -49,7 +56,7 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   }
 
   // 5. ASME B31.3 / Compliance Calculator
-  if (compKey.includes('asme') || compKey.includes('compliance') || compKey.includes('calculator') || compKey === 'asmecompliancecard') {
+  if (compKey.includes('asme') || compKey.includes('compliance') || compKey.includes('thickness') || compKey === 'asmecompliancecard') {
     return <ASMEComplianceCard {...props} />;
   }
 
@@ -116,6 +123,41 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 18. ISA 18.2 / EEMUA 191 Control Room Alarm Flood & Triage Widget
   if (compKey.includes('triage') || compKey.includes('alarm') || compKey === 'alarmtriagewidget') {
     return <AlarmTriageWidget {...props} />;
+  }
+
+  // 19. API 617 Centrifugal Compressor Anti-Surge Map
+  if (compKey.includes('antisurge') || compKey.includes('anti-surge') || compKey.includes('compressor_map') || compKey === 'compressorantisurgewidget') {
+    return <CompressorAntiSurgeWidget {...props} />;
+  }
+
+  // 20. ASME PTC 6 Steam Turbine Extraction-Condensing Cogeneration Balance
+  if (compKey.includes('cogen') || compKey.includes('steamturbine') || compKey.includes('steam_turbine') || compKey.includes('ptc6') || compKey === 'steamturbinecogenwidget') {
+    return <SteamTurbineCogenWidget {...props} />;
+  }
+
+  // 21. NACE SP0169 & API 581 Cathodic Protection & CUI Tracker
+  if (compKey.includes('cathodic') || compKey.includes('cui') || compKey.includes('nace') || compKey === 'cathodicprotectioncuiwidget') {
+    return <CathodicProtectionCuiWidget {...props} />;
+  }
+
+  // 22. CTI ATC-105 Cooling Tower Psychrometric Calculator
+  if (compKey.includes('coolingtower') || compKey.includes('cooling_tower') || compKey.includes('psychrometric') || compKey.includes('atc105') || compKey === 'coolingtowerpsychrometricwidget') {
+    return <CoolingTowerPsychrometricWidget {...props} />;
+  }
+
+  // 23. GPSA Sec 20 Glycol (TEG) Dehydration System
+  if (compKey.includes('glycol') || compKey.includes('dehydration') || compKey.includes('teg') || compKey === 'tegdehydrationwidget') {
+    return <TegDehydrationWidget {...props} />;
+  }
+
+  // 24. API 520 / API 526 Pressure Relief Valve (PSV) Sizing
+  if (compKey.includes('psv') || compKey.includes('relief') || compKey.includes('api520') || compKey.includes('api526') || compKey === 'reliefvalvesizingwidget') {
+    return <ReliefValveSizingWidget {...props} />;
+  }
+
+  // 25. Industrial Root Cause Analysis (RCA) Multi-Tab Suite
+  if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('root_cause') || compKey.includes('fishbone') || compKey.includes('faulttree') || compKey.includes('fault_tree') || compKey.includes('bowtie') || compKey === 'rootcauseanalysiswidget') {
+    return <RootCauseAnalysisWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

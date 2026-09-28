@@ -21,6 +21,13 @@ export type GenerativeUIComponentType =
   | 'RotorDynamicsCard'
   | 'HazardousAreaExCard'
   | 'AlarmTriageWidget'
+  | 'CompressorAntiSurgeWidget'
+  | 'SteamTurbineCogenWidget'
+  | 'CathodicProtectionCuiWidget'
+  | 'CoolingTowerPsychrometricWidget'
+  | 'TegDehydrationWidget'
+  | 'ReliefValveSizingWidget'
+  | 'RootCauseAnalysisWidget'
   | string;
 
 export interface GenerativeUISpec {
@@ -333,5 +340,150 @@ export interface AlarmTriageWidgetProps {
   suppressedAlarms?: AlarmTriageItem[];
   chatteringAlarms?: ChatteringAlarmItem[];
 }
+
+// 17. API 617 Centrifugal Compressor Anti-Surge Map Props
+export interface CompressorAntiSurgeWidgetProps {
+  assetTag?: string;
+  title?: string;
+  standard?: string;
+  suctionPressureBar?: number;
+  dischargePressureBar?: number;
+  operatingFlowM3h?: number;
+  designFlowM3h?: number;
+  operatingSpeedRpm?: number;
+  ratedSpeedRpm?: number;
+  asvValveTravelPercent?: number;
+  surgeMarginPercent?: number;
+  polytropicHeadKjKg?: number;
+  polytropicEfficiencyPercent?: number;
+}
+
+// 18. ASME PTC 6 Steam Turbine Extraction-Condensing Cogeneration Balance Props
+export interface SteamTurbineCogenWidgetProps {
+  assetTag?: string;
+  title?: string;
+  standard?: string;
+  throttleInletFlowTph?: number;
+  throttlePressureBar?: number;
+  throttleTempC?: number;
+  extractionFlowTph?: number;
+  extractionPressureBar?: number;
+  exhaustPressureBar?: number;
+  electricalPowerMwe?: number;
+  thermalDutyMwth?: number;
+  specificSteamConsumptionKgKwh?: number;
+  isentropicEfficiencyPercent?: number;
+}
+
+// 19. NACE SP0169 & API 581 Cathodic Protection & CUI Tracker Props
+export interface CathodicProtectionCuiWidgetProps {
+  assetTag?: string;
+  title?: string;
+  pipeToSoilPotentialMv?: number; // e.g. -940 mV vs -850 mV criterion
+  criterionMv?: number;
+  anodeCurrentAmps?: number;
+  rectifierVoltageVolts?: number;
+  operatingTempC?: number;
+  cuiZoneMinC?: number; // 50 C
+  cuiZoneMaxC?: number; // 150 C
+  insulationType?: string;
+  cuiRiskScore?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  api581PofCategory?: number; // 1-5
+  api581CofCategory?: string; // A-E
+}
+
+// 20. CTI ATC-105 Cooling Tower Psychrometric Calculator Props
+export interface CoolingTowerPsychrometricWidgetProps {
+  assetTag?: string;
+  title?: string;
+  dryBulbTempC?: number;
+  relativeHumidityPercent?: number;
+  coldWaterSupplyTempC?: number;
+  hotWaterReturnTempC?: number;
+  circulatingWaterFlowM3h?: number;
+  cyclesOfConcentration?: number;
+  coolingDutyMw?: number;
+  evaporationRateM3h?: number;
+  blowdownRateM3h?: number;
+  driftLossPercent?: number;
+}
+
+// 21. GPSA Sec 20 Glycol (TEG) Dehydration System Props
+export interface TegDehydrationWidgetProps {
+  assetTag?: string;
+  title?: string;
+  gasInletFlowMmscfd?: number;
+  gasInletPressureBar?: number;
+  gasInletTempC?: number;
+  richGlycolConcentrationPercent?: number;
+  leanGlycolConcentrationPercent?: number;
+  reboilerTempC?: number;
+  reboilerDutyKw?: number;
+  waterDewPointC?: number;
+  waterContentLbsMmscf?: number;
+  glycolCirculationRateGpm?: number;
+}
+
+// 22. API 520 / API 526 Pressure Relief Valve (PSV) Sizing Props
+export interface ReliefValveSizingWidgetProps {
+  assetTag?: string;
+  title?: string;
+  standard?: string;
+  selectedOrificeLetter?: string; // e.g. 'J'
+  requiredAreaIn2?: number;
+  effectiveAreaIn2?: number;
+  setPressureBarg?: number;
+  relievingPressureBarg?: number;
+  allowableAccumulationPercent?: number; // 10%, 16%, 21%
+  backPressureBarg?: number;
+  certifiedCapacityKgH?: number;
+  requiredRelievingCapacityKgH?: number;
+  flowRegime?: 'CHOKED_CRITICAL' | 'SUBSONIC';
+  fluidType?: string;
+}
+
+// 23. Industrial Root Cause Analysis (RCA) Multi-Tab Suite Props
+export interface FaultTreeNode {
+  id: string;
+  label: string;
+  type: 'TOP_EVENT' | 'AND_GATE' | 'OR_GATE' | 'BASIC_EVENT';
+  probability?: number;
+  children?: string[];
+  description?: string;
+}
+
+export interface FiveWhyStep {
+  step: number;
+  why: string;
+  finding: string;
+  evidence: string;
+}
+
+export interface BowTieBarrier {
+  id: string;
+  type: 'PREVENTIVE' | 'MITIGATIVE';
+  name: string;
+  status: 'EFFECTIVE' | 'DEGRADED' | 'FAILED';
+  verificationDate: string;
+}
+
+export interface IshikawaCategory {
+  category: 'Machine' | 'Method' | 'Material' | 'Measurement' | 'Man' | 'Environment';
+  causes: string[];
+}
+
+export interface RootCauseAnalysisWidgetProps {
+  assetTag?: string;
+  title?: string;
+  incidentId?: string;
+  incidentDate?: string;
+  topEventDescription?: string;
+  defaultTab?: 'fta' | '5why' | 'bowtie' | 'fishbone';
+  faultTreeNodes?: FaultTreeNode[];
+  fiveWhySteps?: FiveWhyStep[];
+  barriers?: BowTieBarrier[];
+  ishikawaCategories?: IshikawaCategory[];
+}
+
 
 
