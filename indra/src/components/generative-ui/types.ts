@@ -42,6 +42,7 @@ export type GenerativeUIComponentType =
   | 'RgdSealCard'
   | 'Api618ReciprocatingCompressorCard'
   | 'AsmeSec1BoilerCirculationCard'
+  | 'Api530HeaterTubeCreepCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -749,4 +750,21 @@ export interface AsmeSec1BoilerCirculationCardProps {
   riserTubeThicknessMm?: number; // Default: 4.5 mm
   standardCode?: string; // Default: 'ASME Section I (Power Boilers) / EN 12952-4'
   apiEndpoint?: string; // Default: 'http://localhost:8000/api/boilers/asme-sec1/circulation'
+}
+
+// 40. API Standard 530 (7th Edition) / ISO 13704 Heater-Tube Creep & Rupture Life
+export interface Api530HeaterTubeCreepCardProps {
+  heaterTag?: string; // Default: 'F-101-RAD-01'
+  serviceDescription?: string; // Default: 'Atmospheric Crude Heater Radiant Coil'
+  title?: string;
+  tubeMetalTempC?: number; // Default: 580.0 °C (450.0 to 750.0)
+  designPressurePsig?: number; // Default: 450.0 psig (150.0 to 900.0)
+  operatingLifeTargetHours?: number; // Default: 100,000 hours (20,000 to 200,000)
+  heatFluxDensityKwM2?: number; // Default: 42.0 kW/m² (15.0 to 80.0)
+  tubeOdMm?: number; // Default: 168.3 mm (6.625" NPS)
+  nominalWallThicknessMm?: number; // Default: 8.5 mm
+  corrosionAllowanceMm?: number; // Default: 2.0 mm
+  tubeMaterial?: string; // Default: 'ASTM A335 Grade P9 (9Cr-1Mo)'
+  standardCode?: string; // Default: 'API Standard 530 (7th Edition) / ISO 13704'
+  apiEndpoint?: string; // Default: 'http://localhost:8000/api/heaters/api530/tube-creep'
 }

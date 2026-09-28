@@ -205,6 +205,13 @@ const industrialWorkflows = [
     icon: Droplets,
     badge: 'ASME Sec I / Boiler',
   },
+  {
+    title: 'API Standard 530 Heater Tube Creep & Rupture Life',
+    desc: 'Tube wall hoop stress gradient, Larson-Miller Parameter (LMP), and cumulative creep damage (D_creep ≤ 0.80).',
+    query: 'Evaluate API Standard 530 7th Edition heater tube creep and rupture life for radiant coil F-101-RAD-01 (Atmospheric Crude Heater Radiant Coil): maximum tube metal temperature 580.0 °C, design pressure 450.0 psig, operating life target 100,000 hours, radiant heat flux density 42.0 kW/m2. Render cross-sectional tube wall diagram with stress gradients, plot Larson-Miller parameter LMP logarithmic creep rupture curve for ASTM A335 Grade P9 (9Cr-1Mo), and verify cumulative creep damage margin (D_creep ≤ 0.80).',
+    icon: Flame,
+    badge: 'API 530 / Creep',
+  },
 ];
 
 /**

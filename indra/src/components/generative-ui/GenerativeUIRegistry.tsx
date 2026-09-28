@@ -40,6 +40,7 @@ import HazardousAreaCard from './components/HazardousAreaCard';
 import RgdSealCard from './components/RgdSealCard';
 import Api618ReciprocatingCompressorCard from './components/Api618ReciprocatingCompressorCard';
 import AsmeSec1BoilerCirculationCard from './components/AsmeSec1BoilerCirculationCard';
+import Api530HeaterTubeCreepCard from './components/Api530HeaterTubeCreepCard';
 
 interface RegistryProps {
   component: string;
@@ -242,6 +243,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 39. ASME Section I / EN 12952-4 Natural Circulation Boiler & DNB Margin
   if (compKey.includes('asme_sec1') || compKey.includes('boiler_circulation') || compKey.includes('boiler') || compKey.includes('thermosiphon') || compKey.includes('dnbr') || compKey === 'asmesec1boilercirculationcard') {
     return <AsmeSec1BoilerCirculationCard {...props} />;
+  }
+
+  // 40. API Standard 530 (7th Edition) / ISO 13704 Heater-Tube Creep & Rupture Life
+  if (compKey.includes('api530') || compKey.includes('heater_tube') || compKey.includes('tube_creep') || compKey.includes('larson_miller') || compKey.includes('creep_rupture') || compKey === 'api530heatertubecreepcard') {
+    return <Api530HeaterTubeCreepCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

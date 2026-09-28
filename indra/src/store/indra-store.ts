@@ -987,6 +987,7 @@ export const useIndraStore = create<IndraState>()(
         const isRgdSealQuery = /rgd|explosive[\s_-]?decompression|norsok[\s_-]?m[\s_-]?710|iso\s*23936|rgd-seal|gent[\s_-]?lindley|cavitation\s*stress|elastomer\s*seal|void\s*nucleation|ffkm\s*90|decompression\s*rate/i.test(promptText);
         const isApi618RecipQuery = /api[\s_-]?618|reciprocating|piston[\s_-]?compressor|k-201.*(recip|double[\s_-]?acting|bottle|crosshead|suction\s*pressure)|dampener\s*bottle|volumetric\s*efficiency/i.test(promptText);
         const isBoilerCirculationQuery = /asme[\s_-]?sec(tion)?[\s_-]?1|boiler[\s_-]?circulation|thermosiphon|dnbr|departure\s*from\s*nucleate|b-101|hrsg-102|downcomer\s*height|steam\s*drum\s*pressure/i.test(promptText);
+        const isApi530CreepQuery = /api[\s_-]?530|heater[\s_-]?tube|tube[\s_-]?creep|larson[\s_-]?miller|creep[\s_-]?rupture|f-101|radiant[\s_-]?coil|tmt|tube\s*metal\s*temp|cumulative\s*creep/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1440,6 +1441,32 @@ Thermosiphon driving head, two-phase riser hydrodynamics, and Departure from Nuc
 \`\`\`
 
 - **ASME Section I Circulation Verdict:** At $95.0\\text{ barg}$ drum pressure and $120.0\\text{ t/h}$ steam generation, thermosiphon available driving head is $\\Delta P_{\\text{drive}} = 55.4\\text{ kPa}$, driving $776.4\\text{ t/h}$ total loop circulation. Achieved circulation ratio is $CR = 6.47$ (well above the ASME Sec I min limit of $4.0$). Top riser void fraction is $\\alpha = 0.603$ ($60.3\\% < 80.0\\%$) ensuring continuous liquid wall wetting. Critical heat flux margin $DNBR = 2.12$ confirms continuous nucleate boiling with zero risk of film boiling or wall dryout (**PASS_ASME_SEC1_CIRCULATION_CONFIRMED**).`;
+        } else if (isApi530CreepQuery) {
+          finalMarkdown = `### API Standard 530 7th Ed. / ISO 13704 Heater Tube Creep & Rupture Analysis
+
+Creep rupture life prediction, Larson-Miller Parameter (LMP), and cumulative creep damage evaluation for **F-101-RAD-01** (Atmospheric Crude Heater Radiant Coil) per API Standard 530 7th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api530HeaterTubeCreepCard",
+  "props": {
+    "heaterTag": "F-101-RAD-01",
+    "serviceDescription": "Atmospheric Crude Heater Radiant Coil",
+    "title": "API STANDARD 530 7TH ED. HEATER TUBE CREEP & RUPTURE INTEGRITY",
+    "tubeMetalTempC": 580.0,
+    "designPressurePsig": 450.0,
+    "operatingLifeTargetHours": 100000,
+    "heatFluxDensityKwM2": 42.0,
+    "tubeOdMm": 168.3,
+    "nominalWallThicknessMm": 8.5,
+    "corrosionAllowanceMm": 2.0,
+    "tubeMaterial": "ASTM A335 Grade P9 (9Cr-1Mo)",
+    "standardCode": "API Standard 530 (7th Edition) / ISO 13704"
+  }
+}
+\`\`\`
+
+- **API 530 Creep Assessment Verdict:** At $580.0^\circ\text{C}$ ($1,076.0^\circ\text{F}$) Maximum Tube Metal Temperature (TMT) and $450.0\text{ psig}$ ($3.103\text{ MPa}$) coil design pressure, mean diameter hoop stress is $\sigma_{\text{hoop}} = 38.62\text{ MPa}$ ($5.60\text{ ksi}$) on a $6.50\text{ mm}$ corroded wall. Under $42.0\text{ kW/m}^2$ firebox radiant heat flux, the radial temperature gradient across the wall is $\Delta T = 9.75^\circ\text{C}$, yielding an effective operating stress $\sigma_{\text{eff}} = 41.25\text{ MPa}$. Using the API 530 Larson-Miller parameter ($LMP = 36.62$), predicted mean creep rupture life is $t_{\text{rupture}} = 224,500\text{ hours}$ ($25.6\text{ years}$). Cumulative creep damage for the $100,000\text{ h}$ target is $D_{\text{creep}} = 0.445$, well below the statutory retirement limit $D_{\text{creep}} \le 0.800$ (**PASS_API530_CREEP_LIFE_CONFIRMED**). Remaining creep life margin is $124,500\text{ hours}$ ($14.2\text{ years}$).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 
