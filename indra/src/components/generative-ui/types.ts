@@ -38,6 +38,7 @@ export type GenerativeUIComponentType =
   | 'ProximityProbeCard'
   | 'PipingFlexibilityCard'
   | 'FinFanCoolerCard'
+  | 'HazardousAreaCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -686,11 +687,16 @@ export interface FinFanCoolerCardProps {
   finType?: string; // Default: 'Extruded Aluminum High-Fin (10 FPI)'
 }
 
-
-
-
-
-
-
-
-
+// 36. IEC 60079-10-1 / API RP 505 Hazardous Area Classification & Gas Dispersion
+export interface HazardousAreaCardProps {
+  enclosureTag?: string; // Default: 'HAC-CELL-101'
+  gasMixture?: string; // Default: 'HYDROGEN / METHANE MIX (70/30 mol%)'
+  title?: string;
+  operatingPressureBarG?: number; // Default: 24.0 bar g
+  leakHoleSizeMm?: number; // Default: 3.0 mm
+  ventilationVelocityMs?: number; // Default: 0.65 m/s
+  operatingTempC?: number; // Default: 35.0 °C
+  releaseGrade?: 'Secondary' | 'Primary' | 'Continuous'; // Default: 'Secondary'
+  enclosureVolumeM3?: number; // Default: 240.0 m³
+  standardCode?: string; // Default: 'IEC 60079-10-1:2020 / API RP 505 / NFPA 497'
+}

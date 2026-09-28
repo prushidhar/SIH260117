@@ -36,6 +36,7 @@ import FlareAivCard from './components/FlareAivCard';
 import ProximityProbeCard from './components/ProximityProbeCard';
 import PipingFlexibilityCard from './components/PipingFlexibilityCard';
 import FinFanCoolerCard from './components/FinFanCoolerCard';
+import HazardousAreaCard from './components/HazardousAreaCard';
 
 interface RegistryProps {
   component: string;
@@ -125,8 +126,13 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
     return <RotorDynamicsCard {...props} />;
   }
 
-  // 17. IEC 60079 Hazardous Area Explosion Proof Card
-  if (compKey.includes('iec60079') || compKey.includes('hazardous_area') || compKey === 'hazardousareaexcard') {
+  // 17. IEC 60079-10-1 & API RP 505 Hazardous Area Classification & Gas Dispersion Card
+  if (compKey === 'hazardousareacard' || compKey === 'hazardous_area_card' || compKey.includes('hac') || compKey.includes('dispersion') || compKey.includes('api505') || compKey.includes('60079-10') || compKey === 'hazardous_area') {
+    return <HazardousAreaCard {...props} />;
+  }
+
+  // 17b. IEC 60079 Hazardous Area Explosion Proof (Flameproof Ex d) Card
+  if (compKey.includes('flameproof') || compKey === 'hazardousareaexcard') {
     return <HazardousAreaExCard {...props} />;
   }
 

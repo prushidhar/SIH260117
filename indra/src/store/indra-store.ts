@@ -983,6 +983,7 @@ export const useIndraStore = create<IndraState>()(
         const isProximityProbeQuery = /proximity[\s_-]?probe|api\s*670|shaft[\s_-]?orbit|bently[\s_-]?nevada|2oo2|journal\s*bearing|vt-101|eddy\s*current|keyphasor|dc\s*gap\s*voltage/i.test(promptText);
         const isPipingFlexibilityQuery = /piping[\s_-]?flexibility|expansion[\s_-]?loop|asme\s*b31\.?3\s*(§|sec(tion)?)?\s*319|thermal[\s_-]?expansion|exp-pipe|anchor[\s_-]?thrust|stress[\s_-]?range|displacement[\s_-]?stress/i.test(promptText);
         const isFinFanQuery = /fin[\s_-]?fan|air[\s_-]?cooler|api\s*661|afc-101|air[\s_-]?cooled|induced[\s_-]?draft|forced[\s_-]?draft|tube[\s_-]?bundle\s*gradient|ambient\s*dry[\s_-]?bulb/i.test(promptText);
+        const isHazardousAreaDispersionQuery = /dispersion|contour|iec\s*60079-10|api\s*(rp\s*)?505|hac|hac-cell|zone\s*[012]|gas\s*group|t-class|leak\s*hole|operating\s*pressure.*ventilation|flammable\s*gas\s*mixture/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1343,6 +1344,30 @@ Comprehensive thermal rating, crossflow tube bundle aerodynamic matrix, and ambi
 \`\`\`
 
 - **API 661 Performance Rating:** Operating at 8.45 MWth thermal duty across 2 bays. Dual 14-ft induced-draft axial fans deliver 245.0 m³/s total airflow with 74.4 kWe total electric power (37.2 kW/fan). Effective crossflow LMTD is 42.6°C. At design ambient 32.0°C, thermal approach is 13.0°C with +15.2% cooling capacity safety margin (**PASS_API661_THERMAL_CAPACITY_CONFIRMED**).`;
+        } else if (isHazardousAreaDispersionQuery) {
+          finalMarkdown = `### IEC 60079-10-1 / API RP 505 Hazardous Area Classification & Gas Dispersion
+          
+Quantitative flammable gas release and dispersion contour analysis for compressor cell **HAC-CELL-101** per IEC 60079-10-1:2020 and API RP 505.
+
+\`\`\`gen-ui
+{
+  "component": "HazardousAreaCard",
+  "props": {
+    "enclosureTag": "HAC-CELL-101",
+    "gasMixture": "Hydrogen / Methane Mix (70/30 mol%)",
+    "title": "IEC 60079-10-1 / API RP 505 HAZARDOUS AREA CLASSIFICATION",
+    "operatingPressureBarG": 24.0,
+    "leakHoleSizeMm": 3.0,
+    "ventilationVelocityMs": 0.65,
+    "operatingTempC": 35.0,
+    "releaseGrade": "Secondary",
+    "enclosureVolumeM3": 240.0,
+    "standardCode": "IEC 60079-10-1:2020 / API RP 505 / NFPA 497"
+  }
+}
+\`\`\`
+
+- **Area Classification Verdict:** Choked sonic release rate $W_g = 13.92\\text{ g/s}$ ($50.1\\text{ kg/h}$). In a ventilated enclosure cell ($u_w = 0.65\\text{ m/s}$, $18.5\\text{ ACH}$), hazardous boundary distance to $20\\%\\text{ LEL}$ is $r_z = 3.82\\text{ m}$. Secondary grade release with medium dilution yields **Zone 2** (NEC / API RP 505 equivalent: **Class I, Division 2 / Class I, Zone 2**). Electrical apparatus specification mandate: **Group IIC, T4 Gb** (IP66).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

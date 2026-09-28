@@ -176,6 +176,13 @@ const industrialWorkflows = [
     icon: Wind,
     badge: 'API 661 / Air Cooler',
   },
+  {
+    title: 'IEC 60079-10-1 / API RP 505 Hazardous Area & Gas Dispersion',
+    desc: 'Top-down LEL dispersion contour (r_z meters), sonic jet release, Zone 0/1/2 classification, and Gas Group / T-Class.',
+    query: 'Execute IEC 60079-10-1 and API RP 505 hazardous area classification for compressor enclosure HAC-CELL-101: flammable gas Hydrogen/Methane mix (70/30 mol%), operating pressure 24.0 bar g, leak orifice 3.0 mm, mechanical ventilation velocity 0.65 m/s. Render top-down LEL mass concentration dispersion contour, determine hazardous boundary distance r_z, classify Zone 1/2 vs Class I Div 1/2, and specify electrical apparatus Group IIC T4 rating.',
+    icon: Flame,
+    badge: 'IEC 60079-10 / API 505',
+  },
 ];
 
 /**
