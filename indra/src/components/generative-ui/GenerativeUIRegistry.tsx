@@ -29,6 +29,7 @@ import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 import SensorDriftFddCard from './components/SensorDriftFddCard';
 import HazopMatrixWidget from './components/HazopMatrixWidget';
 import ArcFlashHazardCard from './components/ArcFlashHazardCard';
+import AcidDewPointMeter from './components/AcidDewPointMeter';
 
 interface RegistryProps {
   component: string;
@@ -176,6 +177,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 28. IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety
   if (compKey.includes('arc_flash') || compKey.includes('arcflash') || compKey.includes('ieee1584') || compKey.includes('nfpa70e') || compKey === 'arcflashhazardcard') {
     return <ArcFlashHazardCard {...props} />;
+  }
+
+  // 29. ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity
+  if (compKey.includes('acid_dew_point') || compKey.includes('aciddewpoint') || compKey.includes('ptc43') || compKey.includes('ptc_4_3') || compKey.includes('air_preheater') || compKey.includes('cold_end') || compKey === 'aciddewpointmeter') {
+    return <AcidDewPointMeter {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

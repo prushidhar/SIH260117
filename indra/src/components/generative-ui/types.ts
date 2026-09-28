@@ -31,6 +31,7 @@ export type GenerativeUIComponentType =
   | 'SensorDriftFddCard'
   | 'HazopMatrixWidget'
   | 'ArcFlashHazardCard'
+  | 'AcidDewPointMeter'
   | string;
 
 export interface GenerativeUISpec {
@@ -554,6 +555,20 @@ export interface ArcFlashHazardCardProps {
   gapMm?: number; // 104 mm for MV switchgear
   restrictedBoundaryMm?: number; // 700 mm
   limitedBoundaryMm?: number; // 1500 mm
+}
+
+// 29. ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity
+export interface AcidDewPointMeterProps {
+  assetTag?: string; // Default: 'F-101 / APH-101'
+  equipmentName?: string; // Default: 'Fired Heater / Rotary Air Preheater'
+  title?: string;
+  fuelSulfurWtPct?: number; // Default: 2.2 wt% (0.1 to 4.5)
+  flueGasO2Pct?: number; // Default: 3.5 % (1.0 to 8.0)
+  coldEndMetalTempC?: number; // Default: 155.0 °C (100 to 200)
+  flueGasMoisturePct?: number; // Default: 12.0 % vol
+  flueGasTempInC?: number; // Default: 340.0 °C
+  ambientAirTempC?: number; // Default: 25.0 °C
+  materialSpec?: string; // Default: 'Corten Steel / Carbon Steel'
 }
 
 

@@ -976,6 +976,7 @@ export const useIndraStore = create<IndraState>()(
         const isSensorDriftQuery = /sensor[\s_-]?drift|fdd|iso\s*13374|vdi\s*2888|tt-101|calibration|voting\s*comparator/i.test(promptText);
         const isHazopQuery = /hazop|pha|process\s*hazard|iec\s*61882|r-401|guide[\s_-]?word|deviation\s*matrix/i.test(promptText);
         const isArcFlashQuery = /arc[\s_-]?flash|ieee[\s_-]?1584|nfpa[\s_-]?70e|incident\s*energy|shock\s*hazard|electrical\s*safety|arcflash/i.test(promptText);
+        const isAcidDewPointQuery = /acid[\s_-]?dew[\s_-]?point|ptc[\s_-]?4\.?3|aph-101|air[\s_-]?preheater|cold[\s_-]?end|sulfuric\s*acid\s*condensation/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1163,6 +1164,27 @@ Comprehensive arc flash hazard assessment and shock boundary analysis for **SWGR
 \`\`\`
 
 - **Electrical Safety Assessment:** Arcing current computed at 23.8 kA with 14.8 cal/cm² incident energy at 914 mm (36") working distance. PPE Category 3 flash suit and Class 2 dielectric gloves mandatory within 4,213 mm Arc Flash Boundary.`;
+        } else if (isAcidDewPointQuery) {
+          finalMarkdown = `### ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity Assessment
+
+Verhoff-Banchero thermodynamic correlation and sulfuric acid ($H_2SO_4$) condensation evaluation for **F-101 / APH-101** (Fired Heater / Rotary Air Preheater Cold-End) per ASME PTC 4.3 Air Heaters standard.
+
+\`\`\`gen-ui
+{
+  "component": "AcidDewPointMeter",
+  "props": {
+    "assetTag": "F-101 / APH-101",
+    "equipmentName": "Fired Heater / Rotary Air Preheater",
+    "title": "ASME PTC 4.3 FLUE GAS ACID DEW POINT & COLD-END INTEGRITY",
+    "fuelSulfurWtPct": 2.2,
+    "flueGasO2Pct": 3.5,
+    "coldEndMetalTempC": 155.0,
+    "flueGasMoisturePct": 12.0
+  }
+}
+\`\`\`
+
+- **Cold-End Integrity Diagnosis:** Acid dew point computed at 149.7 °C with 28.4 ppmv SO3. Current cold-end metal temperature (155.0 °C) provides a +5.3 °C safety margin (MARGINAL_RISK). Recommend SCAPH steam coil modulation or O2 trim to maintain recommended T_dew + 15 °C buffer.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

@@ -12,7 +12,8 @@ import {
   ChevronDown, 
   ChevronUp, 
   Sparkles,
-  Zap
+  Zap,
+  Thermometer
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -121,6 +122,13 @@ const industrialWorkflows = [
     query: 'Evaluate IEEE 1584-2018 arc flash hazard and NFPA 70E electrical safety for 6.6 kV MV Substation Switchgear SWGR-6.6KV-01: system voltage 6.6 kV, bolted fault current 25.0 kA, clearing duration 0.20 s, working distance 914 mm (36 in). Compute arcing current, incident energy, arc flash boundary, and restricted shock boundaries.',
     icon: Zap,
     badge: 'IEEE 1584 / Electrical',
+  },
+  {
+    title: 'ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity',
+    desc: 'Verhoff-Banchero H2SO4 acid dew point, dual-needle vertical thermometer, cold-end margin ΔT, and corrosion rate estimation.',
+    query: 'Calculate flue gas sulfuric acid dew point (T_adp) and evaluate air preheater cold-end integrity per ASME PTC 4.3 for Fired Heater F-101 / APH-101: fuel sulfur content 2.2 wt%, flue gas O2 3.5%, cold-end metal temperature 155.0°C, flue gas moisture 12.0% vol. Render dual-needle thermometer and estimate annual basket corrosion rate.',
+    icon: Thermometer,
+    badge: 'ASME PTC 4.3 / Thermal',
   },
 ];
 
