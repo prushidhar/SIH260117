@@ -1153,6 +1153,97 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api537_flare_thermal_radiation_and_steam",
+                    "description": "API 537 / ISO 25457 & API 521 § 5.7 Flare Radiation & Smokeless Steam Optimization: Brzustowski flame tilt, ground radiation contours, safe distances, and smokeless steam injection.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "flare_tag": {"type": "string", "description": "Flare tag e.g. FLARE-101", "default": "FLARE-101"},
+                            "tip_diameter_m": {"type": "number", "description": "Flare tip diameter meters", "default": 1.20},
+                            "flare_height_m": {"type": "number", "description": "Flare stack height meters", "default": 55.0},
+                            "relief_gas_flow_kg_s": {"type": "number", "description": "Relief gas flow rate kg/s", "default": 38.0},
+                            "lower_heating_value_mj_kg": {"type": "number", "description": "Gas LHV MJ/kg", "default": 46.5},
+                            "gas_molecular_weight": {"type": "number", "description": "Gas molecular weight", "default": 28.5},
+                            "wind_speed_m_s": {"type": "number", "description": "Ambient wind speed m/s", "default": 6.0},
+                            "distance_from_base_m": {"type": "number", "description": "Observation distance from stack base m", "default": 120.0},
+                            "steam_assist_enabled": {"type": "boolean", "description": "Steam assist active", "default": True},
+                            "soot_index_c_to_h_ratio": {"type": "number", "description": "C/H mass ratio", "default": 0.35}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_conical_reducer_transition",
+                    "description": "ASME Section VIII Div 1 Appendix 1-5 / EN 13445 Conical Reducer Transition Shell: required conical thickness, half-apex angle limit (30 deg), junction reinforcement, and MAWP.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tag": {"type": "string", "description": "Conical reducer tag", "default": "CONE-101"},
+                            "design_pressure_psig": {"type": "number", "description": "Design pressure psig", "default": 250.0},
+                            "design_temp_c": {"type": "number", "description": "Design temperature °C", "default": 180.0},
+                            "large_diameter_in": {"type": "number", "description": "Large end internal diameter inches", "default": 72.0},
+                            "small_diameter_in": {"type": "number", "description": "Small end internal diameter inches", "default": 36.0},
+                            "half_apex_angle_deg": {"type": "number", "description": "Half-apex angle degrees (max 30)", "default": 25.0},
+                            "corrosion_allowance_in": {"type": "number", "description": "Corrosion allowance inches", "default": 0.125},
+                            "allowable_stress_psi": {"type": "number", "description": "Allowable stress psi", "default": 20000.0},
+                            "joint_efficiency": {"type": "number", "description": "Weld joint efficiency E", "default": 1.0},
+                            "actual_thickness_in": {"type": "number", "description": "Nominal actual thickness inches", "default": 0.625}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_iso1940_rotor_balancing_tolerance",
+                    "description": "ISO 1940-1:2003 / ANSI S2.19 Rotor Dynamic Balancing & Residual Unbalance Tolerance: permissible specific unbalance (eper), per-plane unbalance limits, and trial weights.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "rotor_tag": {"type": "string", "description": "Rotor asset tag", "default": "BAL-ROTOR-101"},
+                            "balance_grade": {"type": "string", "description": "ISO balance quality grade G0.4, G1.0, G2.5, G6.3, G16", "default": "G2.5"},
+                            "rotor_mass_kg": {"type": "number", "description": "Total rotor mass kg", "default": 450.0},
+                            "operating_speed_rpm": {"type": "number", "description": "Operating speed RPM", "default": 6000.0},
+                            "balance_planes": {"type": "integer", "description": "Number of balancing planes (1 or 2)", "default": 2},
+                            "plane_1_correction_radius_mm": {"type": "number", "description": "Plane 1 radius mm", "default": 140.0},
+                            "plane_2_correction_radius_mm": {"type": "number", "description": "Plane 2 radius mm", "default": 140.0},
+                            "measured_initial_unbalance_plane1_g_mm": {"type": "number", "description": "Measured unbalance plane 1 g*mm", "default": 85.0},
+                            "measured_initial_unbalance_plane2_g_mm": {"type": "number", "description": "Measured unbalance plane 2 g*mm", "default": 92.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_nfpa68_explosion_venting",
+                    "description": "NFPA 68:2023 Standard on Explosion Protection by Deflagration Venting: required vent area (Av), St-Class dust/gas categorization, vent duct length penalty, and recoil force.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "enclosure_tag": {"type": "string", "description": "Vessel / silo tag", "default": "SILO-VENT-101"},
+                            "enclosure_volume_m3": {"type": "number", "description": "Enclosure volume m3", "default": 48.0},
+                            "enclosure_length_m": {"type": "number", "description": "Enclosure length m", "default": 6.0},
+                            "enclosure_hydraulic_diameter_m": {"type": "number", "description": "Hydraulic diameter m", "default": 3.2},
+                            "k_st_bar_m_s": {"type": "number", "description": "Deflagration index Kst bar*m/s", "default": 150.0},
+                            "p_max_bar_g": {"type": "number", "description": "Maximum deflagration pressure bar g", "default": 8.5},
+                            "p_stat_bar_g": {"type": "number", "description": "Vent panel burst pressure bar g", "default": 0.10},
+                            "p_red_max_bar_g": {"type": "number", "description": "Max allowable reduced pressure bar g", "default": 0.40},
+                            "vent_duct_length_m": {"type": "number", "description": "Vent discharge duct length m", "default": 1.5},
+                            "panel_mass_kg_m2": {"type": "number", "description": "Vent panel areal density kg/m2", "default": 5.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -1213,10 +1304,15 @@ class ToolRegistry:
             "generate_iec61882_hazop_matrix",
             "calculate_iso13849_functional_safety_pl",
             "calculate_api520_flare_piping_aiv",
-            "calculate_api670_vibration_proximity_probe"
+            "calculate_api670_vibration_proximity_probe",
+            "calculate_api537_flare_thermal_radiation_and_steam",
+            "calculate_asme_conical_reducer_transition",
+            "calculate_iso1940_rotor_balancing_tolerance",
+            "calculate_nfpa68_explosion_venting"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)
+
 
         
         if name == "python_sandbox":

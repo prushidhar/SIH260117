@@ -1327,6 +1327,125 @@ def test_card_49_api670_vibration_proximity_probe():
     print('  PASS')
 
 
+def test_card_50_api537_flare_thermal_radiation_and_steam():
+    print('\n--- TEST 50: API 537 / ISO 25457 Flare Thermal Radiation & Smokeless Steam Optimization ---')
+    res = engineering_tools.calculate_api537_flare_thermal_radiation_and_steam(
+        flare_tag="FLARE-101",
+        tip_diameter_m=1.20,
+        flare_height_m=55.0,
+        relief_gas_flow_kg_s=38.0,
+        lower_heating_value_mj_kg=46.5,
+        gas_molecular_weight=28.5,
+        wind_speed_m_s=6.0,
+        distance_from_base_m=120.0,
+        steam_assist_enabled=True
+    )
+    assert 'error' not in res
+    assert res['flare_tag'] == 'FLARE-101'
+    assert res['total_heat_release_mw'] > 1000.0
+    assert res['flame_length_m'] > 0
+    assert res['flame_tilt_angle_deg'] > 0
+    assert res['radiation_at_specified_distance_kw_m2'] > 0
+    assert res['smokeless_steam_demand_t_h'] > 0
+    assert res['compliance'] == 'PASS'
+    print(f"  [+] Flare: {res['flare_tag']} (Height: {res['flare_height_m']}m, Tip Dia: {res['tip_diameter_m']}m)")
+    print(f"  [+] Total Heat Release: {res['total_heat_release_mw']} MW (Gas Velocity: {res['tip_exit_velocity_m_s']} m/s, Mach: {res['tip_mach_number']})")
+    print(f"  [+] Brzustowski Flame: Length={res['flame_length_m']}m, Tilt Angle={res['flame_tilt_angle_deg']}°")
+    print(f"  [+] Ground Radiation at {res['evaluation_distance_m']}m: {res['radiation_at_specified_distance_kw_m2']} kW/m² (Exposure: {res['exposure_risk_tier']})")
+    print(f"  [+] Continuous Safe Distance (1.58 kW/m²): {res['continuous_safe_distance_1_58_kw_m2_m']} m from base")
+    print(f"  [+] Smokeless Steam Assist: {res['smokeless_steam_demand_kg_s']} kg/s ({res['smokeless_steam_demand_t_h']} t/h)")
+    print(f"  [+] API 537 Status: {res['status']} ({res['compliance']})")
+    print('  PASS')
+
+
+def test_card_51_asme_conical_reducer_transition():
+    print('\n--- TEST 51: ASME Section VIII Div 1 Appendix 1-5 Conical Reducer Transition ---')
+    res = engineering_tools.calculate_asme_conical_reducer_transition(
+        tag="CONE-101",
+        design_pressure_psig=250.0,
+        design_temp_c=180.0,
+        large_diameter_in=72.0,
+        small_diameter_in=36.0,
+        half_apex_angle_deg=25.0,
+        corrosion_allowance_in=0.125,
+        allowable_stress_psi=20000.0,
+        actual_thickness_in=0.750
+    )
+    assert 'error' not in res
+    assert res['tag'] == 'CONE-101'
+    assert res['half_apex_compliant'] is True
+    assert res['minimum_required_thickness_in'] > 0
+    assert res['calculated_mawp_psig'] >= 250.0
+    assert res['compliance'] == 'PASS_CODE_COMPLIANT'
+    print(f"  [+] Conical Transition: {res['tag']} (Large ID: {res['large_diameter_in']}\", Small ID: {res['small_diameter_in']}\")")
+    print(f"  [+] Half-Apex Angle: {res['half_apex_angle_deg']}° vs Limit {res['half_apex_limit_deg']}° (Compliant: {res['half_apex_compliant']})")
+    print(f"  [+] Thickness: Required={res['minimum_required_thickness_in']}in ({res['minimum_required_thickness_mm']}mm) vs Actual={res['actual_thickness_in']}in ({res['actual_thickness_mm']}mm, Margin: +{res['thickness_margin_pct']}%)")
+    print(f"  [+] Large-End Junction Reinforcement: Mandatory={res['junction_reinforcement_mandatory']} (Delta Threshold: {res['reinforcement_threshold_delta_deg']}°)")
+    print(f"  [+] Rating: MAWP={res['calculated_mawp_psig']} psig, Hydrotest UG-99={res['hydrotest_pressure_ug99_psig']} psig")
+    print(f"  [+] Code Compliance: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_52_iso1940_rotor_balancing_tolerance():
+    print('\n--- TEST 52: ISO 1940-1 & ANSI S2.19 Rotor Dynamic Balancing & Unbalance Limits ---')
+    res = engineering_tools.calculate_iso1940_rotor_balancing_tolerance(
+        rotor_tag="BAL-ROTOR-101",
+        balance_grade="G2.5",
+        rotor_mass_kg=450.0,
+        operating_speed_rpm=6000.0,
+        balance_planes=2,
+        plane_1_correction_radius_mm=140.0,
+        plane_2_correction_radius_mm=140.0,
+        measured_initial_unbalance_plane1_g_mm=45.0,
+        measured_initial_unbalance_plane2_g_mm=48.0
+    )
+    assert 'error' not in res
+    assert res['rotor_tag'] == 'BAL-ROTOR-101'
+    assert res['permissible_specific_unbalance_um'] > 0
+    assert res['per_plane_permissible_unbalance_g_mm'] > 0
+    assert res['unbalance_ratio_vs_limit'] <= 1.0
+    assert res['compliance'] == 'PASS'
+    print(f"  [+] Rotor: {res['rotor_tag']} (Mass: {res['rotor_mass_kg']} kg, Speed: {res['operating_speed_rpm']} RPM)")
+    print(f"  [+] Balance Quality Grade: {res['balance_quality_grade']} (Angular Velocity: {res['angular_velocity_rad_s']} rad/s)")
+    print(f"  [+] Permissible Specific Unbalance (e_per): {res['permissible_specific_unbalance_um']} µm (g*mm/kg)")
+    print(f"  [+] Total Unbalance Limit: {res['total_permissible_unbalance_g_mm']} g*mm -> Per Plane: {res['per_plane_permissible_unbalance_g_mm']} g*mm")
+    print(f"  [+] Permissible Mass at 140mm: Plane 1={res['permissible_residual_mass_plane1_g']}g, Plane 2={res['permissible_residual_mass_plane2_g']}g")
+    print(f"  [+] Measured Unbalance: Plane 1={res['measured_unbalance_plane1_g_mm']} g*mm, Plane 2={res['measured_unbalance_plane2_g_mm']} g*mm (Ratio: {res['unbalance_ratio_vs_limit']})")
+    print(f"  [+] Trial Weight Recommendation: Plane 1={res['recommended_trial_weight_plane1_g']}g, Plane 2={res['recommended_trial_weight_plane2_g']}g")
+    print(f"  [+] Dynamic Balance Status: {res['status']} ({res['compliance']})")
+    print('  PASS')
+
+
+def test_card_53_nfpa68_explosion_venting():
+    print('\n--- TEST 53: NFPA 68:2023 Standard on Explosion Protection by Deflagration Venting ---')
+    res = engineering_tools.calculate_nfpa68_explosion_venting(
+        enclosure_tag="SILO-VENT-101",
+        enclosure_volume_m3=48.0,
+        enclosure_length_m=6.0,
+        enclosure_hydraulic_diameter_m=3.2,
+        k_st_bar_m_s=150.0,
+        p_max_bar_g=8.5,
+        p_stat_bar_g=0.10,
+        p_red_max_bar_g=0.40,
+        vent_duct_length_m=1.5
+    )
+    assert 'error' not in res
+    assert res['enclosure_tag'] == 'SILO-VENT-101'
+    assert 'St 1' in res['dust_explosion_class']
+    assert res['required_vent_area_m2'] > 0
+    assert res['standard_vent_panels_count'] >= 1
+    assert res['explosion_reaction_recoil_force_kn'] > 0
+    assert res['compliance'] == 'PASS_EXPLOSION_VENTING_CERTIFIED'
+    print(f"  [+] Enclosure: {res['enclosure_tag']} (Volume: {res['enclosure_volume_m3']} m³, Aspect Ratio L/D: {res['aspect_ratio_l_over_d']})")
+    print(f"  [+] Dust Reactivity: Kst={res['k_st_bar_m_s']} bar*m/s -> {res['dust_explosion_class']}")
+    print(f"  [+] Pressure Profile: P_max={res['p_max_bar_g']} bar g, P_stat={res['p_stat_vent_burst_bar_g']} bar g, Allowable P_red={res['p_red_allowable_bar_g']} bar g")
+    print(f"  [+] Duct Penalty: Length={res['vent_duct_length_m']}m (Factor: {res['vent_duct_penalty_factor']}x)")
+    print(f"  [+] Sizing Result: Required Vent Area Av={res['required_vent_area_m2']} m² ({res['standard_vent_panels_count']} panels)")
+    print(f"  [+] Structural Recoil Thrust Force: {res['explosion_reaction_recoil_force_kn']} kN")
+    print(f"  [+] Statutory Certification: {res['compliance']}")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -1380,9 +1499,14 @@ if __name__ == "__main__":
     test_card_47_iso13849_functional_safety_pl()
     test_card_48_api520_flare_piping_aiv()
     test_card_49_api670_vibration_proximity_probe()
+    test_card_50_api537_flare_thermal_radiation_and_steam()
+    test_card_51_asme_conical_reducer_transition()
+    test_card_52_iso1940_rotor_balancing_tolerance()
+    test_card_53_nfpa68_explosion_venting()
     print("\n================================================================")
-    print("ALL 49 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 53 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+
 
 
 

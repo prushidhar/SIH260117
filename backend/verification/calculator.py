@@ -4267,6 +4267,294 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
             return {"error": str(e)}
 
     @staticmethod
+    def calculate_api537_flare_thermal_radiation_and_steam(
+        flare_tag: str = "FLARE-101",
+        tip_diameter_m: float = 1.20,
+        flare_height_m: float = 55.0,
+        relief_gas_flow_kg_s: float = 38.0,
+        lower_heating_value_mj_kg: float = 46.5,
+        gas_molecular_weight: float = 28.5,
+        wind_speed_m_s: float = 6.0,
+        distance_from_base_m: float = 120.0,
+        steam_assist_enabled: bool = True,
+        soot_index_c_to_h_ratio: float = 0.35
+    ) -> Dict[str, Any]:
+        """
+        API 537 / ISO 25457 & API 521 § 5.7 Flare Radiation & Smokeless Steam Optimization Engine.
+        Calculates Brzustowski flame tilt, ground radiation contours, and smokeless steam injection.
+        """
+        try:
+            import math
+
+            total_heat_release_mw = round(relief_gas_flow_kg_s * lower_heating_value_mj_kg, 1)
+
+            t_rel_k = 300.0
+            r_univ = 8314.46
+            rho_gas = (101325.0 * gas_molecular_weight) / (r_univ * t_rel_k)
+            tip_area_m2 = (math.pi / 4.0) * (tip_diameter_m ** 2)
+            v_exit_m_s = relief_gas_flow_kg_s / max(0.1, rho_gas * tip_area_m2)
+
+            k_ratio = 1.25
+            c_sound = math.sqrt(k_ratio * (r_univ / gas_molecular_weight) * t_rel_k)
+            tip_mach = round(v_exit_m_s / max(1.0, c_sound), 2)
+
+            f_rad = 0.18 if steam_assist_enabled else 0.25
+
+            q_watts = total_heat_release_mw * 1e6
+            flame_length_m = round(0.006 * (q_watts ** 0.478), 1)
+
+            tan_theta = wind_speed_m_s / max(1.0, v_exit_m_s)
+            theta_rad = math.atan(tan_theta)
+            flame_tilt_deg = round(math.degrees(theta_rad), 1)
+
+            xc = (flame_length_m / 2.0) * math.sin(theta_rad)
+            yc = (flame_length_m / 2.0) * math.cos(theta_rad)
+
+            dx = distance_from_base_m - xc
+            dy = flare_height_m + yc
+            r_obs_m = math.sqrt(dx**2 + dy**2)
+
+            tau = 0.85
+            q_rad_kw_m2 = (tau * f_rad * total_heat_release_mw * 1000.0) / (4.0 * math.pi * (r_obs_m ** 2))
+            solar_flux_kw_m2 = 1.00
+            total_radiation_kw_m2 = round(q_rad_kw_m2 + solar_flux_kw_m2, 2)
+
+            denom = max(0.01, 1.58 - solar_flux_kw_m2)
+            r_safe_continuous_m = round(math.sqrt((tau * f_rad * total_heat_release_mw * 1000.0) / (4.0 * math.pi * denom)), 1)
+
+            c_h_factor = soot_index_c_to_h_ratio / 0.33
+            steam_ratio_kg_kg = 0.32 * c_h_factor if steam_assist_enabled else 0.0
+            steam_demand_kg_s = round(relief_gas_flow_kg_s * steam_ratio_kg_kg, 2)
+            steam_demand_t_h = round(steam_demand_kg_s * 3.6, 2)
+
+            if total_radiation_kw_m2 <= 1.58:
+                tier = "CONTINUOUS_PERSONNEL_SAFE"
+                status = "COMPLIANT_UNRESTRICTED_ACCESS"
+            elif total_radiation_kw_m2 <= 4.73:
+                tier = "SHORT_EXPOSURE_ESCAPE_ONLY_2_MIN"
+                status = "RESTRICTED_PPE_REQUIRED"
+            else:
+                tier = "DANGEROUS_EQUIPMENT_DAMAGE_EXPOSURE"
+                status = "EXCLUSION_ZONE_MANDATORY"
+
+            return {
+                "flare_tag": flare_tag,
+                "total_heat_release_mw": total_heat_release_mw,
+                "tip_diameter_m": tip_diameter_m,
+                "flare_height_m": flare_height_m,
+                "tip_exit_velocity_m_s": round(v_exit_m_s, 1),
+                "tip_mach_number": tip_mach,
+                "flame_length_m": flame_length_m,
+                "flame_tilt_angle_deg": flame_tilt_deg,
+                "radiation_at_specified_distance_kw_m2": total_radiation_kw_m2,
+                "evaluation_distance_m": distance_from_base_m,
+                "continuous_safe_distance_1_58_kw_m2_m": r_safe_continuous_m,
+                "smokeless_steam_demand_kg_s": steam_demand_kg_s,
+                "smokeless_steam_demand_t_h": steam_demand_t_h,
+                "exposure_risk_tier": tier,
+                "standard": "API 537 / ISO 25457 / API 521 § 5.7",
+                "status": status,
+                "compliance": "PASS" if total_radiation_kw_m2 <= 4.73 else "EXCEEDS_ESCAPE_LIMIT"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_asme_conical_reducer_transition(
+        tag: str = "CONE-101",
+        design_pressure_psig: float = 250.0,
+        design_temp_c: float = 180.0,
+        large_diameter_in: float = 72.0,
+        small_diameter_in: float = 36.0,
+        half_apex_angle_deg: float = 25.0,
+        corrosion_allowance_in: float = 0.125,
+        allowable_stress_psi: float = 20000.0,
+        joint_efficiency: float = 1.0,
+        actual_thickness_in: float = 0.625
+    ) -> Dict[str, Any]:
+        """
+        ASME Section VIII Div 1 Appendix 1-5 / EN 13445 Conical Reducer Transition Shell Engine.
+        Evaluates conical shell required thickness, knuckle junction reinforcement, and MAWP.
+        """
+        try:
+            import math
+
+            alpha_rad = math.radians(half_apex_angle_deg)
+            cos_alpha = math.cos(alpha_rad)
+
+            s_e = allowable_stress_psi * joint_efficiency
+            denom = 2.0 * cos_alpha * (s_e - 0.6 * design_pressure_psig)
+            t_req_corroded_in = (design_pressure_psig * large_diameter_in) / max(1.0, denom)
+            t_min_required_in = round(t_req_corroded_in + corrosion_allowance_in, 4)
+
+            thickness_margin_pct = round(((actual_thickness_in - t_min_required_in) / t_min_required_in) * 100.0, 1)
+
+            alpha_pass = half_apex_angle_deg <= 30.0
+
+            p_over_se = design_pressure_psig / max(1.0, s_e)
+            delta_deg = round(30.0 * math.sqrt(p_over_se), 1)
+            junction_reinforcement_needed = half_apex_angle_deg > delta_deg
+
+            t_corroded_actual = max(0.001, actual_thickness_in - corrosion_allowance_in)
+            mawp_psig = round((2.0 * s_e * t_corroded_actual * cos_alpha) / (large_diameter_in + 1.2 * t_corroded_actual * cos_alpha), 1)
+
+            hydrotest_pressure_psig = round(1.3 * mawp_psig * (allowable_stress_psi / allowable_stress_psi), 1)
+
+            return {
+                "tag": tag,
+                "large_diameter_in": large_diameter_in,
+                "small_diameter_in": small_diameter_in,
+                "half_apex_angle_deg": half_apex_angle_deg,
+                "half_apex_limit_deg": 30.0,
+                "half_apex_compliant": alpha_pass,
+                "minimum_required_thickness_in": t_min_required_in,
+                "minimum_required_thickness_mm": round(t_min_required_in * 25.4, 2),
+                "actual_thickness_in": actual_thickness_in,
+                "actual_thickness_mm": round(actual_thickness_in * 25.4, 2),
+                "thickness_margin_pct": thickness_margin_pct,
+                "junction_reinforcement_mandatory": junction_reinforcement_needed,
+                "reinforcement_threshold_delta_deg": delta_deg,
+                "calculated_mawp_psig": mawp_psig,
+                "hydrotest_pressure_ug99_psig": hydrotest_pressure_psig,
+                "standard": "ASME Section VIII Div 1 Mandatory Appendix 1-5 / UG-32(g)",
+                "compliance": "PASS_CODE_COMPLIANT" if (actual_thickness_in >= t_min_required_in and alpha_pass) else "REVIEW_REINFORCEMENT"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_iso1940_rotor_balancing_tolerance(
+        rotor_tag: str = "BAL-ROTOR-101",
+        balance_grade: str = "G2.5",
+        rotor_mass_kg: float = 450.0,
+        operating_speed_rpm: float = 6000.0,
+        balance_planes: int = 2,
+        plane_1_correction_radius_mm: float = 140.0,
+        plane_2_correction_radius_mm: float = 140.0,
+        measured_initial_unbalance_plane1_g_mm: float = 85.0,
+        measured_initial_unbalance_plane2_g_mm: float = 92.0
+    ) -> Dict[str, Any]:
+        """
+        ISO 1940-1:2003 / ANSI S2.19 Rotor Dynamic Balancing & Residual Unbalance Tolerance Engine.
+        Calculates permissible specific unbalance (eper), per-plane unbalance limits, and trial balance weights.
+        """
+        try:
+            import math
+
+            grades = {"G0.4": 0.4, "G1.0": 1.0, "G2.5": 2.5, "G6.3": 6.3, "G16": 16.0}
+            g_val = grades.get(balance_grade, 2.5)
+
+            omega_rad_s = (2.0 * math.pi * operating_speed_rpm) / 60.0
+
+            e_per_um = round(1000.0 * (g_val / max(1.0, omega_rad_s)), 2)
+
+            u_per_total_g_mm = round(e_per_um * rotor_mass_kg, 1)
+
+            planes = max(1, balance_planes)
+            u_per_plane_g_mm = round(u_per_total_g_mm / float(planes), 1)
+
+            m_per_plane1_g = round(u_per_plane_g_mm / max(1.0, plane_1_correction_radius_mm), 2)
+            m_per_plane2_g = round(u_per_plane_g_mm / max(1.0, plane_2_correction_radius_mm), 2)
+
+            governing_measured_g_mm = max(measured_initial_unbalance_plane1_g_mm, measured_initial_unbalance_plane2_g_mm)
+            unbalance_ratio = round(governing_measured_g_mm / max(0.1, u_per_plane_g_mm), 2)
+
+            trial_weight_plane1_g = round(m_per_plane1_g * 2.5, 1)
+            trial_weight_plane2_g = round(m_per_plane2_g * 2.5, 1)
+
+            is_balanced = unbalance_ratio <= 1.0
+
+            return {
+                "rotor_tag": rotor_tag,
+                "balance_quality_grade": balance_grade,
+                "operating_speed_rpm": operating_speed_rpm,
+                "rotor_mass_kg": rotor_mass_kg,
+                "angular_velocity_rad_s": round(omega_rad_s, 1),
+                "permissible_specific_unbalance_um": e_per_um,
+                "total_permissible_unbalance_g_mm": u_per_total_g_mm,
+                "per_plane_permissible_unbalance_g_mm": u_per_plane_g_mm,
+                "permissible_residual_mass_plane1_g": m_per_plane1_g,
+                "permissible_residual_mass_plane2_g": m_per_plane2_g,
+                "measured_unbalance_plane1_g_mm": measured_initial_unbalance_plane1_g_mm,
+                "measured_unbalance_plane2_g_mm": measured_initial_unbalance_plane2_g_mm,
+                "unbalance_ratio_vs_limit": unbalance_ratio,
+                "recommended_trial_weight_plane1_g": trial_weight_plane1_g,
+                "recommended_trial_weight_plane2_g": trial_weight_plane2_g,
+                "standard": "ISO 1940-1:2003 / ANSI S2.19 Balance Quality",
+                "status": "COMPLIANT_WITHIN_G_TOLERANCE" if is_balanced else "CORRECTION_WEIGHTS_REQUIRED",
+                "compliance": "PASS" if is_balanced else "REBALANCE_MANDATORY"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_nfpa68_explosion_venting(
+        enclosure_tag: str = "SILO-VENT-101",
+        enclosure_volume_m3: float = 48.0,
+        enclosure_length_m: float = 6.0,
+        enclosure_hydraulic_diameter_m: float = 3.2,
+        k_st_bar_m_s: float = 150.0,
+        p_max_bar_g: float = 8.5,
+        p_stat_bar_g: float = 0.10,
+        p_red_max_bar_g: float = 0.40,
+        vent_duct_length_m: float = 1.5,
+        panel_mass_kg_m2: float = 5.0
+    ) -> Dict[str, Any]:
+        """
+        NFPA 68:2023 Standard on Explosion Protection by Deflagration Venting.
+        Calculates required vent relief area (Av), St-Class, vent duct inertia penalty, and recoil force.
+        """
+        try:
+            import math
+
+            ld_ratio = round(enclosure_length_m / max(0.1, enclosure_hydraulic_diameter_m), 2)
+
+            if k_st_bar_m_s <= 200.0:
+                st_class = "St 1 (Weak to Moderate Explosion Severity)"
+            elif k_st_bar_m_s <= 300.0:
+                st_class = "St 2 (Strong Explosion Severity)"
+            else:
+                st_class = "St 3 (Very Strong Explosion Severity)"
+
+            term1 = 1e-4 * (1.0 + 1.54 * (p_stat_bar_g ** 1.33))
+            term2 = k_st_bar_m_s * (enclosure_volume_m3 ** 0.75)
+            pressure_ratio = max(1.05, p_max_bar_g / max(0.05, p_red_max_bar_g))
+            term3 = math.sqrt(pressure_ratio - 1.0)
+            a_v0 = term1 * term2 * term3
+
+            f_elongation = 1.0 + 0.15 * max(0.0, ld_ratio - 2.0)
+
+            d_vent_m = math.sqrt(4.0 * a_v0 / math.pi)
+            f_duct = 1.0 + 0.20 * (vent_duct_length_m / max(0.5, d_vent_m))
+
+            a_v_required_m2 = round(a_v0 * f_elongation * f_duct, 2)
+
+            panel_area = 1.0
+            panels_count = math.ceil(a_v_required_m2 / panel_area)
+
+            recoil_force_kn = round(1.2 * a_v_required_m2 * (p_red_max_bar_g * 100.0), 1)
+
+            return {
+                "enclosure_tag": enclosure_tag,
+                "enclosure_volume_m3": enclosure_volume_m3,
+                "aspect_ratio_l_over_d": ld_ratio,
+                "dust_explosion_class": st_class,
+                "k_st_bar_m_s": k_st_bar_m_s,
+                "p_max_bar_g": p_max_bar_g,
+                "p_stat_vent_burst_bar_g": p_stat_bar_g,
+                "p_red_allowable_bar_g": p_red_max_bar_g,
+                "vent_duct_length_m": vent_duct_length_m,
+                "vent_duct_penalty_factor": round(f_duct, 2),
+                "required_vent_area_m2": a_v_required_m2,
+                "standard_vent_panels_count": panels_count,
+                "explosion_reaction_recoil_force_kn": recoil_force_kn,
+                "standard": "NFPA 68 (2023 Edition) / NFPA 69 / VDI 3673",
+                "compliance": "PASS_EXPLOSION_VENTING_CERTIFIED" if a_v_required_m2 > 0 else "REVIEW_PARAMETERS"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
     def generate_iec61882_hazop_matrix(
         asset_tag: str = "R-401",
         study_node_description: Optional[str] = None

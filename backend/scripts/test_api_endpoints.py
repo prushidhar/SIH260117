@@ -295,8 +295,87 @@ def main():
     assert api670_data.get("protection_system_verdict") == "NORMAL_ROTATING_STABILITY"
     print(f"[+] /api/machinery/api670/probes: OK (Tag: {api670_data.get('machine_tag')}, Probe Health: {api670_data.get('probe_health_state')}, Gap V: {api670_data.get('dc_gap_voltage_v')}V, Governing Vib: {api670_data.get('governing_vibration_um')} um, Verdict: {api670_data.get('protection_system_verdict')})")
 
+    # 24. API 537 / ISO 25457 Flare Thermal Radiation & Smokeless Steam Endpoint
+    res_flare = client.post("/api/flare/api537/radiation-steam", json={
+        "flare_tag": "FLARE-101",
+        "tip_diameter_m": 1.20,
+        "flare_height_m": 55.0,
+        "relief_gas_flow_kg_s": 38.0,
+        "lower_heating_value_mj_kg": 46.5,
+        "gas_molecular_weight": 28.5,
+        "wind_speed_m_s": 6.0,
+        "distance_from_base_m": 120.0,
+        "steam_assist_enabled": True,
+        "soot_index_c_to_h_ratio": 0.35
+    })
+    assert res_flare.status_code == 200
+    flare_data = res_flare.json()
+    assert flare_data.get("flare_tag") == "FLARE-101"
+    assert "flame_length_m" in flare_data
+    assert "radiation_at_specified_distance_kw_m2" in flare_data
+    assert flare_data.get("compliance") == "PASS"
+    print(f"[+] /api/flare/api537/radiation-steam: OK (Tag: {flare_data.get('flare_tag')}, Flame L: {flare_data.get('flame_length_m')}m, Rad: {flare_data.get('radiation_at_specified_distance_kw_m2')} kW/m2, Steam: {flare_data.get('smokeless_steam_demand_kg_s')} kg/s, Status: {flare_data.get('status')})")
+
+    # 25. ASME Section VIII Div 1 Appendix 1-5 Conical Reducer Transition Endpoint
+    res_cone = client.post("/api/vessels/asme/conical-reducer", json={
+        "tag": "CONE-101",
+        "design_pressure_psig": 250.0,
+        "design_temp_c": 180.0,
+        "large_diameter_in": 72.0,
+        "small_diameter_in": 36.0,
+        "half_apex_angle_deg": 25.0,
+        "corrosion_allowance_in": 0.125,
+        "allowable_stress_psi": 20000.0,
+        "joint_efficiency": 1.0,
+        "actual_thickness_in": 0.750
+    })
+    assert res_cone.status_code == 200
+    cone_data = res_cone.json()
+    assert cone_data.get("tag") == "CONE-101"
+    assert cone_data.get("half_apex_compliant") is True
+    assert cone_data.get("compliance") == "PASS_CODE_COMPLIANT"
+    print(f"[+] /api/vessels/asme/conical-reducer: OK (Tag: {cone_data.get('tag')}, Req t: {cone_data.get('minimum_required_thickness_in')}in, Margin: +{cone_data.get('thickness_margin_pct')}%, MAWP: {cone_data.get('calculated_mawp_psig')} psig, Compliance: {cone_data.get('compliance')})")
+
+    # 26. ISO 1940-1 Rotor Dynamic Balancing & Unbalance Limits Endpoint
+    res_bal = client.post("/api/machinery/iso1940/balancing", json={
+        "rotor_tag": "BAL-ROTOR-101",
+        "balance_grade": "G2.5",
+        "rotor_mass_kg": 450.0,
+        "operating_speed_rpm": 6000.0,
+        "balance_planes": 2,
+        "plane_1_correction_radius_mm": 140.0,
+        "plane_2_correction_radius_mm": 140.0,
+        "measured_initial_unbalance_plane1_g_mm": 45.0,
+        "measured_initial_unbalance_plane2_g_mm": 48.0
+    })
+    assert res_bal.status_code == 200
+    bal_data = res_bal.json()
+    assert bal_data.get("rotor_tag") == "BAL-ROTOR-101"
+    assert bal_data.get("status") == "COMPLIANT_WITHIN_G_TOLERANCE"
+    print(f"[+] /api/machinery/iso1940/balancing: OK (Tag: {bal_data.get('rotor_tag')}, Grade: {bal_data.get('balance_quality_grade')}, e_per: {bal_data.get('permissible_specific_unbalance_um')} um, Per-Plane Limit: {bal_data.get('per_plane_permissible_unbalance_g_mm')} g*mm, Verdict: {bal_data.get('status')})")
+
+    # 27. NFPA 68:2023 Explosion Deflagration Venting Endpoint
+    res_vent = client.post("/api/safety/nfpa68/explosion-venting", json={
+        "enclosure_tag": "SILO-VENT-101",
+        "enclosure_volume_m3": 48.0,
+        "enclosure_length_m": 6.0,
+        "enclosure_hydraulic_diameter_m": 3.2,
+        "k_st_bar_m_s": 150.0,
+        "p_max_bar_g": 8.5,
+        "p_stat_bar_g": 0.10,
+        "p_red_max_bar_g": 0.40,
+        "vent_duct_length_m": 1.5,
+        "panel_mass_kg_m2": 5.0
+    })
+    assert res_vent.status_code == 200
+    vent_data = res_vent.json()
+    assert vent_data.get("enclosure_tag") == "SILO-VENT-101"
+    assert "St 1" in vent_data.get("dust_explosion_class", "")
+    assert vent_data.get("compliance") == "PASS_EXPLOSION_VENTING_CERTIFIED"
+    print(f"[+] /api/safety/nfpa68/explosion-venting: OK (Tag: {vent_data.get('enclosure_tag')}, Class: {vent_data.get('dust_explosion_class')}, Av: {vent_data.get('required_vent_area_m2')} m2, Recoil: {vent_data.get('explosion_reaction_recoil_force_kn')} kN, Cert: {vent_data.get('compliance')})")
+
     print("\n" + "=" * 65)
-    print("ALL 23 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 27 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

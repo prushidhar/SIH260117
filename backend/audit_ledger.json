@@ -8113,5 +8113,106 @@
     },
     "previous_hash": "62f02a37aae1e8107f6df9d9e01924ca38b2d9a9fec208b58375af04682e6830",
     "hash": "19be402bab721e27e1a7e38f4b84098e5804b4ffa6eb8ddd94f321eb568d567a"
+  },
+  {
+    "timestamp": 1790572727.0334384,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "dc53ff97ef2c534a34997e1065b46e73e4253928c2a23bf6dd973faa6b04313c",
+      "file_count": 4
+    },
+    "previous_hash": "19be402bab721e27e1a7e38f4b84098e5804b4ffa6eb8ddd94f321eb568d567a",
+    "hash": "b423c523c8ef9b6d698987e833a0e97eacddb70371c58b369dd85d98f82a0c9e"
+  },
+  {
+    "timestamp": 1790572727.883083,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "55b3daa4be1bf0a5bd2ed4157050d5c52d4eac1bb55267e6f4d1e27973bfa597"
+    },
+    "previous_hash": "b423c523c8ef9b6d698987e833a0e97eacddb70371c58b369dd85d98f82a0c9e",
+    "hash": "1cf1b6697a54097111714505fac4a2d833888f8146204f97ac9251a967f5811f"
+  },
+  {
+    "timestamp": 1790572813.2497766,
+    "event_type": "engineering_calculation_executed",
+    "payload": {
+      "tool": "calculate_tema_heat_exchanger_rating",
+      "task_id": "direct_calc",
+      "elapsed_ms": 114.83,
+      "is_error": false
+    },
+    "previous_hash": "1cf1b6697a54097111714505fac4a2d833888f8146204f97ac9251a967f5811f",
+    "hash": "af40475153d870dda465dc159220a9af4ac5bef605443f566b28ff7f2156669d"
+  },
+  {
+    "timestamp": 1790572813.3064272,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "consensus_task",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "3135e91de00bd0613de907b3c0010fb7724c6355324ed23e625c3d372496a3a7"
+    },
+    "previous_hash": "af40475153d870dda465dc159220a9af4ac5bef605443f566b28ff7f2156669d",
+    "hash": "e6f11ae42f189f1bd697e50b5bff900869ff5da0686b95d5d24ea88e0613af92"
+  },
+  {
+    "timestamp": 1790572813.4886832,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "eval-HEX-301",
+      "asset_tag": "HEX-301",
+      "verdict": "REJECTED_SAFETY_HOLD",
+      "consensus_score_pct": 75.0,
+      "cert_hash": "5df9719d30693e188cdbc00a8a7ac25ab6b0ea33c8aea3dc724433b57708b8e8"
+    },
+    "previous_hash": "e6f11ae42f189f1bd697e50b5bff900869ff5da0686b95d5d24ea88e0613af92",
+    "hash": "0efa3f55aba643917f3340e07105a444684638ecad066cb1b6886d192dc86c41"
+  },
+  {
+    "timestamp": 1790572895.2665963,
+    "event_type": "engineering_calculation_executed",
+    "payload": {
+      "tool": "calculate_tema_heat_exchanger_rating",
+      "task_id": "direct_calc",
+      "elapsed_ms": 118.18,
+      "is_error": false
+    },
+    "previous_hash": "0efa3f55aba643917f3340e07105a444684638ecad066cb1b6886d192dc86c41",
+    "hash": "ffc4696055738baac89421aa45b5525060c5284775bdd136a8751cfe937fd2f3"
+  },
+  {
+    "timestamp": 1790572895.3200095,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "consensus_task",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "418385362225ffee62ab03900f456123c19fb89c7af57b09040d644121913f80"
+    },
+    "previous_hash": "ffc4696055738baac89421aa45b5525060c5284775bdd136a8751cfe937fd2f3",
+    "hash": "8fd631727de354969a849804ca9600d6aea0476e2376b172b9e76932fe62ef2e"
+  },
+  {
+    "timestamp": 1790572895.50153,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "eval-HEX-301",
+      "asset_tag": "HEX-301",
+      "verdict": "REJECTED_SAFETY_HOLD",
+      "consensus_score_pct": 75.0,
+      "cert_hash": "1f627b2aa969625befa3bafeea08361b90820fefe05c95f6050a8c5ea3a87229"
+    },
+    "previous_hash": "8fd631727de354969a849804ca9600d6aea0476e2376b172b9e76932fe62ef2e",
+    "hash": "730b49547c7f2a5fa55b4cacd52f7362c7e16e6435e17eb2bc5616f466c11b43"
   }
 ]

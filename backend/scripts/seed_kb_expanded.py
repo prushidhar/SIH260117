@@ -715,12 +715,62 @@ Non-Contacting Proximity Probe System Calibration & Automatic Trip Logic:
 - Dual Orthogonal Probes: Probes mounted 90° apart (X and Y) at each radial bearing for complete 2D orbit visualization.
 - Two-Out-of-Two (2oo2) Voting: Automatic machinery emergency trip requires confirmation from both orthogonal channels (X and Y) or validated hardware channel health diagnostics to prevent spurious trips.
 - Keyphasor Transducer: Phase reference probe for 1X vibration amplitude and phase lag analysis."""
+    },
+    {
+        "doc_id": "std-api-537-flare-tips",
+        "title": "API 537 & ISO 25457 Flare Details, Radiation Contours & Smokeless Steam Optimization",
+        "text": """API Standard 537 (3rd Edition) / ISO 25457 Flare Details for Petroleum and Petrochemical Industries & API 521 § 5.7:
+Flare Thermal Radiation Modeling and Environmental Steam Optimization:
+- Brzustowski & Sommer Flame Coordinate Formulation: Models the curved centerline of a wind-tilted flame using momentum-flux ratios.
+- Ground Radiation Design Thresholds:
+  1. 1.58 kW/m² (500 BTU/hr-ft²): Continuous exposure limit for operating personnel without special protective gear.
+  2. 4.73 kW/m² (1500 BTU/hr-ft²): Permissible for short duration (2-3 minutes) escape with appropriate clothing.
+  3. 9.46 kW/m² (3000 BTU/hr-ft²): Maximum exposure for equipment and structures before paint blistering and thermal damage.
+- Smokeless Steam Ratio: EPA 40 CFR 63.670 compliant steam injection ratio (typically 0.28 - 0.40 kg steam per kg hydrocarbon) adjusted by carbon-to-hydrogen mass ratio to prevent soot formation while preserving 98% combustion efficiency."""
+    },
+    {
+        "doc_id": "std-asme-app1-conical-shells",
+        "title": "ASME Section VIII Div 1 Mandatory Appendix 1-5 Conical Reducer Transitions",
+        "text": """ASME Boiler & Pressure Vessel Code Section VIII Division 1 Mandatory Appendix 1-5 & UG-32(g):
+Rules for Conical Reducer Sections and Knuckle Junction Transitions:
+- Conical Shell Required Thickness under Internal Pressure:
+  t = (P * D_L) / (2 * cos(alpha) * (S*E - 0.6*P)) + c
+  Where alpha is the half-apex angle, limited to <= 30 degrees for standard non-knuckle transitions.
+- Large End Junction Reinforcement: When alpha exceeds delta = 30 * sqrt(P / (S*E)), localized circumferential compression induces knuckle buckling risk, mandating an increased shell thickness or a reinforcement ring.
+- Hydrostatic Test Pressure (UG-99): Standard 1.30 x MAWP corrected by the temperature stress ratio."""
+    },
+    {
+        "doc_id": "std-iso-1940-rotor-balancing",
+        "title": "ISO 1940-1 & ANSI S2.19 Mechanical Vibration — Balance Quality of Rigid Rotors",
+        "text": """ISO 1940-1:2003 / ANSI S2.19 Balance Quality Requirements of Rotors in a Constant (Rigid) State:
+Dynamic Balancing Criteria & Permissible Residual Unbalance:
+- Balance Quality Grade G (mm/s):
+  1. G 0.4: Gyroscopes and high-precision machine tool spindles.
+  2. G 1.0: Turbo-generator sets, steam and gas turbines.
+  3. G 2.5: Process compressors, refinery centrifugal pumps, and electric motor armatures.
+  4. G 6.3: General machinery and process fans.
+- Permissible Specific Unbalance (e_per in g*mm/kg or micrometers): e_per = 1000 * G / omega.
+- Total Permissible Unbalance: U_per = e_per * M_rotor, split symmetrically between Drive End (DE) and Non-Drive End (NDE) balance planes.
+- Trial Weight Selection: In-situ trim balancing using 2-plane influence coefficient matrix methods."""
+    },
+    {
+        "doc_id": "std-nfpa-68-explosion-venting",
+        "title": "NFPA 68 & NFPA 69 Deflagration Venting & Industrial Explosion Protection",
+        "text": """NFPA 68 (2023 Edition) Standard on Explosion Protection by Deflagration Venting & NFPA 69:
+Deflagration Pressure Relief for Silos, Dust Collectors, and Process Enclosures:
+- Dust Explosion Classes:
+  1. St 1: Kst <= 200 bar*m/s (Weak to moderate deflagration severity).
+  2. St 2: 200 < Kst <= 300 bar*m/s (Strong deflagration severity).
+  3. St 3: Kst > 300 bar*m/s (Very strong deflagration severity e.g. aluminum powder).
+- Vent Area (Av) Equation: Sized to ensure internal deflagration pressure does not exceed the vessel's reduced design pressure P_red:
+  A_v0 = 1e-4 * (1 + 1.54 * P_stat^1.33) * K_st * V^0.75 * sqrt(P_max / P_red - 1)
+- Duct Inertia Penalty: Vent discharge ducts exceeding 3 meters introduce significant backpressure, requiring enlargement of vent relief area and verification of structural recoil thrust forces."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 46 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 50 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)

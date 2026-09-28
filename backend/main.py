@@ -2086,6 +2086,140 @@ async def evaluate_machinery_protection_probes(req: MachineryProtectionRequest):
     )
 
 
+class FlareRadiationSteamRequest(BaseModel):
+    flare_tag: Optional[str] = "FLARE-101"
+    tip_diameter_m: Optional[float] = 1.20
+    flare_height_m: Optional[float] = 55.0
+    relief_gas_flow_kg_s: Optional[float] = 38.0
+    lower_heating_value_mj_kg: Optional[float] = 46.5
+    gas_molecular_weight: Optional[float] = 28.5
+    wind_speed_m_s: Optional[float] = 6.0
+    distance_from_base_m: Optional[float] = 120.0
+    steam_assist_enabled: Optional[bool] = True
+    soot_index_c_to_h_ratio: Optional[float] = 0.35
+
+
+@app.post("/api/flare/api537/radiation-steam")
+async def evaluate_flare_radiation_and_steam(req: FlareRadiationSteamRequest):
+    """
+    API 537 / ISO 25457 & API 521 § 5.7 Flare Radiation & Smokeless Steam Optimization.
+    Calculates Brzustowski flame tilt, ground radiation contours, safe distances, and smokeless steam injection.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api537_flare_thermal_radiation_and_steam(
+        flare_tag=req.flare_tag or "FLARE-101",
+        tip_diameter_m=req.tip_diameter_m or 1.20,
+        flare_height_m=req.flare_height_m or 55.0,
+        relief_gas_flow_kg_s=req.relief_gas_flow_kg_s or 38.0,
+        lower_heating_value_mj_kg=req.lower_heating_value_mj_kg or 46.5,
+        gas_molecular_weight=req.gas_molecular_weight or 28.5,
+        wind_speed_m_s=req.wind_speed_m_s or 6.0,
+        distance_from_base_m=req.distance_from_base_m or 120.0,
+        steam_assist_enabled=req.steam_assist_enabled if req.steam_assist_enabled is not None else True,
+        soot_index_c_to_h_ratio=req.soot_index_c_to_h_ratio or 0.35
+    )
+
+
+class ConicalReducerRequest(BaseModel):
+    tag: Optional[str] = "CONE-101"
+    design_pressure_psig: Optional[float] = 250.0
+    design_temp_c: Optional[float] = 180.0
+    large_diameter_in: Optional[float] = 72.0
+    small_diameter_in: Optional[float] = 36.0
+    half_apex_angle_deg: Optional[float] = 25.0
+    corrosion_allowance_in: Optional[float] = 0.125
+    allowable_stress_psi: Optional[float] = 20000.0
+    joint_efficiency: Optional[float] = 1.0
+    actual_thickness_in: Optional[float] = 0.625
+
+
+@app.post("/api/vessels/asme/conical-reducer")
+async def evaluate_conical_reducer_transition(req: ConicalReducerRequest):
+    """
+    ASME Section VIII Div 1 Appendix 1-5 / EN 13445 Conical Reducer Transition Shell.
+    Evaluates conical shell required thickness, half-apex angle limit (30 deg), junction reinforcement, and MAWP.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_asme_conical_reducer_transition(
+        tag=req.tag or "CONE-101",
+        design_pressure_psig=req.design_pressure_psig or 250.0,
+        design_temp_c=req.design_temp_c or 180.0,
+        large_diameter_in=req.large_diameter_in or 72.0,
+        small_diameter_in=req.small_diameter_in or 36.0,
+        half_apex_angle_deg=req.half_apex_angle_deg or 25.0,
+        corrosion_allowance_in=req.corrosion_allowance_in or 0.125,
+        allowable_stress_psi=req.allowable_stress_psi or 20000.0,
+        joint_efficiency=req.joint_efficiency or 1.0,
+        actual_thickness_in=req.actual_thickness_in or 0.625
+    )
+
+
+class RotorBalancingRequest(BaseModel):
+    rotor_tag: Optional[str] = "BAL-ROTOR-101"
+    balance_grade: Optional[str] = "G2.5"
+    rotor_mass_kg: Optional[float] = 450.0
+    operating_speed_rpm: Optional[float] = 6000.0
+    balance_planes: Optional[int] = 2
+    plane_1_correction_radius_mm: Optional[float] = 140.0
+    plane_2_correction_radius_mm: Optional[float] = 140.0
+    measured_initial_unbalance_plane1_g_mm: Optional[float] = 85.0
+    measured_initial_unbalance_plane2_g_mm: Optional[float] = 92.0
+
+
+@app.post("/api/machinery/iso1940/balancing")
+async def evaluate_rotor_balancing(req: RotorBalancingRequest):
+    """
+    ISO 1940-1:2003 / ANSI S2.19 Rotor Dynamic Balancing & Residual Unbalance Tolerance.
+    Calculates permissible specific unbalance (eper), per-plane unbalance limits, and trial balance weights.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_iso1940_rotor_balancing_tolerance(
+        rotor_tag=req.rotor_tag or "BAL-ROTOR-101",
+        balance_grade=req.balance_grade or "G2.5",
+        rotor_mass_kg=req.rotor_mass_kg or 450.0,
+        operating_speed_rpm=req.operating_speed_rpm or 6000.0,
+        balance_planes=req.balance_planes or 2,
+        plane_1_correction_radius_mm=req.plane_1_correction_radius_mm or 140.0,
+        plane_2_correction_radius_mm=req.plane_2_correction_radius_mm or 140.0,
+        measured_initial_unbalance_plane1_g_mm=req.measured_initial_unbalance_plane1_g_mm or 85.0,
+        measured_initial_unbalance_plane2_g_mm=req.measured_initial_unbalance_plane2_g_mm or 92.0
+    )
+
+
+class ExplosionVentingRequest(BaseModel):
+    enclosure_tag: Optional[str] = "SILO-VENT-101"
+    enclosure_volume_m3: Optional[float] = 48.0
+    enclosure_length_m: Optional[float] = 6.0
+    enclosure_hydraulic_diameter_m: Optional[float] = 3.2
+    k_st_bar_m_s: Optional[float] = 150.0
+    p_max_bar_g: Optional[float] = 8.5
+    p_stat_bar_g: Optional[float] = 0.10
+    p_red_max_bar_g: Optional[float] = 0.40
+    vent_duct_length_m: Optional[float] = 1.5
+    panel_mass_kg_m2: Optional[float] = 5.0
+
+
+@app.post("/api/safety/nfpa68/explosion-venting")
+async def evaluate_explosion_venting(req: ExplosionVentingRequest):
+    """
+    NFPA 68:2023 Standard on Explosion Protection by Deflagration Venting.
+    Calculates required vent relief area (Av), St-Class, vent duct inertia penalty, and recoil force.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_nfpa68_explosion_venting(
+        enclosure_tag=req.enclosure_tag or "SILO-VENT-101",
+        enclosure_volume_m3=req.enclosure_volume_m3 or 48.0,
+        enclosure_length_m=req.enclosure_length_m or 6.0,
+        enclosure_hydraulic_diameter_m=req.enclosure_hydraulic_diameter_m or 3.2,
+        k_st_bar_m_s=req.k_st_bar_m_s or 150.0,
+        p_max_bar_g=req.p_max_bar_g or 8.5,
+        p_stat_bar_g=req.p_stat_bar_g or 0.10,
+        p_red_max_bar_g=req.p_red_max_bar_g or 0.40,
+        vent_duct_length_m=req.vent_duct_length_m or 1.5,
+        panel_mass_kg_m2=req.panel_mass_kg_m2 or 5.0
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
