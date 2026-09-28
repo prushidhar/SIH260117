@@ -1159,7 +1159,7 @@ async def websocket_network(websocket: WebSocket):
 
             has_blocked = False
             for conn in conns:
-                if conn.raddr and conn.raddr.ip not in ["127.0.0.1", "::1", "0.0.0.0"]:
+                if conn.raddr and not network_monitor.is_private_or_loopback(conn.raddr.ip):
                     has_blocked = True
                     await websocket.send_json({
                         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -1168,14 +1168,8 @@ async def websocket_network(websocket: WebSocket):
                         "status": "blocked"
                     })
 
-            if not has_blocked:
-                # 0-WAN verified: workbench is 100% air-gapped on localhost
-                await websocket.send_json({
-                    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "action": "0-WAN VERIFIED",
-                    "destination": "127.0.0.1:8000",
-                    "status": "contained"
-                })
+            # In normal 0-WAN localhost operation, do NOT broadcast fake dropped packet events
+            # to prevent spamming the OS with intrusion notifications.
             await asyncio.sleep(2.0)
     except Exception as e:
         pass
