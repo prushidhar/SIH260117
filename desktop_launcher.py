@@ -213,6 +213,9 @@ def main():
     env["PYTHONUNBUFFERED"] = "1"
     env["HF_HUB_OFFLINE"] = "1"
     env["TRANSFORMERS_OFFLINE"] = "1"
+    env["HF_DATASETS_OFFLINE"] = "1"
+    env["NO_PROXY"] = "*"
+    env["no_proxy"] = "*"
     env["HF_HOME"] = r"D:\huggingface_cache"
 
     backend_log_path = BASE_DIR / "backend_launcher.log"

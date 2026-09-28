@@ -24,6 +24,10 @@ from sandbox.executor import tool_registry
 os.environ["HF_HOME"] = "D:\\huggingface_cache"
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+os.environ["NO_PROXY"] = "*"
+os.environ["no_proxy"] = "*"
+
 
 app = FastAPI(title="Sovereign Agentic AI Workbench Backend")
 

@@ -67,8 +67,16 @@ if exist "D:\models\qwen2.5-coder-1.5b-instruct-q4_k_m.gguf" (
 )
 
 echo.
-echo  Starting INDRA Backend (FastAPI :8000)...
-start "INDRA Backend" cmd /k "title INDRA Backend && cd /d "%PROJECT%\backend" && "%PYTHON%" -m uvicorn main:app --host 0.0.0.0 --port 8000"
+echo  Enforcing Sovereign Air-Gap Containment (0-WAN / IEC 62443)...
+set "HF_HUB_OFFLINE=1"
+set "TRANSFORMERS_OFFLINE=1"
+set "HF_DATASETS_OFFLINE=1"
+set "NO_PROXY=*"
+set "no_proxy=*"
+set "HF_HOME=D:\huggingface_cache"
+
+echo  Starting INDRA Backend (FastAPI :8000 on 127.0.0.1 loopback)...
+start "INDRA Backend" cmd /k "title INDRA Backend && cd /d "%PROJECT%\backend" && set "HF_HUB_OFFLINE=1" && set "TRANSFORMERS_OFFLINE=1" && set "HF_DATASETS_OFFLINE=1" && set "NO_PROXY=*" && "%PYTHON%" -m uvicorn main:app --host 127.0.0.1 --port 8000"
 
 :: Wait for backend to initialize
 echo  Waiting for backend (127.0.0.1:8000) to initialize...
