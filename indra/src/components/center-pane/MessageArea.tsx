@@ -137,7 +137,7 @@ export default function MessageArea() {
   if (messages.length === 0) {
     const displayedWorkflows = isGridExpanded 
       ? industrialWorkflows 
-      : industrialWorkflows.slice(0, 4);
+      : industrialWorkflows.slice(0, 7);
 
     return (
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-8 flex flex-col items-center select-none">
