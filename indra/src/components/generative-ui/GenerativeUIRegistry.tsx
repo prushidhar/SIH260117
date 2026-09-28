@@ -15,6 +15,10 @@ import FatigueMinerCard from './components/FatigueMinerCard';
 import WaterHammerCard from './components/WaterHammerCard';
 import OrificeFlowmeterCard from './components/OrificeFlowmeterCard';
 import RbiRiskMatrixCard from './components/RbiRiskMatrixCard';
+import CryogenicBlowdownCard from './components/CryogenicBlowdownCard';
+import RotorDynamicsCard from './components/RotorDynamicsCard';
+import HazardousAreaExCard from './components/HazardousAreaExCard';
+import AlarmTriageWidget from './components/AlarmTriageWidget';
 
 interface RegistryProps {
   component: string;
@@ -92,6 +96,26 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 14. API 580 / API 581 Quantitative RBI 5x5 Risk Matrix Card
   if (compKey.includes('rbi') || compKey.includes('risk_matrix') || compKey.includes('riskmatrix') || compKey === 'rbiriskmatrixcard') {
     return <RbiRiskMatrixCard {...props} />;
+  }
+
+  // 15. API 521 Cryogenic Blowdown & MDMT Brittle Fracture Card
+  if (compKey.includes('blowdown') || compKey.includes('depressur') || compKey === 'cryogenicblowdowncard') {
+    return <CryogenicBlowdownCard {...props} />;
+  }
+
+  // 16. API 684 Rotordynamics & Campbell Diagram Card
+  if (compKey.includes('rotordynamic') || compKey.includes('critical_speed') || compKey === 'rotordynamicscard') {
+    return <RotorDynamicsCard {...props} />;
+  }
+
+  // 17. IEC 60079 Hazardous Area Explosion Proof Card
+  if (compKey.includes('iec60079') || compKey.includes('hazardous_area') || compKey === 'hazardousareaexcard') {
+    return <HazardousAreaExCard {...props} />;
+  }
+
+  // 18. ISA 18.2 / EEMUA 191 Control Room Alarm Flood & Triage Widget
+  if (compKey.includes('triage') || compKey.includes('alarm') || compKey === 'alarmtriagewidget') {
+    return <AlarmTriageWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

@@ -966,6 +966,10 @@ export const useIndraStore = create<IndraState>()(
         };
         get().addDeliverable(pptxDeliverable);
 
+        const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
+        const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
+        const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
+        const isAlarmTriageQuery = /alarm|triage|rationalization|eemua|isa\s*18\.2|chattering|first[\s_-]?out/i.test(promptText);
         const isHammerQuery = /hammer|joukowsky|surge|acoustic|b31\.4|pl-204/i.test(promptText);
         const isOrificeQuery = /orifice|iso\s*5167|aga\s*3|flowmeter|metering|fe-101|vena\s*contracta/i.test(promptText);
         const isRbiQuery = /rbi|risk[\s_-]?matrix|api\s*580|api\s*581|v-301|inspection\s*mandate/i.test(promptText);
@@ -975,7 +979,93 @@ export const useIndraStore = create<IndraState>()(
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
         let finalMarkdown = '';
-        if (isHammerQuery) {
+        if (isBlowdownQuery) {
+          finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
+
+Simulation analysis for **BDV-201** blowdown valve loop. Joule-Thomson expansion curves and metal wall transient thermal conduction have been computed.
+
+\`\`\`gen-ui
+{
+  "component": "CryogenicBlowdownCard",
+  "props": {
+    "assetTag": "BDV-201",
+    "title": "API 521 EMERGENCY DEPRESSURING & ASME UCS-66 MDMT BRITTLE FRACTURE",
+    "initialPressureBar": 85.0,
+    "finalPressureBar": 0.9,
+    "target15MinPressureBar": 42.5,
+    "minFluidTempC": -52.4,
+    "minWallTempC": -20.1,
+    "vesselMdmtC": -29.0,
+    "materialSpec": "ASTM A516 Gr 70 Normalized",
+    "asmeCurve": "Curve B"
+  }
+}
+\`\`\`
+
+- **Safety Margin:** Minimum wall temperature $-20.1^\\circ\\text{C}$ remains **$+8.9^\\circ\\text{C}$** above design MDMT ($-29.0^\\circ\\text{C}$).
+- **Statutory Status:** **PASS** (Exempt from impact testing per ASME Section VIII Div 1 UCS-66 Curve B).`;
+        } else if (isRotordynamicsQuery) {
+          finalMarkdown = `### API 684 / API 617 Rotordynamics & Lateral Campbell Diagram
+
+Modal Campbell resonance evaluation and separation margin clearance for **TG-502 (48 MW Turbine)**.
+
+\`\`\`gen-ui
+{
+  "component": "RotorDynamicsCard",
+  "props": {
+    "assetTag": "TG-502 (48 MW Turbine)",
+    "title": "API 684 / API 617 ROTORDYNAMICS & CAMPBELL RESONANCE DIAGRAM",
+    "operatingSpeedRpm": 5400,
+    "firstCriticalSpeedRpm": 2450,
+    "secondCriticalSpeedRpm": 7800,
+    "misalignmentRatio2X1X": 0.40,
+    "bearingDerateFactor": 0.98
+  }
+}
+\`\`\`
+
+- **Operating Clearance:** Rated speed 5,400 RPM is centered in the safe operating window with nominal 2X/1X alignment ratio (0.40).`;
+        } else if (isHazardousAreaQuery) {
+          finalMarkdown = `### IEC 60079 / API RP 500 Hazardous Area Integrity Verification
+
+Flameproof Ex d joint clearance, T-class temperature limits, and auto-ignition safety envelope for **JB-101 (Zone 1 Group IIC)**.
+
+\`\`\`gen-ui
+{
+  "component": "HazardousAreaExCard",
+  "props": {
+    "assetTag": "JB-101 (Zone 1 Group IIC)",
+    "title": "IEC 60079 / API RP 500 HAZARDOUS AREA INTEGRITY",
+    "measuredJointGapMm": 0.12,
+    "allowableJointGapMm": 0.15,
+    "measuredSurfaceTempC": 118.5,
+    "tClassLimitTempC": 135.0,
+    "tClassRating": "T4",
+    "hydrogenAitC": 560.0
+  }
+}
+\`\`\`
+
+- **Certification Status:** **ATEX / IECEx Ex d IIC T4 Gb PASS** (Flameproof gap 0.12 mm &le; 0.15 mm allowable limit).`;
+        } else if (isAlarmTriageQuery) {
+          finalMarkdown = `### ANSI/ISA-18.2 & EEMUA 191 Control Room Alarm Rationalization
+
+Real-time alarm flood suppression, cascade de-duplication, and first-out initiator analysis.
+
+\`\`\`gen-ui
+{
+  "component": "AlarmTriageWidget",
+  "props": {
+    "title": "ANSI/ISA-18.2 & EEMUA 191 CONTROL ROOM ALARM RATIONALIZATION",
+    "currentAlarmRate10Min": 14.0,
+    "firstOutTag": "K-102",
+    "firstOutDescription": "Compressor High-High Lube Oil Pressure Trip"
+  }
+}
+\`\`\`
+
+- **Root Cause Identified:** **Tag K-102** triggered first-out trip; 2 downstream cascade alarms suppressed, 4 chattering alarms stabilized.`;
+        } else if (isHammerQuery) {
           finalMarkdown = `### Joukowsky Transient Acoustic Surge Analysis (ASME B31.4 § 404.3.4)
 
 The sovereign neural agent has modeled the transient fluid column momentum and acoustic reflection wave for **PL-204 (24-inch NPS Crude Pipeline, 12.5 km)** following emergency shutdown valve trip.

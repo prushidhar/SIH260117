@@ -17,6 +17,10 @@ export type GenerativeUIComponentType =
   | 'WaterHammerCard'
   | 'OrificeFlowmeterCard'
   | 'RbiRiskMatrixCard'
+  | 'CryogenicBlowdownCard'
+  | 'RotorDynamicsCard'
+  | 'HazardousAreaExCard'
+  | 'AlarmTriageWidget'
   | string;
 
 export interface GenerativeUISpec {
@@ -252,4 +256,82 @@ export interface RbiRiskMatrixCardProps {
   nextPmWindow?: string;
   mandatoryMitigationTechnique?: string;
 }
+
+// 13. API 521 Cryogenic Blowdown & MDMT Brittle Fracture Props
+export interface CryogenicBlowdownCardProps {
+  assetTag?: string;
+  title?: string;
+  initialPressureBar?: number;
+  finalPressureBar?: number;
+  target15MinPressureBar?: number;
+  minFluidTempC?: number;
+  minWallTempC?: number;
+  vesselMdmtC?: number;
+  materialSpec?: string;
+  asmeCurve?: string;
+  durationMinutes?: number;
+}
+
+// 14. API 684 Rotordynamics & Campbell Diagram Props
+export interface RotorDynamicsCardProps {
+  assetTag?: string;
+  title?: string;
+  operatingSpeedRpm?: number;
+  maxContinuousSpeedRpm?: number;
+  tripSpeedRpm?: number;
+  firstCriticalSpeedRpm?: number;
+  firstCriticalFreqHz?: number;
+  firstSeparationMarginPercent?: number;
+  secondCriticalSpeedRpm?: number;
+  secondCriticalFreqHz?: number;
+  secondSeparationMarginPercent?: number;
+  misalignmentRatio2X1X?: number;
+  bearingDerateFactor?: number;
+  vanePassMultiplier?: number;
+}
+
+// 15. IEC 60079 Hazardous Area Explosion Proof Props
+export interface HazardousAreaExCardProps {
+  assetTag?: string;
+  title?: string;
+  measuredJointGapMm?: number;
+  allowableJointGapMm?: number;
+  measuredSurfaceTempC?: number;
+  tClassLimitTempC?: number;
+  tClassRating?: string;
+  hydrogenAitC?: number;
+  ingressProtection?: string;
+  certificationStamp?: string;
+}
+
+// 16. ISA 18.2 / EEMUA 191 Control Room Alarm Flood & Triage Props
+export interface AlarmTriageItem {
+  tag: string;
+  description: string;
+  parentTag?: string;
+  time: string;
+  suppressionType: string;
+}
+
+export interface ChatteringAlarmItem {
+  tag: string;
+  description: string;
+  count: number;
+  deadbandHysteresis: string;
+  status: string;
+}
+
+export interface AlarmTriageWidgetProps {
+  title?: string;
+  currentAlarmRate10Min?: number;
+  totalReceived?: number;
+  actionableRootCauseCount?: number;
+  consequentialSuppressedCount?: number;
+  chatteringDebouncedCount?: number;
+  firstOutTag?: string;
+  firstOutDescription?: string;
+  suppressedAlarms?: AlarmTriageItem[];
+  chatteringAlarms?: ChatteringAlarmItem[];
+}
+
 
