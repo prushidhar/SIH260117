@@ -239,30 +239,36 @@ def main():
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
     )
 
-    # 4. Start Frontend (Next.js) in background
+    # 4. Start Frontend (Next.js) in background - directly with node.exe to avoid any cmd.exe/conhost window popups
     print("[PRE-FLIGHT 4/6] Starting Sovereign Frontend Service (Next.js)...")
-    npm_path = r"C:\Program Files\nodejs\npm.cmd"
-    npm_cmd = f'"{npm_path}" run dev' if os.path.exists(npm_path) else "npm run dev"
+    node_exe = Path(r"C:\Program Files\nodejs\node.exe")
+    next_cli = FRONTEND_DIR / "node_modules" / "next" / "dist" / "bin" / "next"
 
     frontend_log_path = BASE_DIR / "frontend_launcher.log"
     frontend_log_file = open(frontend_log_path, "w", encoding="utf-8")
 
-    frontend_proc = subprocess.Popen(
-        npm_cmd,
-        cwd=str(FRONTEND_DIR),
-        shell=True,
-        stdout=frontend_log_file,
-        stderr=subprocess.STDOUT,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
-    )
+    if node_exe.exists() and next_cli.exists():
+        frontend_proc = subprocess.Popen(
+            [str(node_exe), str(next_cli), "dev"],
+            cwd=str(FRONTEND_DIR),
+            stdout=frontend_log_file,
+            stderr=subprocess.STDOUT,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+        )
+    else:
+        npm_path = r"C:\Program Files\nodejs\npm.cmd"
+        npm_cmd = f'"{npm_path}" run dev' if os.path.exists(npm_path) else "npm run dev"
+        frontend_proc = subprocess.Popen(
+            npm_cmd,
+            cwd=str(FRONTEND_DIR),
+            shell=True,
+            stdout=frontend_log_file,
+            stderr=subprocess.STDOUT,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+        )
 
-    # 5. Service Readiness Validation
-    print("[PRE-FLIGHT 5/6] Validating On-Premise Loopback Bindings...")
-    backend_ok = wait_for_service(BACKEND_PORT, "FastAPI Sovereign Kernel", timeout=60)
-    frontend_ok = wait_for_service(FRONTEND_PORT, "Next.js Micro-Frontend UI", timeout=60)
-
-    # 6. Launch native desktop window (Electron or Edge App Mode)
-    print("[PRE-FLIGHT 6/6] Launching Sovereign Desktop Window...")
+    # 5. Launch native desktop window (Electron with built-in animated splash screen) immediately
+    print("[PRE-FLIGHT 5/6] Launching Sovereign Desktop Shell (Instant Splash)...")
     electron_exe = FRONTEND_DIR / "node_modules" / "electron" / "dist" / "electron.exe"
     electron_script = FRONTEND_DIR / "electron" / "main.js"
 
@@ -279,6 +285,11 @@ def main():
         except Exception as e:
             print(f"  [-] Electron shell launch fallback: {e}")
             launched = False
+
+    # 6. Service Readiness Validation
+    print("[PRE-FLIGHT 6/6] Validating On-Premise Loopback Bindings...")
+    backend_ok = wait_for_service(BACKEND_PORT, "FastAPI Sovereign Kernel", timeout=60)
+    frontend_ok = wait_for_service(FRONTEND_PORT, "Next.js Micro-Frontend UI", timeout=60)
 
     # Fallback to Microsoft Edge standalone App Mode if Electron binary is missing
     if not launched:
