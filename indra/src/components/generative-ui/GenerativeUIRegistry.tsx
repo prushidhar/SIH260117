@@ -33,6 +33,7 @@ import AcidDewPointMeter from './components/AcidDewPointMeter';
 import CompressorTrainCard from './components/CompressorTrainCard';
 import FunctionalSafetyCard from './components/FunctionalSafetyCard';
 import FlareAivCard from './components/FlareAivCard';
+import ProximityProbeCard from './components/ProximityProbeCard';
 
 interface RegistryProps {
   component: string;
@@ -200,6 +201,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 32. API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV)
   if (compKey.includes('flare_aiv') || compKey.includes('api520_aiv') || compKey.includes('acoustic_vibration') || compKey.includes('flareaiv') || compKey.includes('aiv') || compKey === 'flareaivcard') {
     return <FlareAivCard {...props} />;
+  }
+
+  // 33. API Standard 670 Machinery Protection & Proximity Probes
+  if (compKey.includes('api670') || compKey.includes('proximity_probe') || compKey.includes('bently_nevada') || compKey.includes('shaft_orbit') || compKey.includes('proximityprobe') || compKey === 'proximityprobecard') {
+    return <ProximityProbeCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

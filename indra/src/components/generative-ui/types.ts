@@ -35,6 +35,7 @@ export type GenerativeUIComponentType =
   | 'CompressorTrainCard'
   | 'FunctionalSafetyCard'
   | 'FlareAivCard'
+  | 'ProximityProbeCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -630,6 +631,26 @@ export interface FlareAivCardProps {
   pipeNpsInches?: string; // Default: '10"'
   pipeSchedule?: string; // Default: 'Sch 40'
 }
+
+// 33. API Standard 670 Machinery Protection & Proximity Probes
+export interface ProximityProbeCardProps {
+  assetTag?: string; // Default: 'K-101'
+  bearingLocation?: string; // Default: 'K-101 JOURNAL BEARING'
+  title?: string;
+  probeXTag?: string; // Default: 'VT-101X'
+  probeYTag?: string; // Default: 'VT-101Y'
+  dcGapVoltageX?: number; // Default: -10.2 V
+  dcGapVoltageY?: number; // Default: -10.1 V
+  vibrationPkPkX?: number; // Default: 32.5 µm pk-pk
+  vibrationPkPkY?: number; // Default: 28.0 µm pk-pk
+  phaseAngleXDeg?: number; // Default: 48°
+  phaseAngleYDeg?: number; // Default: 138°
+  alarmThresholdUm?: number; // Default: 45.0 µm pk-pk per API 670
+  tripThresholdUm?: number; // Default: 65.0 µm pk-pk per API 670
+  bearingClearanceUm?: number; // Default: 150.0 µm
+  shaftSpeedRpm?: number; // Default: 8500 RPM
+}
+
 
 
 

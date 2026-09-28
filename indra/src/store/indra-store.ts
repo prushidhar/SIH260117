@@ -980,6 +980,7 @@ export const useIndraStore = create<IndraState>()(
         const isCompressorTrainQuery = /compressor[\s_-]?train|api[\s_-]?617[\s_-]?train|k-103|multi[\s_-]?stage[\s_-]?compressor|stage[\s_-]?casing|intercooler\s*duty/i.test(promptText);
         const isFunctionalSafetyQuery = /functional\s*safety|iso\s*13849|iec\s*62061|performance\s*level|mttfd|diagnostic\s*coverage|common\s*cause|ccf|pfhd/i.test(promptText);
         const isFlareAivQuery = /flare[\s_-]?aiv|aiv|acoustical[\s_-]?vibration|sound\s*power\s*level|eemua\s*158|carucci[\s_-]?mueller|psv-101\s*tailpipe|psv\s*tailpipe|tailpipe\s*mach/i.test(promptText);
+        const isProximityProbeQuery = /proximity[\s_-]?probe|api\s*670|shaft[\s_-]?orbit|bently[\s_-]?nevada|2oo2|journal\s*bearing|vt-101|eddy\s*current|keyphasor|dc\s*gap\s*voltage/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1258,6 +1259,35 @@ Comprehensive high-frequency acoustic fatigue screening for **PSV-101 Tailpipe**
 \`\`\`
 
 - **Acoustical Vibration Assessment:** Computed Sound Power Level is 158.3 dB (MODERATE AIV FATIGUE RISK). Radiated acoustic energy is 6.76 kW into the pipe wall. Tailpipe gas velocity is 168.5 m/s (Mach 0.43, compliant with API 520 statutory 0.70 Mach limit). EEMUA 158 integrity requires 360° welded wrap-around wear pads at pipe clamps and sweepolet contoured branch fittings.`;
+        } else if (isProximityProbeQuery) {
+          finalMarkdown = `### API Standard 670 Machinery Protection & Proximity Probes
+
+Comprehensive radial shaft vibration, DC gap voltage diagnostic health, and 2-out-of-2 (2oo2) trip voting assessment for **K-101 Journal Bearing** per API 670 5th Edition and ISO 7919-3 standards.
+
+\`\`\`gen-ui
+{
+  "component": "ProximityProbeCard",
+  "props": {
+    "assetTag": "K-101",
+    "bearingLocation": "K-101 JOURNAL BEARING",
+    "title": "API STANDARD 670 MACHINERY PROTECTION & PROXIMITY PROBES",
+    "probeXTag": "VT-101X",
+    "probeYTag": "VT-101Y",
+    "dcGapVoltageX": -10.2,
+    "dcGapVoltageY": -10.1,
+    "vibrationPkPkX": 32.5,
+    "vibrationPkPkY": 28.0,
+    "phaseAngleXDeg": 48,
+    "phaseAngleYDeg": 138,
+    "alarmThresholdUm": 45.0,
+    "tripThresholdUm": 65.0,
+    "bearingClearanceUm": 150.0,
+    "shaftSpeedRpm": 8500
+  }
+}
+\`\`\`
+
+- **API 670 Health & Trip Assessment:** Dual eddy-current proximity probes VT-101X (-10.20V DC) and VT-101Y (-10.10V DC) operating in the calibrated linear range (-9V to -11V, 51.0 mils gap). Filtered 1X shaft precession orbit indicates stable elliptical trajectory (major axis: 33.1 µm, eccentricity: 0.58). Radial vibration amplitudes remain below API 670 Alarm (45 µm) and Trip (65 µm) limits: 2oo2 system verdict: **NORMAL_ROTATING_STABILITY** (ESD trip solenoid energized).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

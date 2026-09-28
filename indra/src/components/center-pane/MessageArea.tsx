@@ -15,7 +15,8 @@ import {
   Zap,
   Thermometer,
   ShieldCheck,
-  Volume2
+  Volume2,
+  Radio
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -152,6 +153,13 @@ const industrialWorkflows = [
     query: 'Evaluate API 520 Part II and EEMUA 158 flare acoustical vibration (AIV) for PSV-101 tailpipe: mass flow 65.0 t/h, relieving pressure 35.0 bar a, backpressure 2.5 bar a, gas MW 22.0, tailpipe NPS 10" Sch 40. Render 180° decibel meter, verify API 520 0.70 Mach limit, and inspect EEMUA 158 wrap-around pad recommendations.',
     icon: Volume2,
     badge: 'API 520 / EEMUA 158',
+  },
+  {
+    title: 'API Standard 670 Machinery Protection & Proximity Probes',
+    desc: 'Dual eddy current probe DC gap voltages, 2D filtered 1X shaft precession orbit, and 2-out-of-2 (2oo2) trip voting logic.',
+    query: 'Evaluate API Standard 670 machinery protection system and proximity probes on K-101 journal bearing: Probe X (VT-101X) DC gap -10.2V, Probe Y (VT-101Y) DC gap -10.1V, vibration amplitude 32.5 µm pk-pk (X) and 28.0 µm pk-pk (Y). Render 2D shaft orbit plot with clearance circle, verify linear DC range (-9V to -11V), and execute 2oo2 voting coincidence logic.',
+    icon: Radio,
+    badge: 'API 670 / Bently Nevada',
   },
 ];
 
