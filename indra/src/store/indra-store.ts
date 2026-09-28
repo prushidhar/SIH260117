@@ -981,6 +981,7 @@ export const useIndraStore = create<IndraState>()(
         const isFunctionalSafetyQuery = /functional\s*safety|iso\s*13849|iec\s*62061|performance\s*level|mttfd|diagnostic\s*coverage|common\s*cause|ccf|pfhd/i.test(promptText);
         const isFlareAivQuery = /flare[\s_-]?aiv|aiv|acoustical[\s_-]?vibration|sound\s*power\s*level|eemua\s*158|carucci[\s_-]?mueller|psv-101\s*tailpipe|psv\s*tailpipe|tailpipe\s*mach/i.test(promptText);
         const isProximityProbeQuery = /proximity[\s_-]?probe|api\s*670|shaft[\s_-]?orbit|bently[\s_-]?nevada|2oo2|journal\s*bearing|vt-101|eddy\s*current|keyphasor|dc\s*gap\s*voltage/i.test(promptText);
+        const isPipingFlexibilityQuery = /piping[\s_-]?flexibility|expansion[\s_-]?loop|asme\s*b31\.?3\s*(§|sec(tion)?)?\s*319|thermal[\s_-]?expansion|exp-pipe|anchor[\s_-]?thrust|stress[\s_-]?range|displacement[\s_-]?stress/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1288,6 +1289,31 @@ Comprehensive radial shaft vibration, DC gap voltage diagnostic health, and 2-ou
 \`\`\`
 
 - **API 670 Health & Trip Assessment:** Dual eddy-current proximity probes VT-101X (-10.20V DC) and VT-101Y (-10.10V DC) operating in the calibrated linear range (-9V to -11V, 51.0 mils gap). Filtered 1X shaft precession orbit indicates stable elliptical trajectory (major axis: 33.1 µm, eccentricity: 0.58). Radial vibration amplitudes remain below API 670 Alarm (45 µm) and Trip (65 µm) limits: 2oo2 system verdict: **NORMAL_ROTATING_STABILITY** (ESD trip solenoid energized).`;
+        } else if (isPipingFlexibilityQuery) {
+          finalMarkdown = `### ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Analysis
+
+Comprehensive thermal displacement stress range, guided expansion U-loop sizing, and anchor reaction thrust evaluation for **EXP-PIPE-101** (Superheated Steam Expansion Loop) per ASME B31.3 Chapter II § 319 and Appendix X.
+
+\`\`\`gen-ui
+{
+  "component": "PipingFlexibilityCard",
+  "props": {
+    "pipeLineTag": "EXP-PIPE-101",
+    "serviceName": "SUPERHEATED STEAM EXPANSION LOOP",
+    "title": "ASME B31.3 § 319 / APPENDIX X PIPING FLEXIBILITY ANALYSIS",
+    "operatingTempC": 350.0,
+    "ambientTempC": 20.0,
+    "loopHeightM": 5.0,
+    "loopWidthM": 3.5,
+    "pipeRunLengthM": 80.0,
+    "pipeNpsInches": "12\"",
+    "pipeSchedule": "Sch 40",
+    "materialGrade": "ASTM A106 Grade B"
+  }
+}
+\`\`\`
+
+- **Flexibility & Stress Range Assessment:** Thermal expansion across 80.0m straight run is 356.4 mm at 350.0°C. Symmetrical U-expansion loop (H=5.0m, W=3.5m) absorbs thermal expansion with actual displacement stress range SE = 184.2 MPa, well below allowable stress range SA = 242.0 MPa (76.1% utilization, +57.8 MPa safety margin: **COMPLIANT**). Anchor reaction thrust force is 38.4 kN at Anchor A1 and A2.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

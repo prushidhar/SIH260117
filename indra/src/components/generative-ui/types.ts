@@ -36,6 +36,7 @@ export type GenerativeUIComponentType =
   | 'FunctionalSafetyCard'
   | 'FlareAivCard'
   | 'ProximityProbeCard'
+  | 'PipingFlexibilityCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -650,6 +651,22 @@ export interface ProximityProbeCardProps {
   bearingClearanceUm?: number; // Default: 150.0 µm
   shaftSpeedRpm?: number; // Default: 8500 RPM
 }
+
+// 34. ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Loop
+export interface PipingFlexibilityCardProps {
+  pipeLineTag?: string; // Default: 'EXP-PIPE-101'
+  serviceName?: string; // Default: 'SUPERHEATED STEAM EXPANSION LOOP'
+  title?: string;
+  operatingTempC?: number; // Default: 350.0 °C
+  ambientTempC?: number; // Default: 20.0 °C
+  loopHeightM?: number; // Default: 5.0 m
+  loopWidthM?: number; // Default: 3.5 m
+  pipeRunLengthM?: number; // Default: 80.0 m
+  pipeNpsInches?: string; // Default: '12"'
+  pipeSchedule?: string; // Default: 'Sch 40'
+  materialGrade?: string; // Default: 'ASTM A106 Grade B'
+}
+
 
 
 

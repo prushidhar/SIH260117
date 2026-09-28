@@ -161,6 +161,13 @@ const industrialWorkflows = [
     icon: Radio,
     badge: 'API 670 / Bently Nevada',
   },
+  {
+    title: 'ASME B31.3 Piping Flexibility & Thermal Expansion Loop',
+    desc: 'Thermal growth (ΔL), Kellogg expansion U-loop, displacement stress range (SE vs SA), and anchor reaction thrust.',
+    query: 'Perform ASME B31.3 § 319 piping flexibility analysis for steam expansion loop EXP-PIPE-101: operating temperature 350°C, anchor-to-anchor run 80m, loop height 5.0m, loop width 3.5m, 12" NPS Sch 40. Render interactive expansion loop schematic, compute actual stress range SE vs allowable SA, and calculate anchor reaction thrust forces.',
+    icon: Flame,
+    badge: 'ASME B31.3 / Flexibility',
+  },
 ];
 
 /**

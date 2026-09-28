@@ -34,6 +34,7 @@ import CompressorTrainCard from './components/CompressorTrainCard';
 import FunctionalSafetyCard from './components/FunctionalSafetyCard';
 import FlareAivCard from './components/FlareAivCard';
 import ProximityProbeCard from './components/ProximityProbeCard';
+import PipingFlexibilityCard from './components/PipingFlexibilityCard';
 
 interface RegistryProps {
   component: string;
@@ -206,6 +207,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 33. API Standard 670 Machinery Protection & Proximity Probes
   if (compKey.includes('api670') || compKey.includes('proximity_probe') || compKey.includes('bently_nevada') || compKey.includes('shaft_orbit') || compKey.includes('proximityprobe') || compKey === 'proximityprobecard') {
     return <ProximityProbeCard {...props} />;
+  }
+
+  // 34. ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Loop
+  if (compKey.includes('piping_flexibility') || compKey.includes('expansion_loop') || compKey.includes('asme_b313') || compKey.includes('flexibility') || compKey.includes('thermal_expansion') || compKey === 'pipingflexibilitycard') {
+    return <PipingFlexibilityCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card
