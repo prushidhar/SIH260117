@@ -72,6 +72,27 @@ const industrialWorkflows = [
     icon: Waves,
     badge: 'ISO 10816-3 / Telemetry',
   },
+  {
+    title: 'ASME B31.4 Joukowsky Water Hammer & Transient Surge',
+    desc: 'Acoustic shockwave reflection, ESDV closure duration slider, and N2 bladder accumulator sizing.',
+    query: 'Model ASME B31.4 Joukowsky water hammer and transient acoustic surge on 24-inch NPS crude pipeline PL-204 (12.5 km): steady pressure 38.5 bar, peak surge 62.57 bar, allowable ceiling 70.4 bar. Evaluate rapid closure vs gradual closure regime and compute gas bladder accumulator volume.',
+    icon: Waves,
+    badge: 'ASME B31.4 / Surge',
+  },
+  {
+    title: 'ISO 5167-2 / AGA 3 Custody Transfer Orifice Metrology',
+    desc: 'Bore diameter ratio beta, Reader-Harris/Gallagher Cd, and permanent head loss power dissipation.',
+    query: 'Verify ISO 5167-2 / AGA 3 custody transfer orifice meter FE-101: differential pressure 250.0 mbar, mass flow 162.42 t/h, bore 117.566 mm (beta 0.5800), Class 300 RF flange tappings. Render cross-sectional vena contracta streamlines and metrological KPI grid.',
+    icon: Gauge,
+    badge: 'ISO 5167 / Custody',
+  },
+  {
+    title: 'API 580 / API 581 Quantitative RBI 5x5 Risk Matrix',
+    desc: 'Multi-mechanism damage factor (thinning, H2S sour SCC, CUI) and statutory NDT inspection interval.',
+    query: 'Generate API 580 / API 581 quantitative risk-based inspection 5x5 risk matrix for hydrocracker separator V-301: operating coordinate Cell 3D (POF Category 3, COF Category D), damage factor 21.1, flammable release area 7,986.8 m2. Formulate 3.0-year statutory inspection mandate and NDT mitigation grid.',
+    icon: ShieldAlert,
+    badge: 'API 581 / RBI',
+  },
 ];
 
 /**

@@ -966,10 +966,141 @@ export const useIndraStore = create<IndraState>()(
         };
         get().addDeliverable(pptxDeliverable);
 
+        const isHammerQuery = /hammer|joukowsky|surge|acoustic|b31\.4|pl-204/i.test(promptText);
+        const isOrificeQuery = /orifice|iso\s*5167|aga\s*3|flowmeter|metering|fe-101|vena\s*contracta/i.test(promptText);
+        const isRbiQuery = /rbi|risk[\s_-]?matrix|api\s*580|api\s*581|v-301|inspection\s*mandate/i.test(promptText);
+        const isWeibullQuery = /weibull|rul|k-102|prognostics|cox\s*phm/i.test(promptText);
+        const isPinchQuery = /pinch|exergy|hen|linnhoff|heat\s*exchanger\s*network/i.test(promptText);
+        const isFatigueQuery = /fatigue|miner|palmgren|goodman|damage\s*fraction/i.test(promptText);
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
         let finalMarkdown = '';
-        if (isPumpQuery) {
+        if (isHammerQuery) {
+          finalMarkdown = `### Joukowsky Transient Acoustic Surge Analysis (ASME B31.4 § 404.3.4)
+
+The sovereign neural agent has modeled the transient fluid column momentum and acoustic reflection wave for **PL-204 (24-inch NPS Crude Pipeline, 12.5 km)** following emergency shutdown valve trip.
+
+\`\`\`gen-ui
+{
+  "component": "WaterHammerCard",
+  "props": {
+    "assetTag": "PL-204 (24-inch NPS Crude Pipeline, 12.5 km)",
+    "title": "JOUKOWSKY WATER HAMMER & TRANSIENT ACOUSTIC SURGE",
+    "standard": "ASME B31.4 § 404.3.4",
+    "steadyPressureBar": 38.5,
+    "peakSurgePressureBar": 62.57,
+    "allowableSurgeCeilingBar": 70.4,
+    "initialClosureTimeSec": 3.5,
+    "criticalPipePeriodSec": 21.2,
+    "accumulatorVolumeM3": 2.55,
+    "kineticEnergyMJ": 8.12,
+    "recommendedClosureSec": 31.8
+  }
+}
+\`\`\`
+
+- **Surge Margin:** Current rapid closure yields peak pressure of **62.57 bar** (+11.1% margin below the 70.4 bar ASME B31.4 permissible ceiling).
+- **Acoustic Wave Period:** Critical pipe period $2L/a = 21.2\\text{ s}$. Valve closure duration $\\le 21.2\\text{ s}$ generates maximum Joukowsky shock.`;
+        } else if (isOrificeQuery) {
+          finalMarkdown = `### ISO 5167-2 / AGA 3 Custody Transfer Orifice Metrology
+
+Differential pressure verification across concentric square-edged orifice run **FE-101** under Class 300 RF flange tappings.
+
+\`\`\`gen-ui
+{
+  "component": "OrificeFlowmeterCard",
+  "props": {
+    "assetTag": "FE-101",
+    "title": "ISO 5167-2 / AGA 3 ORIFICE FLOW METERING",
+    "standard": "Custody Transfer Metrology",
+    "differentialPressureMbar": 250.0,
+    "massFlowRateTph": 162.42,
+    "massFlowRateKgs": 45.116,
+    "volumetricFlowM3h": 196.87,
+    "dischargeCoefficient": 0.6094,
+    "pipeReynoldsNumber": 224708,
+    "permanentHeadLossKpa": 16.23,
+    "powerDissipationKw": 0.89,
+    "orificeBoreMm": 117.566,
+    "pipeDiameterMm": 202.7,
+    "diameterRatioBeta": 0.5800,
+    "flangeRating": "Class 300 RF"
+  }
+}
+\`\`\`
+
+- **Metrology Verification:** Reader-Harris/Gallagher (1998) discharge coefficient $C_d = 0.6094$.
+- **Reynolds Number:** $Re_D = 224,708$ (Fully Turbulent, $Re > 5,000$ compliance satisfied).`;
+        } else if (isRbiQuery) {
+          finalMarkdown = `### API 580 / API 581 Quantitative Risk-Based Inspection (RBI)
+
+Quantitative POF × COF multi-mechanism damage factor calculation and statutory NDT strategy for **V-301 (Hydrocracker High-Pressure Separator)**.
+
+\`\`\`gen-ui
+{
+  "component": "RbiRiskMatrixCard",
+  "props": {
+    "assetTag": "V-301 (Hydrocracker High-Pressure Separator)",
+    "title": "API 580 / API 581 QUANTITATIVE RISK-BASED INSPECTION (RBI)",
+    "standard": "API 581 3rd Edition",
+    "activePofCategory": 3,
+    "activeCofCategory": "D",
+    "multiMechanismDamageFactor": 21.1,
+    "thinningDamageFactor": 5.1,
+    "h2sSourDamageFactor": 15.0,
+    "cuiDamageFactor": 1.0,
+    "flammableReleaseAreaM2": 7986.8,
+    "financialConsequenceUsd": 2190000,
+    "expectedAnnualizedLossUsd": 1201.72,
+    "targetIntervalYears": 3.0,
+    "nextPmWindow": "Q3 2029",
+    "mandatoryMitigationTechnique": "ONSTREAM EXTERNAL PEC & PHASED ARRAY ULTRASONIC GRID"
+  }
+}
+\`\`\`
+
+- **Risk Ranking:** Operating coordinate **Cell 3D** (Medium-High Risk).
+- **Mandatory Mitigation:** Targeted NDT grid focusing on H₂S Sour SCC and localized thinning.`;
+        } else if (isWeibullQuery) {
+          finalMarkdown = `### IEC 61649 / ISO 13381-1 Weibull Fault Prognostics & RUL
+
+\`\`\`gen-ui
+{
+  "component": "WeibullRulCard",
+  "props": {
+    "assetTag": "K-102",
+    "title": "WEIBULL FAULT PROGNOSTICS & RUL",
+    "standard": "IEC 61649 / ISO 13381-1"
+  }
+}
+\`\`\``;
+        } else if (isPinchQuery) {
+          finalMarkdown = `### Linnhoff Pinch Analysis & Heat Exchanger Network Synthesis
+
+\`\`\`gen-ui
+{
+  "component": "PinchNetworkCard",
+  "props": {
+    "assetTag": "HEN-400",
+    "title": "LINNHOFF PINCH ANALYSIS & HEAT EXCHANGER NETWORK",
+    "standard": "TEMA / 2nd-Law Exergy"
+  }
+}
+\`\`\``;
+        } else if (isFatigueQuery) {
+          finalMarkdown = `### ASME Section VIII Div 2 Palmgren-Miner Cumulative Fatigue
+
+\`\`\`gen-ui
+{
+  "component": "FatigueMinerCard",
+  "props": {
+    "assetTag": "V-204",
+    "title": "ASME SEC VIII DIV 2 PALMGREN-MINER FATIGUE INTEGRITY",
+    "standard": "ASME Sec VIII Div 2 Part 5.5"
+  }
+}
+\`\`\``;
+        } else if (isPumpQuery) {
           finalMarkdown = `### Sovereign Equipment Status & Telemetry (P-101)
 
 The sovereign neural agent has retrieved live telemetry for **Slurry Feed Pump P-101** from the local SCADA historian. Real-time vibration spectra and discharge pressure have been synthesized into interactive micro-frontends below.
