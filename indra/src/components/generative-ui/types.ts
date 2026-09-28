@@ -40,6 +40,7 @@ export type GenerativeUIComponentType =
   | 'FinFanCoolerCard'
   | 'HazardousAreaCard'
   | 'RgdSealCard'
+  | 'Api618ReciprocatingCompressorCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -713,4 +714,22 @@ export interface RgdSealCardProps {
   oringSectionDiameterMm?: number; // Default: 5.33 mm
   gasComposition?: string; // Default: '100% CO2 (Supercritical)'
   standardCode?: string; // Default: 'NORSOK M-710 Rev 3 / ISO 23936-2'
+}
+
+// 38. API Standard 618 (5th Edition) / ISO 13707 Reciprocating Compressor Performance & Pulsation Dampener
+export interface Api618ReciprocatingCompressorCardProps {
+  compressorTag?: string; // Default: 'K-201'
+  serviceDescription?: string; // Default: 'Two-Cylinder Double-Acting Hydrogen / Hydrocarbon Gas Compressor'
+  title?: string;
+  suctionPressureBarA?: number; // Default: 3.5 bar a (1.0 to 10.0)
+  dischargePressureBarA?: number; // Default: 9.8 bar a (4.0 to 25.0)
+  crankshaftSpeedRpm?: number; // Default: 450 RPM (200 to 750)
+  gasMolecularWeight?: number; // Default: 18.5 g/mol (2.0 to 45.0)
+  installedDampenerBottleM3?: number; // Default: 0.65 m³ (0.20 to 1.50)
+  suctionTempC?: number; // Default: 40.0 °C
+  boreDiameterMm?: number; // Default: 320.0 mm
+  strokeLengthMm?: number; // Default: 250.0 mm
+  clearanceVolumePct?: number; // Default: 12.0 %
+  standardCode?: string; // Default: 'API Standard 618 (5th Edition) / ISO 13707'
+  apiEndpoint?: string; // Default: 'http://localhost:8000/api/compressor/api618/reciprocating'
 }

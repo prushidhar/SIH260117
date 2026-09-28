@@ -191,6 +191,13 @@ const industrialWorkflows = [
     icon: Disc,
     badge: 'NORSOK M-710 / RGD',
   },
+  {
+    title: 'API Standard 618 Reciprocating Compressor Performance',
+    desc: 'Two-cylinder double-acting piston kinematics, volumetric efficiency (ηv), thermal limit check, and pulsation dampener bottle sizing.',
+    query: 'Evaluate API Standard 618 5th Edition reciprocating compressor K-201 (Two-Cylinder Double-Acting Hydrogen/Hydrocarbon Gas Compressor): suction pressure 3.5 bar a, discharge pressure 9.8 bar a, speed 450 RPM, gas MW 18.5 g/mol, installed dampener bottle 0.65 m3. Render reciprocating piston animation with crossheads and valves, compute volumetric efficiency, verify discharge temperature limit (≤ 150.0°C), and size API 618 pulsation bottles.',
+    icon: Activity,
+    badge: 'API 618 / Reciprocating',
+  },
 ];
 
 /**

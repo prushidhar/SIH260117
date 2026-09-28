@@ -985,6 +985,7 @@ export const useIndraStore = create<IndraState>()(
         const isFinFanQuery = /fin[\s_-]?fan|air[\s_-]?cooler|api\s*661|afc-101|air[\s_-]?cooled|induced[\s_-]?draft|forced[\s_-]?draft|tube[\s_-]?bundle\s*gradient|ambient\s*dry[\s_-]?bulb/i.test(promptText);
         const isHazardousAreaDispersionQuery = /dispersion|contour|iec\s*60079-10|api\s*(rp\s*)?505|hac|hac-cell|zone\s*[012]|gas\s*group|t-class|leak\s*hole|operating\s*pressure.*ventilation|flammable\s*gas\s*mixture/i.test(promptText);
         const isRgdSealQuery = /rgd|explosive[\s_-]?decompression|norsok[\s_-]?m[\s_-]?710|iso\s*23936|rgd-seal|gent[\s_-]?lindley|cavitation\s*stress|elastomer\s*seal|void\s*nucleation|ffkm\s*90|decompression\s*rate/i.test(promptText);
+        const isApi618RecipQuery = /api[\s_-]?618|reciprocating|piston[\s_-]?compressor|k-201.*(recip|double[\s_-]?acting|bottle|crosshead|suction\s*pressure)|dampener\s*bottle|volumetric\s*efficiency/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1392,6 +1393,30 @@ Finite-difference dissolved gas diffusion and Gent-Lindley internal cavitation s
 \`\`\`
 
 - **RGD Qualification Verdict:** At 150.0 bar g system pressure and 35.0 bar/min decompression rate (100% CO2), internal gas cavitation stress is $\\sigma_{\\text{cav}} = 8.84\\text{ MPa}$, remaining below the Gent-Lindley bubble nucleation limit $P_{\\text{crit}} = 12.00\\text{ MPa}$ ($1.36\\times$ safety margin). Evaluated cross-sections confirm NORSOK M-710 damage rating **'1000'** with compliant micro-voids ($< 0.1\\times$ cross-section). **PASS_NORSOK_M710_CONFIRMED**.`;
+        } else if (isApi618RecipQuery) {
+          finalMarkdown = `### API Standard 618 5th Ed. / ISO 13707 Reciprocating Compressor Rating
+          
+Thermodynamic performance, double-acting volumetric efficiency (ηv), and pulsation dampener bottle sizing for **K-201** per API Standard 618 5th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api618ReciprocatingCompressorCard",
+  "props": {
+    "compressorTag": "K-201",
+    "serviceDescription": "Two-Cylinder Double-Acting Hydrogen / Hydrocarbon Gas Compressor",
+    "title": "API STANDARD 618 5TH ED. RECIPROCATING COMPRESSOR PERFORMANCE",
+    "suctionPressureBarA": 3.5,
+    "dischargePressureBarA": 9.8,
+    "crankshaftSpeedRpm": 450,
+    "gasMolecularWeight": 18.5,
+    "installedDampenerBottleM3": 0.65,
+    "suctionTempC": 40.0,
+    "standardCode": "API Standard 618 (5th Edition) / ISO 13707"
+  }
+}
+\`\`\`
+
+- **API 618 Performance Verdict:** Operating at compression ratio $r_p = 2.80:1$ with $450\text{ RPM}$ crankshaft speed. Volumetric efficiency is $\eta_v = 80.2\%$, delivering $1,706\text{ m}^3/\text{h}$ ($4.24\text{ t/h}$) gas capacity with $193.1\text{ kW}$ indicated power ($205.4\text{ kW}$ brake power). Discharge temperature is $131.8^\circ\text{C}$, comfortably below the API 618 statutory threshold of $150.0^\circ\text{C}$ for hydrogen-rich gas (**PASS_API618_DISCHARGE_TEMP_CONFIRMED**). Installed $0.65\text{ m}^3$ pulsation dampener bottle provides $1.71\times$ required volume, keeping residual acoustic ripple below $\pm 1.6\%\text{ pk-pk}$.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

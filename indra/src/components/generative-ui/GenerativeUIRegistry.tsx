@@ -38,6 +38,7 @@ import PipingFlexibilityCard from './components/PipingFlexibilityCard';
 import FinFanCoolerCard from './components/FinFanCoolerCard';
 import HazardousAreaCard from './components/HazardousAreaCard';
 import RgdSealCard from './components/RgdSealCard';
+import Api618ReciprocatingCompressorCard from './components/Api618ReciprocatingCompressorCard';
 
 interface RegistryProps {
   component: string;
@@ -230,6 +231,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 37. NORSOK M-710 Rev 3 & ISO 23936-2 Rapid Gas Decompression (RGD) Elastomer Seal Integrity
   if (compKey.includes('rgd') || compKey.includes('norsok_m710') || compKey.includes('iso23936') || compKey.includes('explosive_decompression') || compKey === 'rgdsealcard') {
     return <RgdSealCard {...props} />;
+  }
+
+  // 38. API Standard 618 (5th Edition) / ISO 13707 Reciprocating Compressor Performance & Pulsation Dampener
+  if (compKey.includes('api618') || compKey.includes('reciprocating') || compKey.includes('recip_compressor') || compKey.includes('piston_compressor') || compKey.includes('pulsation_dampener') || compKey === 'api618reciprocatingcompressorcard') {
+    return <Api618ReciprocatingCompressorCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card
