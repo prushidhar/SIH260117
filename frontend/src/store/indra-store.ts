@@ -2022,7 +2022,8 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
       },
 
   addNetworkEvent: (event: NetworkEvent) => {
-    if (event.status === 'blocked' || event.status === 'contained') {
+    const isLocal = !event.destination || event.destination.includes('127.0.0.1') || event.destination.includes('localhost') || event.destination.includes('0.0.0.0');
+    if (event.status === 'blocked' && !isLocal) {
       sendNativeNotification({
         title: 'INDRA: Intrusion Blocked',
         body: `Localhost boundary dropped outbound packet to ${event.destination} (${event.protocol || 'TCP'}).`,
