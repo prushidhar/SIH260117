@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LeftPane from '@/components/left-pane/LeftPane';
@@ -25,7 +25,11 @@ import {
   Network,
   BookOpen,
   Cpu,
-  Server
+  Server,
+  Search,
+  Volume2,
+  VolumeX,
+  Keyboard
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,6 +40,9 @@ import { useVoiceCommandContext } from '@/providers/VoiceCommandProvider';
 import { useCrossWindowSync } from '@/hooks/useCrossWindowSync';
 import { multiWindowSync } from '@/lib/sync/multi-window-sync';
 import { useAirGapTelemetry } from '@/hooks/useAirGapTelemetry';
+import UniversalAssetSearchModal from '@/components/common/UniversalAssetSearchModal';
+import { useControlRoomShortcuts } from '@/hooks/useControlRoomShortcuts';
+import { sovereignAudio } from '@/lib/audio/sound-effects';
 
 const navLabels: Record<string, string> = {
   workbench: 'Agent Workbench',
@@ -75,6 +82,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const voiceCommand = useVoiceCommandContext();
   useCrossWindowSync();
   const prevApprovalsCount = useRef(pendingApprovals.length);
+
+  // Control Room Keyboard Shortcuts & Universal Asset Search State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+
+  useEffect(() => {
+    setIsAudioMuted(sovereignAudio.getMuted());
+  }, []);
+
+  const handleToggleAudio = () => {
+    const nextMuted = sovereignAudio.toggleMuted();
+    setIsAudioMuted(nextMuted);
+  };
+
+  useControlRoomShortcuts({
+    onOpenSearch: () => setIsSearchOpen(true),
+    isSearchOpen,
+    onCloseSearch: () => setIsSearchOpen(false),
+  });
 
   // DCS Air-Gap Telemetry, Synchronized 1Hz UTC Clock & Audit Recording Engine
   const {
@@ -249,6 +275,58 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Download className="w-3.5 h-3.5" />
               </button>
             )}
+          </div>
+
+          {/* Universal Asset Search Trigger [Ctrl + K] */}
+          <button
+            onClick={() => {
+              sovereignAudio.playClick(0.08);
+              setIsSearchOpen(true);
+            }}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer font-mono text-xs"
+            title="Open Universal Asset & Standards Search (Ctrl+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            <span className="hidden lg:inline text-[11px]">Search Assets</span>
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded font-semibold border border-slate-300 dark:border-zinc-700">
+              Ctrl+K
+            </kbd>
+          </button>
+
+          {/* Synthesized Sovereign Audio Ergonomics (Mute / Unmute) */}
+          <button
+            onClick={handleToggleAudio}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-mono font-semibold ${
+              isAudioMuted
+                ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300'
+            }`}
+            title={isAudioMuted ? 'Acoustic Ergonomics: MUTED (Click to unmute SCADA synthesizer)' : 'Acoustic Ergonomics: ACTIVE (Click to mute)'}
+          >
+            {isAudioMuted ? (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                <span className="hidden xl:inline text-[10px] text-rose-600 dark:text-rose-400">MUTED</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="hidden xl:inline text-[10px] text-emerald-600 dark:text-emerald-400">AUDIO ON</span>
+              </>
+            )}
+          </button>
+
+          {/* Control Room Shortcuts Pill */}
+          <div 
+            className="hidden 2xl:flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-slate-900/5 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 font-mono text-[10px] text-slate-500 dark:text-zinc-400 select-none"
+            title="DCS Control Room Ergonomic Keybindings"
+          >
+            <Keyboard className="w-3 h-3 text-slate-400 dark:text-zinc-500" />
+            <span><strong className="text-slate-800 dark:text-zinc-200">1-4</strong> Panes</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span><strong className="text-slate-800 dark:text-zinc-200">Ctrl+↵</strong> Transmit</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span><strong className="text-rose-600 dark:text-rose-400">Esc</strong> Trip</span>
           </div>
 
           {/* Theme Switcher Toggle */}
@@ -570,6 +648,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 7. Universal Asset Search Modal (Ctrl + K) */}
+      <UniversalAssetSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Global Connection Alerts & Status Toasts */}
       <ToastContainer />

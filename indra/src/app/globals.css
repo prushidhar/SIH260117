@@ -116,6 +116,49 @@ body {
   box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.25);
 }
 
+.rose-glow {
+  box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.35);
+}
+
+.amber-glow {
+  box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.3);
+}
+
+.cyan-glow {
+  box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.3);
+}
+
+/* DCS Control Room 24/7 High-Contrast Color Coding */
+.dcs-state-safe {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dcs-state-warning {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dcs-state-critical {
+  color: #f43f5e;
+  background-color: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.dcs-state-inference {
+  color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.dcs-state-telemetry {
+  color: #06b6d4;
+  background-color: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
 @keyframes processFlowAnimation {
   from {
     stroke-dashoffset: 20;

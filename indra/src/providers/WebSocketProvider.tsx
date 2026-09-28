@@ -13,6 +13,7 @@ import useIndraStore, {
 } from '@/store/indra-store';
 import type { GenerativeUISpec } from '@/components/generative-ui/types';
 import { getGlobalQueryClient, queryKeys } from '@/lib/queries';
+import { sovereignAudio } from '@/lib/audio/sound-effects';
 
 export type TaskStreamStatus = 'idle' | 'submitted' | 'streaming' | 'completed' | 'error';
 
@@ -160,6 +161,8 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
         console.warn('Backend task abort request error:', err);
       });
     }
+
+    sovereignAudio.playAlertTone(0.22);
 
     useIndraStore.setState((s) => ({
       isAgentWorking: false,
@@ -362,6 +365,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
 
             // HITL Approval Requested Event
             else if (type === 'approval_requested') {
+              sovereignAudio.playAlertTone(0.25);
               getGlobalQueryClient()?.invalidateQueries({ queryKey: queryKeys.approvals });
               useIndraStore.getState().fetchPendingApprovals();
               useIndraStore.getState().addToast({
@@ -427,6 +431,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             // Deliverable event
             else if (type === 'deliverable') {
               flushTokenBuffer();
+              sovereignAudio.playSonarPing(0.15);
               const filename = ev.filename || ev.name || 'deliverable.docx';
               const fileType = (ev.file_type || ev.kind || (filename.endsWith('.xlsx') ? 'xlsx' : filename.endsWith('.pptx') ? 'pptx' : 'docx')).toLowerCase() as any;
               const title = ev.title || ev.name || filename.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
@@ -452,6 +457,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             // Generative UI event (Server-Driven Micro-Frontends)
             else if (type === 'generative_ui' || type === 'ui_component' || type === 'ui') {
               flushTokenBuffer();
+              sovereignAudio.playSonarPing(0.12);
               const componentName = ev.component || ev.name || ev.ui_type || 'IndustrialGauge';
               const componentProps = ev.props || ev.data || ev.arguments || {};
               const title = ev.title;
@@ -477,6 +483,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             // Complete event
             else if (type === 'complete' || type === 'done') {
               flushTokenBuffer();
+              sovereignAudio.playSonarPing(0.10);
               useIndraStore.setState((state) => ({
                 isAgentWorking: false,
                 messages: state.messages.map((m) => {

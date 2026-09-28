@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Calculator,
   CheckCircle2,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
+import { sovereignAudio } from '@/lib/audio/sound-effects';
 import type { ASMEComplianceCardProps } from '../types';
 
 export default function ASMEComplianceCard({
@@ -62,8 +63,18 @@ export default function ASMEComplianceCard({
     };
   }, [pressure, pipeDiameter, stress, actualThickness, corrAllowance, jointQualityE, corrosionRate]);
 
+  // Safety interlock acoustic alert when pipe wall breaches ASME code threshold
+  const prevCompliantRef = useRef(true);
+  useEffect(() => {
+    if (!isCompliant && prevCompliantRef.current) {
+      sovereignAudio.playAlertTone(0.20);
+    }
+    prevCompliantRef.current = isCompliant;
+  }, [isCompliant]);
+
   const handleLocateTag = () => {
     if (tag) {
+      sovereignAudio.playClick(0.08);
       selectTag(tag);
       broadcastSyncEvent({
         type: 'TAG_SELECTED',
@@ -74,6 +85,7 @@ export default function ASMEComplianceCard({
   };
 
   const handleReset = () => {
+    sovereignAudio.playClick(0.08);
     setPressure(initialPressure);
     setPipeDiameter(diameter);
     setStress(allowableStress);
@@ -83,6 +95,7 @@ export default function ASMEComplianceCard({
   };
 
   const handleExportReport = () => {
+    sovereignAudio.playSonarPing(0.12);
     const now = new Date().toLocaleTimeString();
     addDeliverable({
       id: `del-asme-${Date.now()}`,
@@ -259,7 +272,10 @@ export default function ASMEComplianceCard({
             max={1200}
             step={25}
             value={pressure}
-            onChange={(e) => setPressure(Number(e.target.value))}
+            onChange={(e) => {
+              sovereignAudio.playClick(0.04);
+              setPressure(Number(e.target.value));
+            }}
             className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
           />
         </div>
@@ -276,7 +292,10 @@ export default function ASMEComplianceCard({
             max={25000}
             step={500}
             value={stress}
-            onChange={(e) => setStress(Number(e.target.value))}
+            onChange={(e) => {
+              sovereignAudio.playClick(0.04);
+              setStress(Number(e.target.value));
+            }}
             className="w-full accent-amber-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
           />
         </div>
@@ -293,7 +312,10 @@ export default function ASMEComplianceCard({
             max={0.25}
             step={0.0125}
             value={corrAllowance}
-            onChange={(e) => setCorrAllowance(Number(e.target.value))}
+            onChange={(e) => {
+              sovereignAudio.playClick(0.04);
+              setCorrAllowance(Number(e.target.value));
+            }}
             className="w-full accent-rose-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
           />
         </div>
@@ -310,7 +332,10 @@ export default function ASMEComplianceCard({
             max={0.80}
             step={0.005}
             value={actualThickness}
-            onChange={(e) => setActualThickness(Number(e.target.value))}
+            onChange={(e) => {
+              sovereignAudio.playClick(0.04);
+              setActualThickness(Number(e.target.value));
+            }}
             className="w-full accent-emerald-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
           />
         </div>

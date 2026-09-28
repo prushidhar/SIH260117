@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
+import { sovereignAudio } from '@/lib/audio/sound-effects';
 
 function getAttachmentIcon(name: string) {
   const ext = name.split('.').pop()?.toLowerCase();
@@ -71,6 +72,7 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
       if (e.key === 'Escape' && isAgentWorking) {
         e.preventDefault();
         abortTask();
+        sovereignAudio.playAlertTone(0.22);
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -120,6 +122,7 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
     if (!text && !selectedAttachment) return;
     if (isAgentWorking) return;
 
+    sovereignAudio.playClick(0.08);
     sendMessage(text || `Process attached document: ${selectedAttachment?.name}`);
     setInputValue('');
     setSelectedAttachment(null);
@@ -129,7 +132,7 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if ((e.key === 'Enter' && (e.ctrlKey || e.metaKey)) || (e.key === 'Enter' && !e.shiftKey)) {
       e.preventDefault();
       handleSend();
     }
@@ -305,9 +308,12 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
               {isAgentWorking ? (
                 <button
                   type="button"
-                  onClick={abortTask}
+                  onClick={() => {
+                    abortTask();
+                    sovereignAudio.playAlertTone(0.22);
+                  }}
                   className="px-3 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1 text-xs font-medium cursor-pointer"
-                  title="Stop Execution"
+                  title="Stop Execution (Esc)"
                 >
                   <Square className="w-3 h-3 fill-current text-white" />
                   <span>Stop</span>
@@ -318,12 +324,33 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
                   onClick={handleSend}
                   disabled={(!inputValue.trim() && !selectedAttachment) || isUploading}
                   className="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Send message"
+                  title="Send message (Ctrl+Enter)"
                 >
                   <ArrowRight className="w-4 h-4 text-white" />
                 </button>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Control Room Keyboard Shortcuts Footnote */}
+        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 dark:text-zinc-500 px-1 pt-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Ctrl+↵]</span>
+            <span>Transmit</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Shift+↵]</span>
+            <span>Newline</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span className="text-rose-600 dark:text-rose-400 font-semibold">[Esc]</span>
+            <span>Emergency Trip</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-[9px]">
+            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[1-4]</span>
+            <span>Switch Panes</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Ctrl+K]</span>
+            <span>Asset Search</span>
           </div>
         </div>
       </div>
