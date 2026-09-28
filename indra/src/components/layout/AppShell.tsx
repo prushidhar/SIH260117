@@ -182,16 +182,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Synchronized 1Hz UTC SCADA Clock */}
           <div 
-            className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-black border border-slate-800 text-slate-100 font-mono text-xs shadow-inner"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-black border border-slate-800 text-slate-100 font-mono text-xs shadow-inner"
             title="DCS Control Room Synchronized UTC Reference Clock (1Hz IEEE 1588 Standard)"
           >
             <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="tracking-widest font-semibold font-mono text-emerald-400">
               {utcTime.hours}
-              <span className={`inline-block transition-opacity duration-200 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
+              <span className={`inline-block transition-opacity duration-150 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
               {utcTime.minutes}
-              <span className={`inline-block transition-opacity duration-200 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
+              <span className={`inline-block transition-opacity duration-150 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
               {utcTime.seconds}
+            </span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700">
               UTC
@@ -312,7 +316,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Workbench</span>
+              <span>Workbench (Tri-Pane)</span>
             </Link>
 
             <Link
@@ -324,7 +328,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <Network className="w-3.5 h-3.5" />
-              <span>Spatial Canvas</span>
+              <span>Spatial P&amp;ID Canvas (/canvas)</span>
             </Link>
 
             <Link
@@ -336,7 +340,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Knowledge Base</span>
+              <span>RAG Knowledge Base (/knowledge)</span>
             </Link>
 
             <Link
@@ -348,7 +352,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Audit Ledger</span>
+              <span>Merkle Audit Ledger (/audit)</span>
             </Link>
 
             {/* Live Amber HITL Pending Approvals Badge */}
@@ -383,21 +387,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Telemetry 1: LOCAL LOOP (127.0.0.1) */}
           <div 
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold shadow-2xs"
             title="Local loopback binding (127.0.0.1) - Zero WAN egress confirmed"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="hidden sm:inline">LOCAL LOOP (127.0.0.1)</span>
-            <span className="sm:hidden">LOOPBACK</span>
+            <span className="sm:hidden">127.0.0.1</span>
           </div>
 
           {/* Telemetry 2: API ENGINE (Port 8000) Latency */}
           <div 
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
-            title="FastAPI Local Server Port 8000 Roundtrip Latency"
+            title="FastAPI Local Server Port 8000 Healthcheck Roundtrip Latency"
           >
             <Server className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
-            <span className="hidden md:inline">API:</span>
+            <span>API ENGINE (Port 8000):</span>
             <span className={isApiAlive ? 'text-cyan-600 dark:text-cyan-400 font-bold' : 'text-amber-500 font-bold'}>
               {apiLatencyMs}ms
             </span>
@@ -405,21 +409,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Telemetry 3: AUDIT LEDGER Merkle Root Preview */}
           <div 
-            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
             title={`Merkle Chain Integrity Root: ${merkleRootRaw}`}
           >
             <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            <span>AUDIT:</span>
+            <span>AUDIT LEDGER:</span>
             <span className="text-slate-900 dark:text-zinc-100 font-bold">{merkleRootPreview}</span>
           </div>
 
           {/* Telemetry 4: GPU / INFERENCE Load */}
           <div 
-            className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
             title="Local Tensor Runner & WebGPU Resident Core Load"
           >
             <Cpu className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
-            <span>GPU:</span>
+            <span>GPU / INFERENCE:</span>
             <span className="text-indigo-600 dark:text-indigo-400 font-bold">{gpuLoad}%</span>
           </div>
 
