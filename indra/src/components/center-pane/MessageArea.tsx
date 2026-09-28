@@ -100,6 +100,13 @@ const industrialWorkflows = [
     icon: Cpu,
     badge: 'RCA / Incident Investigation',
   },
+  {
+    title: 'ISO 13374 / VDI 2888 Sensor Drift & Fault Diagnostics',
+    desc: 'Condition monitoring, drift velocity sparkline, and dual-channel voting comparator (TT-101 vs TT-101B).',
+    query: 'Run ISO 13374 condition monitoring and sensor drift fault diagnostics on column CDU-104 primary temperature sensor TT-101 (span 0-300°C) with redundant sensor TT-101B. Plot 20-sample historical drift curve and verify ±2.0% statutory bounds.',
+    icon: Activity,
+    badge: 'ISO 13374 / FDD',
+  },
 ];
 
 /**

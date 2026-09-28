@@ -973,6 +973,7 @@ export const useIndraStore = create<IndraState>()(
         const isTegQuery = /teg|glycol|dehydration|v-204|reboiler|dew[\s_-]?point|stripping\s*gas/i.test(promptText);
         const isReliefValveQuery = /relief\s*valve|psv|psv-101|api\s*520|api\s*526|choked\s*flow|accumulation/i.test(promptText);
         const isRcaQuery = /rca|root\s*cause|5[\s_-]?why|bowtie|bow[\s_-]?tie|fishbone|ishikawa|fault\s*tree|fta/i.test(promptText);
+        const isSensorDriftQuery = /sensor[\s_-]?drift|fdd|iso\s*13374|vdi\s*2888|tt-101|calibration|voting\s*comparator/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1098,6 +1099,28 @@ Comprehensive incident investigation for **K-102** incorporating Fault Tree Anal
 \`\`\`
 
 - **Root Cause Confirmed:** MOC field inspection sign-off bypassed for piping insulation weather-jacketing following turnaround, causing spring hanger saturation and casing thermal misalignment.`;
+        } else if (isSensorDriftQuery) {
+          finalMarkdown = `### ISO 13374 / VDI 2888 Condition Monitoring, Sensor Drift & Fault Diagnostics
+
+Condition monitoring and dual-channel redundancy adjudication for **TT-101** on CDU-104. Drift velocity sparkline and statutory tolerance limits (±2.0% span) verified.
+
+\`\`\`gen-ui
+{
+  "component": "SensorDriftFddCard",
+  "props": {
+    "assetTag": "CDU-104",
+    "sensorTag": "TT-101",
+    "redundantTag": "TT-101B",
+    "title": "ISO 13374 / VDI 2888 — CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS",
+    "spanMin": 0,
+    "spanMax": 300,
+    "unit": "°C",
+    "statutoryLimitPct": 2.0
+  }
+}
+\`\`\`
+
+- **FDD Diagnosis:** Dual-channel redundancy comparison confirmed. Statistical drift velocity at +0.28 °C/sample indicates progressive thermocouple decalibration.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

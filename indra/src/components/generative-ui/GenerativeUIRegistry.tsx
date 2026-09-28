@@ -26,6 +26,7 @@ import CoolingTowerPsychrometricWidget from './components/CoolingTowerPsychromet
 import TegDehydrationWidget from './components/TegDehydrationWidget';
 import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
 import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
+import SensorDriftFddCard from './components/SensorDriftFddCard';
 
 interface RegistryProps {
   component: string;
@@ -158,6 +159,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 25. Industrial Root Cause Analysis (RCA) Multi-Tab Suite
   if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('root_cause') || compKey.includes('fishbone') || compKey.includes('faulttree') || compKey.includes('fault_tree') || compKey.includes('bowtie') || compKey === 'rootcauseanalysiswidget') {
     return <RootCauseAnalysisWidget {...props} />;
+  }
+
+  // 26. ISO 13374 Condition Monitoring, Sensor Drift & Fault Diagnostics
+  if (compKey.includes('sensor_drift') || compKey.includes('sensordrift') || compKey.includes('fdd') || compKey.includes('calibration') || compKey.includes('iso13374') || compKey === 'sensordriftfddcard') {
+    return <SensorDriftFddCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

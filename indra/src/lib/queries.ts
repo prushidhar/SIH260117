@@ -302,3 +302,95 @@ export function useEquipmentQuery(tag: string | null) {
     staleTime: 60 * 1000,
   });
 }
+
+// ==========================================
+// 6. Phase 4 Sovereign REST API Endpoints
+// ==========================================
+
+/**
+ * 1. POST /api/engineering/calculate
+ * High-performance instant engineering solver without WebSocket latency.
+ */
+export async function calculateEngineeringApi<T = any>(
+  tool: string,
+  args: Record<string, any>
+): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/engineering/calculate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tool, args }),
+  });
+  if (!res.ok) {
+    throw new Error(`Engineering calculation for tool "${tool}" failed (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * 2. POST /api/engineering/consensus
+ * 4-Specialist multi-agent consensus adjudication and SHA-256 seal.
+ */
+export async function fetchEngineeringConsensusApi<T = any>(payload: {
+  asset_tag: string;
+  telemetry: Record<string, any>;
+  calculation_results: Record<string, any>;
+}): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/engineering/consensus`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(`Consensus adjudication failed (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * 3. GET /api/equipment/{tag}/integrity
+ * Digital Twin equipment integrity record.
+ */
+export async function fetchEquipmentIntegrityApi<T = any>(tag: string): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/equipment/${encodeURIComponent(tag)}/integrity`);
+  if (!res.ok) {
+    throw new Error(`Integrity record for "${tag}" not found (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * 4. GET /api/audit/verify
+ * Merkle Tree cryptographic integrity verification badge.
+ */
+export async function fetchAuditVerifyApi(): Promise<{
+  is_chain_valid: boolean;
+  total_blocks: number;
+  genesis_hash?: string;
+  head_hash?: string;
+}> {
+  const res = await fetch(`${API_BASE}/api/audit/verify`);
+  if (!res.ok) {
+    throw new Error(`Audit chain verification failed (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * 5. POST /api/kb/query
+ * Semantic vector similarity top-k search preview.
+ */
+export async function queryKnowledgeBaseApi<T = any>(
+  query: string,
+  top_k: number = 3
+): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/kb/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, top_k }),
+  });
+  if (!res.ok) {
+    throw new Error(`KB semantic query failed (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+

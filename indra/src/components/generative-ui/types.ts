@@ -28,6 +28,7 @@ export type GenerativeUIComponentType =
   | 'TegDehydrationWidget'
   | 'ReliefValveSizingWidget'
   | 'RootCauseAnalysisWidget'
+  | 'SensorDriftFddCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -484,6 +485,34 @@ export interface RootCauseAnalysisWidgetProps {
   barriers?: BowTieBarrier[];
   ishikawaCategories?: IshikawaCategory[];
 }
+
+// 26. ISO 13374 Condition Monitoring, Sensor Drift & Fault Diagnostics
+export interface SensorSamplePoint {
+  sampleIndex: number;
+  timestamp: string;
+  nominalValue: number;
+  measuredPrimary: number; // TT-101
+  measuredRedundant: number; // TT-101B
+  driftValue: number;
+  driftVelocity: number;
+}
+
+export interface SensorDriftFddCardProps {
+  assetTag?: string; // Default: 'CDU-104'
+  sensorTag?: string; // Default: 'TT-101'
+  redundantTag?: string; // Default: 'TT-101B'
+  title?: string;
+  spanMin?: number; // 0
+  spanMax?: number; // 300
+  unit?: string; // '°C'
+  statutoryLimitPct?: number; // ±2.0%
+  samples?: SensorSamplePoint[];
+  initialDriftOffset?: number;
+  initialDriftRate?: number;
+  redundancyDiscrepancyMae?: number;
+  sensorReliabilityIndex?: number;
+}
+
 
 
 
