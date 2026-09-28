@@ -28,6 +28,7 @@ import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
 import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 import SensorDriftFddCard from './components/SensorDriftFddCard';
 import HazopMatrixWidget from './components/HazopMatrixWidget';
+import ArcFlashHazardCard from './components/ArcFlashHazardCard';
 
 interface RegistryProps {
   component: string;
@@ -170,6 +171,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 27. Autonomous IEC 61882 HAZOP Deviation Matrix
   if (compKey.includes('hazop') || compKey.includes('hazop_matrix') || compKey.includes('pha_study') || compKey === 'hazopmatrixwidget') {
     return <HazopMatrixWidget {...props} />;
+  }
+
+  // 28. IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety
+  if (compKey.includes('arc_flash') || compKey.includes('arcflash') || compKey.includes('ieee1584') || compKey.includes('nfpa70e') || compKey === 'arcflashhazardcard') {
+    return <ArcFlashHazardCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

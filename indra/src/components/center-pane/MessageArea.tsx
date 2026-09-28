@@ -11,7 +11,8 @@ import {
   Cpu, 
   ChevronDown, 
   ChevronUp, 
-  Sparkles 
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -113,6 +114,13 @@ const industrialWorkflows = [
     query: 'Generate autonomous IEC 61882 / OSHA 1910.119 Process Hazard Analysis (PHA) HAZOP deviation matrix for gas-phase exothermic reactor R-401 across guide words MORE, LESS, REVERSE, OTHER THAN. Formulate risk scores and recommended CAPA safeguards.',
     icon: ShieldAlert,
     badge: 'IEC 61882 / HAZOP',
+  },
+  {
+    title: 'IEEE 1584 Arc Flash & NFPA 70E Electrical Safety',
+    desc: 'Incident energy calculation, dual-gauge visualization, approach shock boundaries, and mandatory NFPA 70E PPE specification.',
+    query: 'Evaluate IEEE 1584-2018 arc flash hazard and NFPA 70E electrical safety for 6.6 kV MV Substation Switchgear SWGR-6.6KV-01: system voltage 6.6 kV, bolted fault current 25.0 kA, clearing duration 0.20 s, working distance 914 mm (36 in). Compute arcing current, incident energy, arc flash boundary, and restricted shock boundaries.',
+    icon: Zap,
+    badge: 'IEEE 1584 / Electrical',
   },
 ];
 

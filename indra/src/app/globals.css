@@ -167,3 +167,12 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes chevronSlide {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 39.6px 0;
+  }
+}

@@ -30,6 +30,7 @@ export type GenerativeUIComponentType =
   | 'RootCauseAnalysisWidget'
   | 'SensorDriftFddCard'
   | 'HazopMatrixWidget'
+  | 'ArcFlashHazardCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -538,6 +539,21 @@ export interface HazopMatrixWidgetProps {
   studyId?: string;
   sha256Seal?: string;
   deviations?: HazopItem[];
+}
+
+// 28. IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety
+export interface ArcFlashHazardCardProps {
+  assetTag?: string; // Default: 'SWGR-6.6KV-01'
+  location?: string; // Default: '6.6 kV MV SUBSTATION'
+  title?: string;
+  systemVoltageKv?: number; // 6.6 kV
+  boltedFaultCurrentKa?: number; // 25.0 kA
+  clearingTimeSec?: number; // 0.20 s
+  workingDistanceMm?: number; // 914 mm (36 in)
+  electrodeConfig?: 'VCB' | 'VCBB' | 'HCB' | 'VOA' | 'HOA';
+  gapMm?: number; // 104 mm for MV switchgear
+  restrictedBoundaryMm?: number; // 700 mm
+  limitedBoundaryMm?: number; // 1500 mm
 }
 
 

@@ -975,6 +975,7 @@ export const useIndraStore = create<IndraState>()(
         const isRcaQuery = /rca|root\s*cause|5[\s_-]?why|bowtie|bow[\s_-]?tie|fishbone|ishikawa|fault\s*tree|fta/i.test(promptText);
         const isSensorDriftQuery = /sensor[\s_-]?drift|fdd|iso\s*13374|vdi\s*2888|tt-101|calibration|voting\s*comparator/i.test(promptText);
         const isHazopQuery = /hazop|pha|process\s*hazard|iec\s*61882|r-401|guide[\s_-]?word|deviation\s*matrix/i.test(promptText);
+        const isArcFlashQuery = /arc[\s_-]?flash|ieee[\s_-]?1584|nfpa[\s_-]?70e|incident\s*energy|shock\s*hazard|electrical\s*safety|arcflash/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1140,6 +1141,28 @@ Comprehensive deviation matrix for Reactor **R-401** evaluated across standard g
 \`\`\`
 
 - **HAZOP Summary:** 9 deviation nodes evaluated. 4 Critical/High risk scenarios identified requiring mandatory independent SIS trips and API 521 flare header capacity verification.`;
+        } else if (isArcFlashQuery) {
+          finalMarkdown = `### IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety Study
+
+Comprehensive arc flash hazard assessment and shock boundary analysis for **SWGR-6.6KV-01** (6.6 kV Medium Voltage Substation) per IEEE 1584-2018 and NFPA 70E Standard for Electrical Safety in the Workplace (2024 Edition).
+
+\`\`\`gen-ui
+{
+  "component": "ArcFlashHazardCard",
+  "props": {
+    "assetTag": "SWGR-6.6KV-01",
+    "location": "6.6 kV MV SUBSTATION",
+    "title": "IEEE 1584-2018 ARC FLASH & NFPA 70E ELECTRICAL SAFETY",
+    "systemVoltageKv": 6.6,
+    "boltedFaultCurrentKa": 25.0,
+    "clearingTimeSec": 0.20,
+    "workingDistanceMm": 914,
+    "electrodeConfig": "VCB"
+  }
+}
+\`\`\`
+
+- **Electrical Safety Assessment:** Arcing current computed at 23.8 kA with 14.8 cal/cm² incident energy at 914 mm (36") working distance. PPE Category 3 flash suit and Class 2 dielectric gloves mandatory within 4,213 mm Arc Flash Boundary.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 
