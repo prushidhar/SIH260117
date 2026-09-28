@@ -32,6 +32,7 @@ export type GenerativeUIComponentType =
   | 'HazopMatrixWidget'
   | 'ArcFlashHazardCard'
   | 'AcidDewPointMeter'
+  | 'CompressorTrainCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -569,6 +570,33 @@ export interface AcidDewPointMeterProps {
   flueGasTempInC?: number; // Default: 340.0 °C
   ambientAirTempC?: number; // Default: 25.0 °C
   materialSpec?: string; // Default: 'Corten Steel / Carbon Steel'
+}
+
+// 30. API 617 Multi-Stage Centrifugal Compressor Train Performance
+export interface CompressorTrainStage {
+  stageNumber: number;
+  suctionPressureBar: number;
+  dischargePressureBar: number;
+  pressureRatio: number;
+  suctionTempC: number;
+  dischargeTempC: number;
+  polytropicHeadKjKg: number;
+  powerDemandKw: number;
+  exceedsThermalLimit: boolean;
+}
+
+export interface CompressorTrainCardProps {
+  assetTag?: string; // Default: 'K-103'
+  trainName?: string; // Default: 'K-103 FLASH GAS'
+  title?: string;
+  suctionPressureBar?: number; // 2.2 bar a
+  dischargePressureBar?: number; // 15.4 bar a
+  massFlowTh?: number; // 42.5 t/h
+  intercoolerOutletTempC?: number; // 40.0 °C
+  polytropicEfficiencyPct?: number; // 82.0 %
+  gasMolecularWeight?: number; // 28.5 kg/kmol
+  specificHeatRatio?: number; // 1.26
+  maxAllowableTempC?: number; // 135.0 °C per API 617
 }
 
 

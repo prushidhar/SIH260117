@@ -30,6 +30,7 @@ import SensorDriftFddCard from './components/SensorDriftFddCard';
 import HazopMatrixWidget from './components/HazopMatrixWidget';
 import ArcFlashHazardCard from './components/ArcFlashHazardCard';
 import AcidDewPointMeter from './components/AcidDewPointMeter';
+import CompressorTrainCard from './components/CompressorTrainCard';
 
 interface RegistryProps {
   component: string;
@@ -182,6 +183,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 29. ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity
   if (compKey.includes('acid_dew_point') || compKey.includes('aciddewpoint') || compKey.includes('ptc43') || compKey.includes('ptc_4_3') || compKey.includes('air_preheater') || compKey.includes('cold_end') || compKey === 'aciddewpointmeter') {
     return <AcidDewPointMeter {...props} />;
+  }
+
+  // 30. API 617 Multi-Stage Centrifugal Compressor Train Performance
+  if (compKey.includes('multistage_compressor') || compKey.includes('compressor_train') || compKey.includes('api617_train') || compKey.includes('compressortrain') || compKey === 'compressortraincard') {
+    return <CompressorTrainCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

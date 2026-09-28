@@ -977,6 +977,7 @@ export const useIndraStore = create<IndraState>()(
         const isHazopQuery = /hazop|pha|process\s*hazard|iec\s*61882|r-401|guide[\s_-]?word|deviation\s*matrix/i.test(promptText);
         const isArcFlashQuery = /arc[\s_-]?flash|ieee[\s_-]?1584|nfpa[\s_-]?70e|incident\s*energy|shock\s*hazard|electrical\s*safety|arcflash/i.test(promptText);
         const isAcidDewPointQuery = /acid[\s_-]?dew[\s_-]?point|ptc[\s_-]?4\.?3|aph-101|air[\s_-]?preheater|cold[\s_-]?end|sulfuric\s*acid\s*condensation/i.test(promptText);
+        const isCompressorTrainQuery = /compressor[\s_-]?train|api[\s_-]?617[\s_-]?train|k-103|multi[\s_-]?stage[\s_-]?compressor|stage[\s_-]?casing|intercooler\s*duty/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1185,6 +1186,28 @@ Verhoff-Banchero thermodynamic correlation and sulfuric acid ($H_2SO_4$) condens
 \`\`\`
 
 - **Cold-End Integrity Diagnosis:** Acid dew point computed at 149.7 °C with 28.4 ppmv SO3. Current cold-end metal temperature (155.0 °C) provides a +5.3 °C safety margin (MARGINAL_RISK). Recommend SCAPH steam coil modulation or O2 trim to maintain recommended T_dew + 15 °C buffer.`;
+        } else if (isCompressorTrainQuery) {
+          finalMarkdown = `### API 617 Multi-Stage Centrifugal Compressor Train Performance Assessment
+
+Three-stage centrifugal flash gas compressor train evaluation for **K-103 FLASH GAS** per API 617 8th Edition / ISO 10439 standards, covering thermodynamic polytropic balance, interstage cooling, and discharge thermal limits.
+
+\`\`\`gen-ui
+{
+  "component": "CompressorTrainCard",
+  "props": {
+    "assetTag": "K-103",
+    "trainName": "K-103 FLASH GAS",
+    "title": "API 617 MULTI-STAGE COMPRESSOR TRAIN PERFORMANCE",
+    "suctionPressureBar": 2.2,
+    "dischargePressureBar": 15.4,
+    "massFlowTh": 42.5,
+    "intercoolerOutletTempC": 40.0,
+    "polytropicEfficiencyPct": 82.0
+  }
+}
+\`\`\`
+
+- **Train Performance Summary:** Overall pressure ratio 7.00:1 (average stage ratio 1.91:1) across 3 stages with total polytropic head of 218.4 kJ/kg and 3.42 MW shaft power demand. Maximum discharge temperature is 98.2 °C (PASS: well below API 617 135.0 °C statutory limit with +36.8 °C safety margin). Total intercooler thermal duty is 2.15 MWth.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

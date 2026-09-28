@@ -130,6 +130,13 @@ const industrialWorkflows = [
     icon: Thermometer,
     badge: 'ASME PTC 4.3 / Thermal',
   },
+  {
+    title: 'API 617 Multi-Stage Compressor Train Performance',
+    desc: '3-stage centrifugal thermodynamic balance, intercooler heat duties, polytropic head, and API 617 135°C discharge limit verification.',
+    query: 'Model API 617 multi-stage flash gas centrifugal compressor train K-103: suction pressure 2.2 bar a, discharge pressure 15.4 bar a (overall ratio 7.0:1), mass flow 42.5 t/h, intercooler exit temperature 40.0°C. Generate 3-stage process flow schematic, calculate interstage temperatures, and verify API 617 § 4.3 thermal limit (≤ 135.0°C).',
+    icon: Activity,
+    badge: 'API 617 / Turbomachine',
+  },
 ];
 
 /**
