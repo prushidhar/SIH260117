@@ -467,8 +467,88 @@ def main():
     assert rgd_data.get("compliance") == "PASS_NORSOK_M710_QUALIFIED"
     print(f"[+] /api/materials/norsok/rgd-seal: OK (Tag: {rgd_data.get('seal_tag')}, Material: {rgd_data.get('elastomer_material')}, Cavitation: {rgd_data.get('effective_internal_cavitation_stress_mpa')} MPa, Margin: {rgd_data.get('blistering_resistance_margin_factor')}x, Rating: {rgd_data.get('norsok_m710_crack_rating')}, Status: {rgd_data.get('compliance')})")
 
+    # 32. API Standard 618 Reciprocating Process Compressor Endpoint
+    res_api618 = client.post("/api/compressor/api618/reciprocating", json={
+        "compressor_tag": "K-201",
+        "piston_bore_diameter_mm": 380.0,
+        "stroke_length_mm": 250.0,
+        "crankshaft_speed_rpm": 450.0,
+        "number_of_cylinders": 2,
+        "cylinder_clearance_volume_pct": 12.5,
+        "suction_pressure_bar_a": 3.5,
+        "discharge_pressure_bar_a": 9.8,
+        "suction_temperature_c": 35.0,
+        "gas_isentropic_exponent_k": 1.32,
+        "gas_molecular_weight": 18.5,
+        "pulsation_damper_bottle_volume_m3": 0.65
+    })
+    assert res_api618.status_code == 200
+    api618_data = res_api618.json()
+    assert api618_data.get("compressor_tag") == "K-201"
+    assert api618_data.get("compliance") == "PASS_API618_CYLINDER_SIZED"
+    print(f"[+] /api/compressor/api618/reciprocating: OK (Tag: {api618_data.get('compressor_tag')}, Flow: {api618_data.get('actual_suction_flow_m3_h')} m3/h, T_d: {api618_data.get('discharge_temperature_c')} C, BHP: {api618_data.get('shaft_power_kw')} kW, Damper: {api618_data.get('pulsation_suppression_adequate')}, Status: {api618_data.get('compliance')})")
+
+    # 33. ASME Section I Boiler & HRSG Circulation Hydrodynamics Endpoint
+    res_bl = client.post("/api/boilers/asme-sec1/circulation", json={
+        "boiler_tag": "B-101",
+        "steam_drum_pressure_barg": 95.0,
+        "steam_production_tonne_h": 120.0,
+        "riser_tube_id_mm": 51.0,
+        "riser_tube_length_m": 24.0,
+        "number_of_riser_tubes": 180,
+        "downcomer_id_mm": 250.0,
+        "number_of_downcomers": 4,
+        "downcomer_height_m": 22.0,
+        "average_heat_flux_kw_m2": 145.0,
+        "feedwater_temp_c": 210.0
+    })
+    assert res_bl.status_code == 200
+    bl_data = res_bl.json()
+    assert bl_data.get("boiler_tag") == "B-101"
+    assert bl_data.get("compliance") == "PASS_CIRCULATION_HYDRODYNAMICS_CERTIFIED"
+    print(f"[+] /api/boilers/asme-sec1/circulation: OK (Tag: {bl_data.get('boiler_tag')}, Drum P: {bl_data.get('steam_drum_pressure_barg')} barg, CR: {bl_data.get('circulation_ratio')}, Void: {bl_data.get('riser_exit_void_fraction_pct')}%, DNBR: {bl_data.get('dnb_safety_margin_ratio')}x, Status: {bl_data.get('compliance')})")
+
+    # 34. API Standard 530 Fired Heater Radiant Tube Creep Rupture Life Endpoint
+    res_cr = client.post("/api/heaters/api530/tube-creep", json={
+        "tube_tag": "F-101-RAD-01",
+        "tube_od_in": 6.625,
+        "minimum_wall_thickness_in": 0.280,
+        "design_pressure_psig": 450.0,
+        "maximum_tube_metal_temp_c": 580.0,
+        "tube_material": "ASTM A335 Gr P9 (9Cr-1Mo)",
+        "corrosion_allowance_in": 0.0625,
+        "design_operating_life_hours": 100000.0,
+        "heat_flux_density_kw_m2": 42.0
+    })
+    assert res_cr.status_code == 200
+    cr_data = res_cr.json()
+    assert cr_data.get("tube_tag") == "F-101-RAD-01"
+    assert cr_data.get("compliance") == "PASS_API530_CREEP_LIFE_VALIDATED"
+    print(f"[+] /api/heaters/api530/tube-creep: OK (Tag: {cr_data.get('tube_tag')}, Alloy: {cr_data.get('tube_material')}, Hoop Stress: {cr_data.get('hoop_stress_mpa')} MPa, Life: {cr_data.get('predicted_creep_rupture_life_years')} yrs, Damage: {cr_data.get('creep_damage_fraction')}, Status: {cr_data.get('compliance')})")
+
+    # 35. API Standard 676 Rotary Twin-Screw PD Pump Endpoint
+    res_sp = client.post("/api/pumps/api676/screw-pump", json={
+        "pump_tag": "P-801",
+        "pump_type": "Twin-Screw Double-Volute Positive Displacement",
+        "fluid_name": "Heavy Vacuum Residue / Bitumen",
+        "operating_viscosity_cst": 450.0,
+        "operating_temperature_c": 180.0,
+        "specific_gravity": 0.98,
+        "screw_rotor_diameter_mm": 160.0,
+        "screw_lead_pitch_mm": 85.0,
+        "operating_speed_rpm": 1450.0,
+        "differential_pressure_bar": 28.0,
+        "suction_pressure_bar_g": 2.5,
+        "radial_clearance_mm": 0.080
+    })
+    assert res_sp.status_code == 200
+    sp_data = res_sp.json()
+    assert sp_data.get("pump_tag") == "P-801"
+    assert sp_data.get("compliance") == "PASS_API676_SCREW_PUMP_QUALIFIED"
+    print(f"[+] /api/pumps/api676/screw-pump: OK (Tag: {sp_data.get('pump_tag')}, Flow: {sp_data.get('delivered_capacity_m3_h')} m3/h ({sp_data.get('delivered_capacity_gpm')} GPM), Vol Eff: {sp_data.get('volumetric_efficiency_pct')}%, BHP: {sp_data.get('total_shaft_power_kw')} kW, NPSHR: {sp_data.get('npsh_required_m')}m, Cavitation Safe: {sp_data.get('cavitation_safe')}, Status: {sp_data.get('compliance')})")
+
     print("\n" + "=" * 65)
-    print("ALL 31 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 35 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

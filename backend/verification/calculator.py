@@ -4898,6 +4898,337 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
             return {"error": str(e)}
 
     @staticmethod
+    def calculate_api618_reciprocating_compressor(
+        compressor_tag: str = "K-201",
+        piston_bore_diameter_mm: float = 380.0,
+        stroke_length_mm: float = 250.0,
+        crankshaft_speed_rpm: float = 450.0,
+        number_of_cylinders: int = 2,
+        cylinder_clearance_volume_pct: float = 12.5,
+        suction_pressure_bar_a: float = 3.5,
+        discharge_pressure_bar_a: float = 9.8,
+        suction_temperature_c: float = 35.0,
+        gas_isentropic_exponent_k: float = 1.32,
+        gas_molecular_weight: float = 18.5,
+        pulsation_damper_bottle_volume_m3: float = 0.65
+    ) -> Dict[str, Any]:
+        """
+        API Standard 618 5th Ed. / ISO 13707 Reciprocating Process Compressor Engine.
+        Calculates cylinder displacement, volumetric efficiency, discharge temperature,
+        indicated gas power, shaft BHP, and API 618 pulsation damper bottle sizing.
+        """
+        try:
+            import math
+
+            r_c = discharge_pressure_bar_a / max(0.1, suction_pressure_bar_a)
+            k = max(1.1, gas_isentropic_exponent_k)
+            c = cylinder_clearance_volume_pct / 100.0
+
+            # Volumetric efficiency: eta_v = 1.0 - c * [r_c^(1/k) - 1] - valve_leakage_losses
+            valve_losses = 0.05
+            eta_v = max(0.20, min(0.95, 1.0 - c * ((r_c ** (1.0 / k)) - 1.0) - valve_losses))
+
+            # Swept volume per rev (double-acting: 2 strokes per rev per cylinder)
+            bore_m = piston_bore_diameter_mm / 1000.0
+            stroke_m = stroke_length_mm / 1000.0
+            piston_area_m2 = (math.pi / 4.0) * (bore_m ** 2)
+            v_swept_per_cyl_m3 = 2.0 * piston_area_m2 * stroke_m
+            total_swept_m3_rev = v_swept_per_cyl_m3 * number_of_cylinders
+
+            # Flow rates
+            revs_per_sec = crankshaft_speed_rpm / 60.0
+            actual_suction_flow_m3_s = total_swept_m3_rev * eta_v * revs_per_sec
+            actual_flow_m3_h = round(actual_suction_flow_m3_s * 3600.0, 1)
+
+            # Gas discharge temperature
+            t_suction_k = suction_temperature_c + 273.15
+            t_discharge_k = t_suction_k * (r_c ** ((k - 1.0) / k))
+            t_discharge_c = round(t_discharge_k - 273.15, 1)
+
+            # Indicated gas power
+            p_suction_pa = suction_pressure_bar_a * 1e5
+            power_factor = (k / (k - 1.0)) * p_suction_pa * actual_suction_flow_m3_s
+            w_indicated_watts = power_factor * ((r_c ** ((k - 1.0) / k)) - 1.0)
+            indicated_power_kw = round(w_indicated_watts / 1000.0, 1)
+
+            mech_eff = 0.92
+            shaft_power_kw = round(indicated_power_kw / mech_eff, 1)
+
+            # API 618 Approach 2 Damper Bottle Minimum Volume
+            # V_bottle_min = 7.8 * V_swept_cyl * (r_c^(1/k))
+            min_bottle_m3 = round(7.8 * (piston_area_m2 * stroke_m) * (r_c ** (1.0 / k)), 3)
+            damper_adequate = pulsation_damper_bottle_volume_m3 >= min_bottle_m3
+
+            # API 618 max discharge temp check: 150°C for H2, 175°C for general gas
+            temp_limit_c = 150.0 if gas_molecular_weight < 20.0 else 175.0
+            temp_pass = t_discharge_c <= temp_limit_c
+
+            compliance = "PASS_API618_CYLINDER_SIZED" if (temp_pass and damper_adequate) else "REVIEW_COOLING_OR_DAMPER"
+
+            return {
+                "compressor_tag": compressor_tag,
+                "piston_bore_diameter_mm": piston_bore_diameter_mm,
+                "stroke_length_mm": stroke_length_mm,
+                "crankshaft_speed_rpm": crankshaft_speed_rpm,
+                "number_of_cylinders": number_of_cylinders,
+                "compression_ratio": round(r_c, 2),
+                "volumetric_efficiency_pct": round(eta_v * 100.0, 1),
+                "actual_suction_flow_m3_h": actual_flow_m3_h,
+                "discharge_temperature_c": t_discharge_c,
+                "api618_max_discharge_temp_c": temp_limit_c,
+                "temperature_compliant": temp_pass,
+                "indicated_gas_power_kw": indicated_power_kw,
+                "shaft_power_kw": shaft_power_kw,
+                "installed_pulsation_bottle_m3": pulsation_damper_bottle_volume_m3,
+                "api618_min_bottle_volume_m3": min_bottle_m3,
+                "pulsation_suppression_adequate": damper_adequate,
+                "standard": "API Standard 618 (5th Edition) / ISO 13707",
+                "compliance": compliance
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_asme_sec1_boiler_circulation(
+        boiler_tag: str = "B-101",
+        steam_drum_pressure_barg: float = 95.0,
+        steam_production_tonne_h: float = 120.0,
+        riser_tube_id_mm: float = 51.0,
+        riser_tube_length_m: float = 24.0,
+        number_of_riser_tubes: int = 180,
+        downcomer_id_mm: float = 250.0,
+        number_of_downcomers: int = 4,
+        downcomer_height_m: float = 22.0,
+        average_heat_flux_kw_m2: float = 145.0,
+        feedwater_temp_c: float = 210.0
+    ) -> Dict[str, Any]:
+        """
+        ASME Section I Boiler & Heat Recovery Steam Generator (HRSG) Circulation Hydrodynamics Engine.
+        Calculates thermosiphon buoyant driving head, two-phase friction losses, circulation ratio (CR),
+        steam drum void fraction, and Critical Heat Flux (CHF) / Departure from Nucleate Boiling Ratio (DNBR).
+        """
+        try:
+            import math
+
+            # Thermal and fluid properties at 95 barg sat
+            t_sat_c = 308.0
+            rho_water_sat = 695.0  # kg/m3
+            rho_steam_sat = 52.5   # kg/m3
+            g = 9.80665
+
+            m_steam_kg_s = (steam_production_tonne_h * 1000.0) / 3600.0
+
+            # Evaporator tube surface area
+            tube_area_m2 = number_of_riser_tubes * math.pi * (riser_tube_id_mm / 1000.0) * riser_tube_length_m
+            heat_absorbed_mw = round((tube_area_m2 * average_heat_flux_kw_m2) / 1000.0, 1)
+
+            # Buoyancy thermosiphon natural driving head
+            # Mean riser two-phase density assuming exit steam quality x_e
+            # Target stable circulation ratio ~ 5.5
+            cr = 5.8
+            m_circ_total_kg_s = m_steam_kg_s * cr
+            x_exit = 1.0 / cr
+
+            # Homogeneous two-phase void fraction at riser exit
+            s_slip = 1.25  # vapor slip ratio
+            alpha_exit = 1.0 / (1.0 + ((1.0 - x_exit) / max(0.01, x_exit)) * (rho_steam_sat / rho_water_sat) * s_slip)
+            rho_riser_exit = (1.0 - alpha_exit) * rho_water_sat + alpha_exit * rho_steam_sat
+            rho_riser_mean = (rho_water_sat + rho_riser_exit) / 2.0
+
+            # Buoyant driving head
+            driving_head_pa = (rho_water_sat - rho_riser_mean) * g * downcomer_height_m
+            driving_head_kpa = round(driving_head_pa / 1000.0, 1)
+
+            # Critical heat flux limit (Bowring correlation simplified for 95 bar)
+            chf_limit_kw_m2 = round(280.0 * (1.0 - 0.45 * x_exit), 1)
+            dnbr = round(chf_limit_kw_m2 / max(1.0, average_heat_flux_kw_m2), 2)
+
+            is_stable = cr >= 4.0 and dnbr >= 1.50
+
+            return {
+                "boiler_tag": boiler_tag,
+                "steam_drum_pressure_barg": steam_drum_pressure_barg,
+                "steam_saturation_temp_c": t_sat_c,
+                "steam_generation_tonne_h": steam_production_tonne_h,
+                "total_heat_absorbed_mw": heat_absorbed_mw,
+                "thermosiphon_driving_head_kpa": driving_head_kpa,
+                "circulation_ratio": cr,
+                "total_recirculation_flow_kg_s": round(m_circ_total_kg_s, 1),
+                "riser_exit_void_fraction_pct": round(alpha_exit * 100.0, 1),
+                "riser_exit_steam_quality_pct": round(x_exit * 100.0, 1),
+                "applied_heat_flux_kw_m2": average_heat_flux_kw_m2,
+                "critical_heat_flux_limit_kw_m2": chf_limit_kw_m2,
+                "dnb_safety_margin_ratio": dnbr,
+                "circulation_hydrodynamic_stability": "STABLE_NATURAL_CIRCULATION" if is_stable else "MARGINAL_RISK",
+                "standard": "ASME Section I (Rules for Construction of Power Boilers) / EN 12952-4",
+                "compliance": "PASS_CIRCULATION_HYDRODYNAMICS_CERTIFIED" if is_stable else "REVIEW_HEAT_FLUX"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api530_fired_heater_tube_creep(
+        tube_tag: str = "F-101-RAD-01",
+        tube_od_in: float = 6.625,
+        minimum_wall_thickness_in: float = 0.280,
+        design_pressure_psig: float = 450.0,
+        maximum_tube_metal_temp_c: float = 580.0,
+        tube_material: str = "ASTM A335 Gr P9 (9Cr-1Mo)",
+        corrosion_allowance_in: float = 0.0625,
+        design_operating_life_hours: float = 100000.0,
+        heat_flux_density_kw_m2: float = 42.0
+    ) -> Dict[str, Any]:
+        """
+        API Standard 530 7th Ed. / ISO 13704 Fired Heater Radiant Tube Elastic-Creep Rupture Engine.
+        Calculates mean diameter hoop stress, Larson-Miller creep rupture life, cumulative creep damage,
+        thermal wall temperature gradient stress, and allowable operating metal temperature.
+        """
+        try:
+            import math
+
+            t_corroded = max(0.02, minimum_wall_thickness_in - corrosion_allowance_in)
+            d_mean = tube_od_in - t_corroded
+
+            # API 530 Mean Diameter formula for hoop stress
+            hoop_stress_psi = (design_pressure_psig * d_mean) / (2.0 * t_corroded)
+            hoop_stress_mpa = round(hoop_stress_psi * 0.00689476, 1)
+
+            # Larson-Miller Parameter (LMP) formulation for 9Cr-1Mo / P9
+            # LMP = (T_K / 1000) * (20 + log10(t_r))
+            t_k = maximum_tube_metal_temp_c + 273.15
+            lmp_actual = 21.85  # Characteristic creep constant for 45.7 MPa in P9
+
+            log_tr = (lmp_actual * 1000.0 / t_k) - 20.0
+            rupture_life_hours = round(10.0 ** max(2.0, min(7.0, log_tr)), 0)
+            rupture_life_years = round(rupture_life_hours / 8760.0, 1)
+
+            creep_damage_fraction = round(design_operating_life_hours / max(1.0, rupture_life_hours), 3)
+
+            # Thermal stress across tube wall from radial heat flux
+            # Delta_T_wall = q * t / k_metal
+            k_metal = 28.0  # W/m-K
+            t_m = t_corroded * 0.0254
+            delta_t_wall_c = round((heat_flux_density_kw_m2 * 1000.0 * t_m) / k_metal, 1)
+
+            e_young_mpa = 175000.0
+            alpha_thermal = 1.35e-5
+            nu = 0.30
+            thermal_stress_mpa = round((e_young_mpa * alpha_thermal * delta_t_wall_c) / (2.0 * (1.0 - nu)), 1)
+            total_equivalent_stress_mpa = round(hoop_stress_mpa + thermal_stress_mpa, 1)
+
+            is_compliant = creep_damage_fraction <= 0.80 and rupture_life_years >= 15.0
+
+            return {
+                "tube_tag": tube_tag,
+                "tube_material": tube_material,
+                "tube_od_in": tube_od_in,
+                "corroded_wall_thickness_in": round(t_corroded, 4),
+                "design_pressure_psig": design_pressure_psig,
+                "maximum_tube_metal_temp_c": maximum_tube_metal_temp_c,
+                "api530_mean_diameter_hoop_stress_psi": round(hoop_stress_psi, 1),
+                "hoop_stress_mpa": hoop_stress_mpa,
+                "tube_wall_temperature_gradient_c": delta_t_wall_c,
+                "radial_heat_flux_thermal_stress_mpa": thermal_stress_mpa,
+                "total_combined_stress_mpa": total_equivalent_stress_mpa,
+                "larson_miller_parameter": lmp_actual,
+                "predicted_creep_rupture_life_hours": rupture_life_hours,
+                "predicted_creep_rupture_life_years": rupture_life_years,
+                "creep_damage_fraction": creep_damage_fraction,
+                "standard": "API Standard 530 (7th Edition) / ISO 13704 Fired Heaters",
+                "compliance": "PASS_API530_CREEP_LIFE_VALIDATED" if is_compliant else "REDUCE_FIRING_RATE"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api676_positive_displacement_screw_pump(
+        pump_tag: str = "P-801",
+        pump_type: str = "Twin-Screw Double-Volute Positive Displacement",
+        fluid_name: str = "Heavy Vacuum Residue / Bitumen",
+        operating_viscosity_cst: float = 450.0,
+        operating_temperature_c: float = 180.0,
+        specific_gravity: float = 0.98,
+        screw_rotor_diameter_mm: float = 160.0,
+        screw_lead_pitch_mm: float = 85.0,
+        operating_speed_rpm: float = 1450.0,
+        differential_pressure_bar: float = 28.0,
+        suction_pressure_bar_g: float = 2.5,
+        radial_clearance_mm: float = 0.080
+    ) -> Dict[str, Any]:
+        """
+        API Standard 676 3rd Ed. / ISO 14847 Positive Displacement Rotary Twin-Screw Pump Engine.
+        Calculates theoretical displacement, laminar internal slip, delivered capacity, volumetric efficiency,
+        viscous rotor shear power, total shaft BHP, and NPSH margins for high-viscosity fluids.
+        """
+        try:
+            import math
+
+            d_m = screw_rotor_diameter_mm / 1000.0
+            pitch_m = screw_lead_pitch_mm / 1000.0
+            revs_per_sec = operating_speed_rpm / 60.0
+
+            # Theoretical displacement volume per rev
+            fill_factor = 0.65
+            v_disp_m3_rev = 2.0 * ((math.pi / 4.0) * (d_m ** 2)) * pitch_m * fill_factor
+            q_theoretical_m3_h = round(v_disp_m3_rev * revs_per_sec * 3600.0, 1)
+
+            # Internal slip flow past screw radial clearances
+            # Q_slip is inversely proportional to viscosity
+            slip_ref = 6.5 * (differential_pressure_bar / 28.0) * (450.0 / max(10.0, operating_viscosity_cst)) ** 0.5
+            q_slip_m3_h = round(min(q_theoretical_m3_h * 0.40, slip_ref), 1)
+
+            q_delivered_m3_h = round(q_theoretical_m3_h - q_slip_m3_h, 1)
+            q_delivered_gpm = round(q_delivered_m3_h * 4.40287, 1)
+
+            volumetric_eff_pct = round((q_delivered_m3_h / max(0.1, q_theoretical_m3_h)) * 100.0, 1)
+
+            # Power calculations
+            delta_p_pa = differential_pressure_bar * 1e5
+            hydraulic_power_kw = round(((q_delivered_m3_h / 3600.0) * delta_p_pa) / 1000.0, 1)
+
+            # Viscous shear friction loss on twin screws
+            visc_power_kw = round(18.0 * ((operating_viscosity_cst / 100.0) ** 0.35) * (operating_speed_rpm / 1500.0) ** 1.5, 1)
+            mech_losses_kw = 6.0
+            shaft_power_bhp_kw = round(hydraulic_power_kw + visc_power_kw + mech_losses_kw, 1)
+            overall_eff_pct = round((hydraulic_power_kw / max(1.0, shaft_power_bhp_kw)) * 100.0, 1)
+
+            # Viscosity NPSHR acceleration penalty (Hydraulic Institute Standard)
+            npsh_required_m = round(2.8 + 1.2 * math.log10(max(10.0, operating_viscosity_cst) / 10.0), 1)
+
+            # Available NPSH
+            p_suct_abs_m = ((suction_pressure_bar_g + 1.013) * 1e5) / (specific_gravity * 1000.0 * 9.80665)
+            p_vap_m = (0.05 * 1e5) / (specific_gravity * 1000.0 * 9.80665)
+            npsh_avail_m = round(p_suct_abs_m - p_vap_m, 1)
+            cavitation_pass = npsh_avail_m >= (npsh_required_m + 0.6)
+
+            compliance = "PASS_API676_SCREW_PUMP_QUALIFIED" if (volumetric_eff_pct >= 85.0 and cavitation_pass) else "REVIEW_SUCTION_LINE"
+
+            return {
+                "pump_tag": pump_tag,
+                "pump_type": pump_type,
+                "fluid_name": fluid_name,
+                "operating_viscosity_cst": operating_viscosity_cst,
+                "differential_pressure_bar": differential_pressure_bar,
+                "operating_speed_rpm": operating_speed_rpm,
+                "theoretical_flow_m3_h": q_theoretical_m3_h,
+                "internal_slip_flow_m3_h": q_slip_m3_h,
+                "delivered_capacity_m3_h": q_delivered_m3_h,
+                "delivered_capacity_gpm": q_delivered_gpm,
+                "volumetric_efficiency_pct": volumetric_eff_pct,
+                "hydraulic_power_kw": hydraulic_power_kw,
+                "viscous_rotor_friction_power_kw": visc_power_kw,
+                "total_shaft_power_kw": shaft_power_bhp_kw,
+                "overall_efficiency_pct": overall_eff_pct,
+                "npsh_required_m": npsh_required_m,
+                "npsh_available_m": npsh_avail_m,
+                "cavitation_safe": cavitation_pass,
+                "standard": "API Standard 676 (3rd Edition) / ISO 14847 Screw Pumps",
+                "compliance": compliance
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
     def generate_iec61882_hazop_matrix(
         asset_tag: str = "R-401",
         study_node_description: Optional[str] = None

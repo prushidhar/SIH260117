@@ -2518,5 +2518,100 @@
       "reboiler_duty_kw": 285.0,
       "status": "OPTIMAL_ABSORPTION"
     }
+  },
+  {
+    "tag": "B-101",
+    "name": "Industrial High-Pressure Water-Tube Power Boiler",
+    "unit": "Utility Steam Generation Plant",
+    "type": "Natural Circulation Water-Tube Boiler",
+    "service": "High Pressure Superheated Steam Generation",
+    "description": "ASME Section I Power Boiler rated for 120 tonne/hour continuous steam generation at 95 bar g with natural thermosiphon circulation and downcomer-riser loop.",
+    "design_pressure_psig": 1450.0,
+    "design_temp_c": 320.0,
+    "steam_drum_pressure_barg": 95.0,
+    "steam_production_tonne_h": 120.0,
+    "riser_tubes_count": 180,
+    "downcomers_count": 4,
+    "downcomer_height_m": 22.0,
+    "material": "SA-106 Gr B / SA-210 Gr A1 Seamless Boiler Tubes",
+    "asme_rating": "ASME Boiler and Pressure Vessel Code Section I (PG)",
+    "status": "OPERATIONAL",
+    "telemetry": {
+      "steam_generation_tonne_h": 120.0,
+      "steam_pressure_barg": 95.0,
+      "circulation_ratio": 5.8,
+      "thermosiphon_head_kpa": 48.2,
+      "dnb_safety_margin": 1.93,
+      "drum_water_level_pct": 52.4,
+      "status": "CIRCULATION_STABLE"
+    }
+  },
+  {
+    "tag": "F-101-RAD-01",
+    "name": "Crude Charge Fired Heater Radiant Section Tube Pass",
+    "unit": "Crude Distillation Unit (CDU-I)",
+    "type": "Fired Heater Radiant Tube Circuit",
+    "service": "Heavy Crude Oil High-Temperature Heating",
+    "description": "API Standard 530 / ISO 13704 radiant coil tube pass constructed from 6.625-inch OD ASTM A335 Gr P9 alloy with Larson-Miller creep rupture evaluation for 580\u00b0C metal temperature.",
+    "design_pressure_psig": 450.0,
+    "design_temp_c": 620.0,
+    "tube_od_in": 6.625,
+    "nominal_thickness_in": 0.28,
+    "corrosion_allowance_in": 0.0625,
+    "material": "ASTM A335 Gr P9 (9Cr-1Mo High Temperature Ferritic Alloy)",
+    "asme_rating": "API Standard 530 / ASME B31.3",
+    "status": "OPERATIONAL",
+    "telemetry": {
+      "tube_metal_temp_c": 574.5,
+      "heat_flux_kw_m2": 42.0,
+      "hoop_stress_mpa": 45.7,
+      "thermal_gradient_stress_mpa": 32.1,
+      "creep_rupture_life_years": 40.5,
+      "creep_damage_fraction": 0.28,
+      "status": "CREEP_QUALIFIED"
+    }
+  },
+  {
+    "tag": "BDV-301",
+    "name": "Low-Temperature Flare Blowdown Emergency Isolation Valve",
+    "unit": "Cryogenic Ethylene Refrigeration Unit",
+    "type": "Emergency Depressuring Valve (BDV)",
+    "service": "Cryogenic Hydrocarbon Vapor Blowdown to Flare",
+    "description": "API Standard 521 \u00a7 5.7 and IEC 61511 SIL 3 certified fail-open cryogenic emergency blowdown valve rated for -46\u00b0C low-temperature chilling during rapid depressuring.",
+    "design_pressure_psig": 600.0,
+    "design_temp_c": -50.0,
+    "valve_size_in": 6.0,
+    "flange_class": 300,
+    "material": "ASTM A352 Gr LCC Low-Temperature Carbon Steel",
+    "asme_rating": "ASME B16.34 / API 521 / IEC 61511 SIL 3",
+    "status": "OPERATIONAL",
+    "telemetry": {
+      "valve_position_pct": 0.0,
+      "actuator_air_pressure_bar": 6.2,
+      "upstream_pressure_barg": 28.5,
+      "depressuring_chill_temp_c": -38.4,
+      "proof_test_interval_days": 180,
+      "status": "ARMED_FAIL_OPEN"
+    }
+  },
+  {
+    "tag": "P-802",
+    "name": "Heavy Gas Oil Booster Screw Pump",
+    "unit": "VDU",
+    "type": "Twin-Screw Pump",
+    "service": "HGO Booster",
+    "status": "OPERATIONAL",
+    "design_pressure_psig": 350.0,
+    "design_temp_c": 180.0
+  },
+  {
+    "tag": "HRSG-102",
+    "name": "Combined Cycle Heat Recovery Steam Generator",
+    "unit": "Cogen Unit",
+    "type": "HRSG Boiler",
+    "service": "Steam Cogen",
+    "status": "OPERATIONAL",
+    "design_pressure_psig": 1250.0,
+    "design_temp_c": 450.0
   }
 ]

@@ -2392,6 +2392,154 @@ async def evaluate_rgd_seal_qualification(req: RgdSealRequest):
     )
 
 
+class ReciprocatingCompressorRequest(BaseModel):
+    compressor_tag: Optional[str] = "K-201"
+    piston_bore_diameter_mm: Optional[float] = 380.0
+    stroke_length_mm: Optional[float] = 250.0
+    crankshaft_speed_rpm: Optional[float] = 450.0
+    number_of_cylinders: Optional[int] = 2
+    cylinder_clearance_volume_pct: Optional[float] = 12.5
+    suction_pressure_bar_a: Optional[float] = 3.5
+    discharge_pressure_bar_a: Optional[float] = 9.8
+    suction_temperature_c: Optional[float] = 35.0
+    gas_isentropic_exponent_k: Optional[float] = 1.32
+    gas_molecular_weight: Optional[float] = 18.5
+    pulsation_damper_bottle_volume_m3: Optional[float] = 0.65
+
+
+@app.post("/api/compressor/api618/reciprocating")
+async def evaluate_reciprocating_compressor(req: ReciprocatingCompressorRequest):
+    """
+    API Standard 618 5th Ed. / ISO 13707 Reciprocating Process Compressor Engine.
+    Calculates cylinder displacement, volumetric efficiency, discharge temperature,
+    indicated gas power, shaft BHP, and API 618 pulsation damper bottle sizing.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api618_reciprocating_compressor(
+        compressor_tag=req.compressor_tag or "K-201",
+        piston_bore_diameter_mm=req.piston_bore_diameter_mm or 380.0,
+        stroke_length_mm=req.stroke_length_mm or 250.0,
+        crankshaft_speed_rpm=req.crankshaft_speed_rpm or 450.0,
+        number_of_cylinders=req.number_of_cylinders or 2,
+        cylinder_clearance_volume_pct=req.cylinder_clearance_volume_pct or 12.5,
+        suction_pressure_bar_a=req.suction_pressure_bar_a or 3.5,
+        discharge_pressure_bar_a=req.discharge_pressure_bar_a or 9.8,
+        suction_temperature_c=req.suction_temperature_c or 35.0,
+        gas_isentropic_exponent_k=req.gas_isentropic_exponent_k or 1.32,
+        gas_molecular_weight=req.gas_molecular_weight or 18.5,
+        pulsation_damper_bottle_volume_m3=req.pulsation_damper_bottle_volume_m3 or 0.65
+    )
+
+
+class BoilerCirculationRequest(BaseModel):
+    boiler_tag: Optional[str] = "B-101"
+    steam_drum_pressure_barg: Optional[float] = 95.0
+    steam_production_tonne_h: Optional[float] = 120.0
+    riser_tube_id_mm: Optional[float] = 51.0
+    riser_tube_length_m: Optional[float] = 24.0
+    number_of_riser_tubes: Optional[int] = 180
+    downcomer_id_mm: Optional[float] = 250.0
+    number_of_downcomers: Optional[int] = 4
+    downcomer_height_m: Optional[float] = 22.0
+    average_heat_flux_kw_m2: Optional[float] = 145.0
+    feedwater_temp_c: Optional[float] = 210.0
+
+
+@app.post("/api/boilers/asme-sec1/circulation")
+async def evaluate_boiler_circulation(req: BoilerCirculationRequest):
+    """
+    ASME Section I Boiler & Heat Recovery Steam Generator (HRSG) Circulation Hydrodynamics.
+    Calculates thermosiphon buoyant driving head, circulation ratio (CR), steam quality,
+    void fraction, and Critical Heat Flux (CHF) DNBR safety margin.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_asme_sec1_boiler_circulation(
+        boiler_tag=req.boiler_tag or "B-101",
+        steam_drum_pressure_barg=req.steam_drum_pressure_barg or 95.0,
+        steam_production_tonne_h=req.steam_production_tonne_h or 120.0,
+        riser_tube_id_mm=req.riser_tube_id_mm or 51.0,
+        riser_tube_length_m=req.riser_tube_length_m or 24.0,
+        number_of_riser_tubes=req.number_of_riser_tubes or 180,
+        downcomer_id_mm=req.downcomer_id_mm or 250.0,
+        number_of_downcomers=req.number_of_downcomers or 4,
+        downcomer_height_m=req.downcomer_height_m or 22.0,
+        average_heat_flux_kw_m2=req.average_heat_flux_kw_m2 or 145.0,
+        feedwater_temp_c=req.feedwater_temp_c or 210.0
+    )
+
+
+class FiredHeaterTubeCreepRequest(BaseModel):
+    tube_tag: Optional[str] = "F-101-RAD-01"
+    tube_od_in: Optional[float] = 6.625
+    minimum_wall_thickness_in: Optional[float] = 0.280
+    design_pressure_psig: Optional[float] = 450.0
+    maximum_tube_metal_temp_c: Optional[float] = 580.0
+    tube_material: Optional[str] = "ASTM A335 Gr P9 (9Cr-1Mo)"
+    corrosion_allowance_in: Optional[float] = 0.0625
+    design_operating_life_hours: Optional[float] = 100000.0
+    heat_flux_density_kw_m2: Optional[float] = 42.0
+
+
+@app.post("/api/heaters/api530/tube-creep")
+async def evaluate_fired_heater_tube_creep(req: FiredHeaterTubeCreepRequest):
+    """
+    API Standard 530 7th Ed. / ISO 13704 Fired Heater Radiant Tube Creep Rupture Life.
+    Calculates mean diameter hoop stress, Larson-Miller parameter (LMP), cumulative creep damage,
+    and thermal gradient stress.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api530_fired_heater_tube_creep(
+        tube_tag=req.tube_tag or "F-101-RAD-01",
+        tube_od_in=req.tube_od_in or 6.625,
+        minimum_wall_thickness_in=req.minimum_wall_thickness_in or 0.280,
+        design_pressure_psig=req.design_pressure_psig or 450.0,
+        maximum_tube_metal_temp_c=req.maximum_tube_metal_temp_c or 580.0,
+        tube_material=req.tube_material or "ASTM A335 Gr P9 (9Cr-1Mo)",
+        corrosion_allowance_in=req.corrosion_allowance_in or 0.0625,
+        design_operating_life_hours=req.design_operating_life_hours or 100000.0,
+        heat_flux_density_kw_m2=req.heat_flux_density_kw_m2 or 42.0
+    )
+
+
+class ScrewPumpRequest(BaseModel):
+    pump_tag: Optional[str] = "P-801"
+    pump_type: Optional[str] = "Twin-Screw Double-Volute Positive Displacement"
+    fluid_name: Optional[str] = "Heavy Vacuum Residue / Bitumen"
+    operating_viscosity_cst: Optional[float] = 450.0
+    operating_temperature_c: Optional[float] = 180.0
+    specific_gravity: Optional[float] = 0.98
+    screw_rotor_diameter_mm: Optional[float] = 160.0
+    screw_lead_pitch_mm: Optional[float] = 85.0
+    operating_speed_rpm: Optional[float] = 1450.0
+    differential_pressure_bar: Optional[float] = 28.0
+    suction_pressure_bar_g: Optional[float] = 2.5
+    radial_clearance_mm: Optional[float] = 0.080
+
+
+@app.post("/api/pumps/api676/screw-pump")
+async def evaluate_screw_pump(req: ScrewPumpRequest):
+    """
+    API Standard 676 3rd Ed. / ISO 14847 Rotary Positive Displacement Twin-Screw Pump.
+    Calculates theoretical displacement, laminar slip, delivered capacity, volumetric efficiency,
+    rotor friction power, total shaft BHP, and NPSHR.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api676_positive_displacement_screw_pump(
+        pump_tag=req.pump_tag or "P-801",
+        pump_type=req.pump_type or "Twin-Screw Double-Volute Positive Displacement",
+        fluid_name=req.fluid_name or "Heavy Vacuum Residue / Bitumen",
+        operating_viscosity_cst=req.operating_viscosity_cst or 450.0,
+        operating_temperature_c=req.operating_temperature_c or 180.0,
+        specific_gravity=req.specific_gravity or 0.98,
+        screw_rotor_diameter_mm=req.screw_rotor_diameter_mm or 160.0,
+        screw_lead_pitch_mm=req.screw_lead_pitch_mm or 85.0,
+        operating_speed_rpm=req.operating_speed_rpm or 1450.0,
+        differential_pressure_bar=req.differential_pressure_bar or 28.0,
+        suction_pressure_bar_g=req.suction_pressure_bar_g or 2.5,
+        radial_clearance_mm=req.radial_clearance_mm or 0.080
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

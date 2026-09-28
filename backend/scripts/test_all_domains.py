@@ -1582,6 +1582,125 @@ def test_card_57_norsok_m710_rapid_gas_decompression():
     print('  PASS')
 
 
+def test_card_58_api618_reciprocating_compressor():
+    print('\n--- TEST 58: API Standard 618 5th Ed. / ISO 13707 Reciprocating Process Compressor ---')
+    res = engineering_tools.calculate_api618_reciprocating_compressor(
+        compressor_tag="K-201",
+        piston_bore_diameter_mm=380.0,
+        stroke_length_mm=250.0,
+        crankshaft_speed_rpm=450.0,
+        number_of_cylinders=2,
+        cylinder_clearance_volume_pct=12.5,
+        suction_pressure_bar_a=3.5,
+        discharge_pressure_bar_a=9.8,
+        suction_temperature_c=35.0,
+        gas_isentropic_exponent_k=1.32,
+        gas_molecular_weight=18.5,
+        pulsation_damper_bottle_volume_m3=0.65
+    )
+    assert 'error' not in res
+    assert res['compressor_tag'] == 'K-201'
+    assert res['compression_ratio'] >= 2.5
+    assert res['volumetric_efficiency_pct'] > 50.0
+    assert res['discharge_temperature_c'] <= res['api618_max_discharge_temp_c']
+    assert res['pulsation_suppression_adequate'] is True
+    assert res['compliance'] == 'PASS_API618_CYLINDER_SIZED'
+    print(f"  [+] Compressor: {res['compressor_tag']} (Cylinders: {res['number_of_cylinders']}, Bore: {res['piston_bore_diameter_mm']}mm, Stroke: {res['stroke_length_mm']}mm @ {res['crankshaft_speed_rpm']} RPM)")
+    print(f"  [+] Compression Ratio: {res['compression_ratio']} -> Volumetric Efficiency: {res['volumetric_efficiency_pct']}% (Flow: {res['actual_suction_flow_m3_h']} m³/h)")
+    print(f"  [+] Discharge Temperature: {res['discharge_temperature_c']} °C vs Limit: {res['api618_max_discharge_temp_c']} °C (Compliant: {res['temperature_compliant']})")
+    print(f"  [+] Power Demand: Indicated Gas Power={res['indicated_gas_power_kw']} kW, Shaft BHP={res['shaft_power_kw']} kW")
+    print(f"  [+] Pulsation Dampener Bottle: Installed={res['installed_pulsation_bottle_m3']} m³ vs Min Required={res['api618_min_bottle_volume_m3']} m³ (Adequate: {res['pulsation_suppression_adequate']})")
+    print(f"  [+] API 618 Verdict: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_59_asme_sec1_boiler_circulation():
+    print('\n--- TEST 59: ASME Section I Power Boilers & EN 12952 Circulation Hydrodynamics ---')
+    res = engineering_tools.calculate_asme_sec1_boiler_circulation(
+        boiler_tag="B-101",
+        steam_drum_pressure_barg=95.0,
+        steam_production_tonne_h=120.0,
+        riser_tube_id_mm=51.0,
+        riser_tube_length_m=24.0,
+        number_of_riser_tubes=180,
+        downcomer_id_mm=250.0,
+        number_of_downcomers=4,
+        downcomer_height_m=22.0,
+        average_heat_flux_kw_m2=145.0,
+        feedwater_temp_c=210.0
+    )
+    assert 'error' not in res
+    assert res['boiler_tag'] == 'B-101'
+    assert res['circulation_ratio'] >= 4.0
+    assert res['dnb_safety_margin_ratio'] >= 1.50
+    assert res['compliance'] == 'PASS_CIRCULATION_HYDRODYNAMICS_CERTIFIED'
+    print(f"  [+] Boiler / HRSG: {res['boiler_tag']} (Drum Pressure: {res['steam_drum_pressure_barg']} barg, Tsat: {res['steam_saturation_temp_c']} °C)")
+    print(f"  [+] Thermal Evaporation: Steam Production={res['steam_generation_tonne_h']} t/h (Total Heat Duty: {res['total_heat_absorbed_mw']} MWth)")
+    print(f"  [+] Thermosiphon Head: Buoyant Delta_P={res['thermosiphon_driving_head_kpa']} kPa -> Circulation Ratio CR={res['circulation_ratio']} (Recirc: {res['total_recirculation_flow_kg_s']} kg/s)")
+    print(f"  [+] Two-Phase Flow: Riser Void Fraction={res['riser_exit_void_fraction_pct']}%, Steam Quality x={res['riser_exit_steam_quality_pct']}%")
+    print(f"  [+] DNB / Critical Heat Flux: Actual={res['applied_heat_flux_kw_m2']} kW/m² vs Limit={res['critical_heat_flux_limit_kw_m2']} kW/m² (DNBR Margin: {res['dnb_safety_margin_ratio']}x)")
+    print(f"  [+] Circulation Stability: {res['circulation_hydrodynamic_stability']} ({res['compliance']})")
+    print('  PASS')
+
+
+def test_card_60_api530_fired_heater_tube_creep():
+    print('\n--- TEST 60: API Standard 530 / ISO 13704 Fired Heater Tube Creep Rupture Life ---')
+    res = engineering_tools.calculate_api530_fired_heater_tube_creep(
+        tube_tag="F-101-RAD-01",
+        tube_od_in=6.625,
+        minimum_wall_thickness_in=0.280,
+        design_pressure_psig=450.0,
+        maximum_tube_metal_temp_c=580.0,
+        tube_material="ASTM A335 Gr P9 (9Cr-1Mo)",
+        corrosion_allowance_in=0.0625,
+        design_operating_life_hours=100000.0,
+        heat_flux_density_kw_m2=42.0
+    )
+    assert 'error' not in res
+    assert res['tube_tag'] == 'F-101-RAD-01'
+    assert res['hoop_stress_mpa'] > 0
+    assert res['predicted_creep_rupture_life_years'] > 15.0
+    assert res['creep_damage_fraction'] <= 0.80
+    assert res['compliance'] == 'PASS_API530_CREEP_LIFE_VALIDATED'
+    print(f"  [+] Radiant Tube: {res['tube_tag']} (Alloy: {res['tube_material']}, NPS {res['tube_od_in']}\", Corroded Wall: {res['corroded_wall_thickness_in']}\")")
+    print(f"  [+] Stress Profile: Mean Diameter Hoop Stress={res['hoop_stress_mpa']} MPa ({res['api530_mean_diameter_hoop_stress_psi']} psi), Thermal Stress={res['radial_heat_flux_thermal_stress_mpa']} MPa (Total: {res['total_combined_stress_mpa']} MPa)")
+    print(f"  [+] Metal Temperature: {res['maximum_tube_metal_temp_c']} °C -> Larson-Miller Parameter LMP={res['larson_miller_parameter']}")
+    print(f"  [+] Creep Rupture Life: {res['predicted_creep_rupture_life_hours']} operating hours ({res['predicted_creep_rupture_life_years']} years)")
+    print(f"  [+] Cumulative Creep Damage: {res['creep_damage_fraction']} vs Max 0.80 ({res['compliance']})")
+    print('  PASS')
+
+
+def test_card_61_api676_positive_displacement_screw_pump():
+    print('\n--- TEST 61: API Standard 676 3rd Ed. / ISO 14847 Rotary Twin-Screw PD Pump ---')
+    res = engineering_tools.calculate_api676_positive_displacement_screw_pump(
+        pump_tag="P-801",
+        pump_type="Twin-Screw Double-Volute Positive Displacement",
+        fluid_name="Heavy Vacuum Residue / Bitumen",
+        operating_viscosity_cst=450.0,
+        operating_temperature_c=180.0,
+        specific_gravity=0.98,
+        screw_rotor_diameter_mm=160.0,
+        screw_lead_pitch_mm=85.0,
+        operating_speed_rpm=1450.0,
+        differential_pressure_bar=28.0,
+        suction_pressure_bar_g=2.5,
+        radial_clearance_mm=0.080
+    )
+    assert 'error' not in res
+    assert res['pump_tag'] == 'P-801'
+    assert res['delivered_capacity_m3_h'] > 150.0
+    assert res['volumetric_efficiency_pct'] >= 85.0
+    assert res['cavitation_safe'] is True
+    assert res['compliance'] == 'PASS_API676_SCREW_PUMP_QUALIFIED'
+    print(f"  [+] Rotary Screw Pump: {res['pump_tag']} ({res['pump_type']}, Fluid: {res['fluid_name']}, Viscosity: {res['operating_viscosity_cst']} cSt)")
+    print(f"  [+] Hydraulic Performance: Theoretical={res['theoretical_flow_m3_h']} m³/h, Slip={res['internal_slip_flow_m3_h']} m³/h -> Delivered={res['delivered_capacity_m3_h']} m³/h ({res['delivered_capacity_gpm']} GPM)")
+    print(f"  [+] Volumetric Efficiency: {res['volumetric_efficiency_pct']}% at {res['differential_pressure_bar']} bar differential pressure")
+    print(f"  [+] Power Profile: Hydraulic Power={res['hydraulic_power_kw']} kW, Viscous Rotor Friction={res['viscous_rotor_friction_power_kw']} kW -> Total BHP={res['total_shaft_power_kw']} kW (Overall Efficiency: {res['overall_efficiency_pct']}%)")
+    print(f"  [+] Suction Dynamics: NPSH Available={res['npsh_available_m']}m vs NPSHR={res['npsh_required_m']}m (Cavitation Safe: {res['cavitation_safe']})")
+    print(f"  [+] API 676 Verdict: {res['compliance']}")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -1643,8 +1762,12 @@ if __name__ == "__main__":
     test_card_55_api661_air_cooled_heat_exchanger()
     test_card_56_iec60079_hazardous_area_classification()
     test_card_57_norsok_m710_rapid_gas_decompression()
+    test_card_58_api618_reciprocating_compressor()
+    test_card_59_asme_sec1_boiler_circulation()
+    test_card_60_api530_fired_heater_tube_creep()
+    test_card_61_api676_positive_displacement_screw_pump()
     print("\n================================================================")
-    print("ALL 57 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 61 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 

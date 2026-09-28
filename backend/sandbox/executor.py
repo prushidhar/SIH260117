@@ -1352,6 +1352,102 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api618_reciprocating_compressor",
+                    "description": "API Standard 618 5th Ed. / ISO 13707 Reciprocating Process Compressor: cylinder swept volume, volumetric efficiency, discharge temperature, indicated power, and pulsation bottle sizing.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "compressor_tag": {"type": "string", "description": "Compressor tag", "default": "K-201"},
+                            "piston_bore_diameter_mm": {"type": "number", "description": "Cylinder bore diameter mm", "default": 380.0},
+                            "stroke_length_mm": {"type": "number", "description": "Piston stroke mm", "default": 250.0},
+                            "crankshaft_speed_rpm": {"type": "number", "description": "Operating crankshaft RPM", "default": 450.0},
+                            "number_of_cylinders": {"type": "integer", "description": "Cylinders count", "default": 2},
+                            "cylinder_clearance_volume_pct": {"type": "number", "description": "Clearance volume percent", "default": 12.5},
+                            "suction_pressure_bar_a": {"type": "number", "description": "Suction pressure bar a", "default": 3.5},
+                            "discharge_pressure_bar_a": {"type": "number", "description": "Discharge pressure bar a", "default": 9.8},
+                            "suction_temperature_c": {"type": "number", "description": "Suction temp °C", "default": 35.0},
+                            "gas_isentropic_exponent_k": {"type": "number", "description": "Cp/Cv ratio", "default": 1.32},
+                            "gas_molecular_weight": {"type": "number", "description": "Gas molecular weight", "default": 18.5},
+                            "pulsation_damper_bottle_volume_m3": {"type": "number", "description": "Installed bottle volume m3", "default": 0.65}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_sec1_boiler_circulation",
+                    "description": "ASME Section I / EN 12952 Boiler & HRSG Circulation Hydrodynamics: thermosiphon driving head, circulation ratio (CR), steam quality, void fraction, and Critical Heat Flux (CHF) DNBR margin.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "boiler_tag": {"type": "string", "description": "Boiler / steam drum tag", "default": "B-101"},
+                            "steam_drum_pressure_barg": {"type": "number", "description": "Steam drum pressure bar g", "default": 95.0},
+                            "steam_production_tonne_h": {"type": "number", "description": "Steam capacity t/h", "default": 120.0},
+                            "riser_tube_id_mm": {"type": "number", "description": "Riser internal diameter mm", "default": 51.0},
+                            "riser_tube_length_m": {"type": "number", "description": "Riser tube length m", "default": 24.0},
+                            "number_of_riser_tubes": {"type": "integer", "description": "Number of riser tubes", "default": 180},
+                            "downcomer_id_mm": {"type": "number", "description": "Downcomer internal diameter mm", "default": 250.0},
+                            "number_of_downcomers": {"type": "integer", "description": "Number of downcomers", "default": 4},
+                            "downcomer_height_m": {"type": "number", "description": "Downcomer vertical height m", "default": 22.0},
+                            "average_heat_flux_kw_m2": {"type": "number", "description": "Average heat flux kW/m2", "default": 145.0},
+                            "feedwater_temp_c": {"type": "number", "description": "Feedwater inlet temp °C", "default": 210.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api530_fired_heater_tube_creep",
+                    "description": "API Standard 530 / ISO 13704 Fired Heater Radiant Tube Creep Rupture Life: mean diameter hoop stress, Larson-Miller parameter (LMP), cumulative creep damage, and thermal gradient stress.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tube_tag": {"type": "string", "description": "Fired heater tube tag", "default": "F-101-RAD-01"},
+                            "tube_od_in": {"type": "number", "description": "Tube outer diameter inches", "default": 6.625},
+                            "minimum_wall_thickness_in": {"type": "number", "description": "Minimum wall thickness inches", "default": 0.280},
+                            "design_pressure_psig": {"type": "number", "description": "Design pressure psig", "default": 450.0},
+                            "maximum_tube_metal_temp_c": {"type": "number", "description": "Max metal temperature °C", "default": 580.0},
+                            "tube_material": {"type": "string", "description": "Tube alloy specification", "default": "ASTM A335 Gr P9 (9Cr-1Mo)"},
+                            "corrosion_allowance_in": {"type": "number", "description": "Corrosion allowance inches", "default": 0.0625},
+                            "design_operating_life_hours": {"type": "number", "description": "Target service hours", "default": 100000.0},
+                            "heat_flux_density_kw_m2": {"type": "number", "description": "Radiant heat flux kW/m2", "default": 42.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api676_positive_displacement_screw_pump",
+                    "description": "API Standard 676 3rd Ed. / ISO 14847 Rotary Positive Displacement Twin-Screw Pump: displacement volume, laminar slip, delivered capacity, volumetric efficiency, rotor friction, and NPSHR.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "pump_tag": {"type": "string", "description": "Screw pump tag", "default": "P-801"},
+                            "pump_type": {"type": "string", "description": "Pump type description", "default": "Twin-Screw Double-Volute Positive Displacement"},
+                            "fluid_name": {"type": "string", "description": "Pumped viscous fluid name", "default": "Heavy Vacuum Residue / Bitumen"},
+                            "operating_viscosity_cst": {"type": "number", "description": "Kinematic viscosity cSt", "default": 450.0},
+                            "operating_temperature_c": {"type": "number", "description": "Operating temperature °C", "default": 180.0},
+                            "specific_gravity": {"type": "number", "description": "Fluid specific gravity", "default": 0.98},
+                            "screw_rotor_diameter_mm": {"type": "number", "description": "Screw outer diameter mm", "default": 160.0},
+                            "screw_lead_pitch_mm": {"type": "number", "description": "Screw lead pitch mm", "default": 85.0},
+                            "operating_speed_rpm": {"type": "number", "description": "Operating motor speed RPM", "default": 1450.0},
+                            "differential_pressure_bar": {"type": "number", "description": "Differential pressure bar", "default": 28.0},
+                            "suction_pressure_bar_g": {"type": "number", "description": "Suction pressure bar g", "default": 2.5},
+                            "radial_clearance_mm": {"type": "number", "description": "Radial screw clearance mm", "default": 0.080}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -1420,7 +1516,11 @@ class ToolRegistry:
             "calculate_asme_b313_piping_thermal_flexibility",
             "calculate_api661_air_cooled_heat_exchanger",
             "calculate_iec60079_hazardous_area_classification",
-            "calculate_norsok_m710_rapid_gas_decompression"
+            "calculate_norsok_m710_rapid_gas_decompression",
+            "calculate_api618_reciprocating_compressor",
+            "calculate_asme_sec1_boiler_circulation",
+            "calculate_api530_fired_heater_tube_creep",
+            "calculate_api676_positive_displacement_screw_pump"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

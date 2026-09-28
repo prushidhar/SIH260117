@@ -816,12 +816,53 @@ Qualification of Non-Metallic Sealing Materials and Rapid Gas Decompression (RGD
   Rating 0000: Completely crack-free cross section (undamaged).
   Rating 1000: Micro-voids localized, maximum crack length < 0.5 mm, passing criterion.
   Rating 2000 - 4000: Severe blistering and structural rupture, failed qualification."""
+    },
+    {
+        "doc_id": "std-api-618-recip-compressors",
+        "title": "API Standard 618 5th Ed. & ISO 13707 Reciprocating Process Gas Compressors",
+        "text": """API Standard 618 (5th Edition) / ISO 13707 Reciprocating Compressors for Petroleum, Chemical, and Gas Industry Services:
+Cylinder Sizing, Volumetric Efficiency, and Acoustic Pulsation Suppression:
+- Volumetric Efficiency: eta_v = 1.0 - c * [r_c^(1/k) - 1] - L_valve where c is cylinder clearance ratio.
+- Discharge Temperature Limits: Max 150°C for hydrogen service (MW < 12), max 175°C for general process hydrocarbon gases.
+- Indicated Power & BHP: W_ind = [k / (k - 1)] * P_s * V_s * [r_c^((k-1)/k) - 1].
+- Pulsation Suppression (Design Approach 2 & 3): Dampener surge volume V_bottle_min = 7.8 * V_swept_cyl * (r_c^(1/k)) sized to limit line pressure pulsations to < 1.0% peak-to-peak."""
+    },
+    {
+        "doc_id": "std-asme-sec1-power-boilers",
+        "title": "ASME Section I Power Boilers & EN 12952 Water-Tube Boiler Circulation Hydrodynamics",
+        "text": """ASME Boiler & Pressure Vessel Code Section I (Rules for Construction of Power Boilers) & EN 12952:
+Thermosiphon Circulation Hydrodynamics, Critical Heat Flux, and Steam Drum Level Stability:
+- Natural Circulation Driving Head: Delta_P_drive = (rho_downcomer - rho_riser_mean) * g * H_downcomer.
+- Circulation Ratio (CR): Defined as total circulating liquid flow divided by steam production rate (target CR between 4.0 and 8.0 for stable natural thermosiphon).
+- Departure from Nucleate Boiling (DNB) & Critical Heat Flux (CHF): Operating heat flux must satisfy DNBR >= 1.50 to prevent tube burnout and steam blanketing film boiling.
+- Downcomer Sizing: Water downward velocity restricted to < 2.5 m/s to prevent steam bubble carry-under from the drum."""
+    },
+    {
+        "doc_id": "std-api-530-heater-tubes",
+        "title": "API Standard 530 7th Ed. & ISO 13704 Fired Heater Tube Thickness & Creep Rupture Life",
+        "text": """API Standard 530 (7th Edition) / ISO 13704 Calculation of Heater-Tube Thickness in Petroleum Refineries:
+Radiant Coil Elastic-Creep Rupture Life Assessment:
+- Mean Diameter Stress Equation: sigma_hoop = (P * D_mean) / (2 * t_corroded) where D_mean = D_o - t_corroded.
+- Larson-Miller Parameter (LMP): Relates operating metal temperature and time-to-rupture: LMP = (T_K / 1000) * [20 + log10(t_rupture)].
+- Cumulative Creep Damage (Robinson's Rule): Sum(t_i / t_rupture_i) <= 1.0. Design life criteria typically requires cumulative creep fraction <= 0.80 at 100,000 operating hours.
+- Radial Heat Flux Thermal Gradient: Imposes differential thermal expansion stress across the tube wall thickness."""
+    },
+    {
+        "doc_id": "std-api-676-screw-pumps",
+        "title": "API Standard 676 3rd Ed. & ISO 14847 Positive Displacement Rotary Twin-Screw Pumps",
+        "text": """API Standard 676 (3rd Edition) / ISO 14847 Rotary Positive Displacement Pumps for Petroleum & Gas Service:
+Twin and Triple Screw Pump Hydraulics, Slip Flow, and Viscous Performance:
+- Theoretical Capacity: Q_th = V_displacement_per_rev * RPM.
+- Internal Laminar Slip: High viscosity suppresses internal leakage slip past screw meshing and radial clearances.
+- Volumetric Efficiency: Delivered Q = Q_th - Q_slip; volumetric efficiency exceeds 95% on heavy residues (> 100 cSt).
+- Viscous Rotor Friction: Power absorbed by viscous fluid shear on screws adds directly to hydraulic shaft power.
+- NPSH Margins: Positive suction head required includes viscosity acceleration head penalty."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 54 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 58 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)
