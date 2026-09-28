@@ -1011,6 +1011,82 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_ieee1584_arc_flash_hazard",
+                    "description": "IEEE 1584-2018 / NFPA 70E Arc Flash Hazard & Electrical Safety: bolted fault arcing current, incident energy in cal/cm2, arc flash boundary, and NFPA 70E PPE category.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "equipment_tag": {"type": "string", "description": "Switchgear/MCC tag", "default": "MCC-101"},
+                            "system_voltage_kv": {"type": "number", "description": "System voltage in kV", "default": 6.6},
+                            "bolted_fault_current_ka": {"type": "number", "description": "Bolted fault current in kA", "default": 25.0},
+                            "arcing_fault_clearing_time_s": {"type": "number", "description": "Relay clearing time in seconds", "default": 0.15},
+                            "working_distance_mm": {"type": "number", "description": "Working distance in mm", "default": 914.0},
+                            "electrode_configuration": {"type": "string", "description": "Electrode config e.g. VCB", "default": "VCB"}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_acid_gas_dew_point",
+                    "description": "ASME PTC 4.3 / Verhoff-Banchero Flue Gas Sulfuric Acid Dew Point: acid condensation temperature, moisture dew point, and cold-end corrosion safety margin.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "heater_tag": {"type": "string", "description": "Heater tag", "default": "F-101"},
+                            "fuel_sulfur_wt_pct": {"type": "number", "description": "Fuel sulfur content wt%", "default": 1.85},
+                            "flue_gas_excess_o2_pct": {"type": "number", "description": "Excess O2 in flue gas %", "default": 3.2},
+                            "so3_ppmv": {"type": "number", "description": "SO3 concentration in ppmv", "default": 28.5},
+                            "moisture_vol_pct": {"type": "number", "description": "Moisture vol%", "default": 12.0},
+                            "cold_end_metal_temp_c": {"type": "number", "description": "Cold end metal temperature °C", "default": 142.0},
+                            "air_preheater_tag": {"type": "string", "description": "APH tag", "default": "APH-101"}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_multistage_compressor_train",
+                    "description": "API 617 (8th Ed.) & ASME PTC 10 Multi-Stage Centrifugal Compressor Train: equal pressure ratio optimization, intercooler duties, total shaft power, and discharge temperature compliance.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "compressor_tag": {"type": "string", "description": "Compressor tag", "default": "K-101"},
+                            "suction_pressure_bar": {"type": "number", "description": "Suction pressure in bar", "default": 25.0},
+                            "discharge_pressure_bar": {"type": "number", "description": "Discharge pressure in bar", "default": 175.0},
+                            "suction_temp_c": {"type": "number", "description": "Suction temperature in °C", "default": 40.0},
+                            "mass_flow_kg_s": {"type": "number", "description": "Mass flow in kg/s", "default": 42.0},
+                            "gas_molecular_weight": {"type": "number", "description": "Gas molecular weight", "default": 12.5},
+                            "gas_k_ratio": {"type": "number", "description": "Gas Cp/Cv ratio", "default": 1.36},
+                            "stage_count": {"type": "integer", "description": "Number of stages", "default": 3},
+                            "intercooler_outlet_temp_c": {"type": "number", "description": "Intercooler outlet temp °C", "default": 45.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "generate_iec61882_hazop_matrix",
+                    "description": "IEC 61882 / OSHA 1910.119 Process Hazard Analysis (PHA) & HAZOP Deviation Matrix: systematic guide words evaluation, causes, consequences, safeguards, and risk ranking.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "asset_tag": {"type": "string", "description": "Asset tag e.g. R-401, P-101", "default": "R-401"},
+                            "study_node_description": {"type": "string", "description": "Optional study node description", "default": ""}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -1064,7 +1140,11 @@ class ToolRegistry:
             "calculate_api2218_fireproofing_thermal_rating",
             "calculate_sensor_drift_and_fdd",
             "calculate_api650_seismic_sloshing_dynamics",
-            "calculate_hei_condenser_vacuum_performance"
+            "calculate_hei_condenser_vacuum_performance",
+            "calculate_ieee1584_arc_flash_hazard",
+            "calculate_acid_gas_dew_point",
+            "calculate_multistage_compressor_train",
+            "generate_iec61882_hazop_matrix"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

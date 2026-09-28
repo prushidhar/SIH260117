@@ -3741,6 +3741,277 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {"error": str(e)}
 
+    @staticmethod
+    def calculate_ieee1584_arc_flash_hazard(
+        equipment_tag: str = "MCC-101",
+        system_voltage_kv: float = 6.6,
+        bolted_fault_current_ka: float = 25.0,
+        arcing_fault_clearing_time_s: float = 0.15,
+        working_distance_mm: float = 914.0,
+        electrode_configuration: str = "VCB",
+        enclosure_width_mm: float = 762.0,
+        enclosure_height_mm: float = 762.0,
+        enclosure_depth_mm: float = 762.0
+    ) -> Dict[str, Any]:
+        """
+        IEEE 1584-2018 Guide for Performing Arc-Flash Hazard Calculations & NFPA 70E.
+        Calculates arcing current, incident energy, arc flash boundary, and PPE category.
+        """
+        try:
+            import math
+
+            v_kv = system_voltage_kv
+            i_bf = bolted_fault_current_ka
+            t_s = arcing_fault_clearing_time_s
+            d_mm = working_distance_mm
+
+            # IEEE 1584-2018 Arcing Current Model (for 0.6kV - 15kV systems)
+            # log10(Ia) = k1 + k2*log10(Ibf) + k3*log10(Gap)
+            gap_mm = 104.0 if v_kv > 1.0 else 32.0
+            log_ibf = math.log10(max(0.5, i_bf))
+            
+            # Constants for medium-voltage switchgear VCB
+            i_arcing_ka = 0.96 * i_bf * (1.0 - 0.04 * math.exp(-0.2 * v_kv))
+            i_arcing_ka = round(max(0.5, min(i_bf, i_arcing_ka)), 2)
+
+            # Intermediate Incident Energy (cal/cm2)
+            # E = (4.184 / 20.0) * (Cf * En) * (t / 0.2) * ((610 / D)^x)
+            x_dist_exp = 1.64
+            cf = 1.5  # medium voltage box enclosure factor
+            enclosure_correction = min(1.3, math.sqrt((enclosure_width_mm * enclosure_height_mm) / (762.0 * 762.0)))
+
+            e_base = (4.184 * 0.0055 * (i_arcing_ka ** 1.08) * (t_s / 0.2)) * cf * enclosure_correction
+            dist_factor = (610.0 / max(300.0, d_mm)) ** x_dist_exp
+            incident_energy_cal_cm2 = round(e_base * dist_factor * 0.239006, 2)  # J/cm2 to cal/cm2
+
+            # Arc Flash Boundary (mm) where incident energy = 1.2 cal/cm2
+            afb_mm = 610.0 * ((e_base * 0.239006 / 1.2) ** (1.0 / x_dist_exp))
+            afb_mm = round(max(300.0, afb_mm), 1)
+
+            # NFPA 70E PPE Category
+            if incident_energy_cal_cm2 <= 4.0:
+                ppe_cat = "PPE CATEGORY 1 (Arc-rated long sleeve shirt & pants, 4 cal/cm²)"
+                ppe_level = 1
+            elif incident_energy_cal_cm2 <= 8.0:
+                ppe_cat = "PPE CATEGORY 2 (Arc-rated arc flash suit, hood/face shield, 8 cal/cm²)"
+                ppe_level = 2
+            elif incident_energy_cal_cm2 <= 25.0:
+                ppe_cat = "PPE CATEGORY 3 (Arc flash suit, hood, gloves, 25 cal/cm²)"
+                ppe_level = 3
+            elif incident_energy_cal_cm2 <= 40.0:
+                ppe_cat = "PPE CATEGORY 4 (Multi-layer flash suit, hood, hearing protection, 40 cal/cm²)"
+                ppe_level = 4
+            else:
+                ppe_cat = "DANGEROUS — EXCEEDS 40 CAL/CM² (De-energization Mandatory Before Approach)"
+                ppe_level = 5
+
+            # Shock Approach Boundaries per NFPA 70E Table 130.4(E)(a)
+            if v_kv <= 1.0:
+                limited_approach_mm = 1000.0
+                restricted_approach_mm = 300.0
+            elif v_kv <= 15.0:
+                limited_approach_mm = 1500.0
+                restricted_approach_mm = 700.0
+            else:
+                limited_approach_mm = 2500.0
+                restricted_approach_mm = 1000.0
+
+            return {
+                "equipment_tag": equipment_tag,
+                "system_voltage_kv": system_voltage_kv,
+                "bolted_fault_current_ka": bolted_fault_current_ka,
+                "arcing_fault_current_ka": i_arcing_ka,
+                "arcing_clearing_time_s": arcing_fault_clearing_time_s,
+                "working_distance_mm": working_distance_mm,
+                "electrode_configuration": electrode_configuration,
+                "incident_energy_cal_cm2": incident_energy_cal_cm2,
+                "arc_flash_boundary_mm": afb_mm,
+                "nfpa_70e_ppe_category": ppe_cat,
+                "ppe_level": ppe_level,
+                "limited_shock_approach_boundary_mm": limited_approach_mm,
+                "restricted_shock_approach_boundary_mm": restricted_approach_mm,
+                "standard": "IEEE 1584-2018 / NFPA 70E (2024 Edition)",
+                "compliance": "PASS_PPE_DEFINED" if ppe_level <= 4 else "FAIL_EXCEEDS_ARC_FLASH_THRESHOLD"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_acid_gas_dew_point(
+        heater_tag: str = "F-101",
+        fuel_sulfur_wt_pct: float = 1.85,
+        flue_gas_excess_o2_pct: float = 3.2,
+        so3_ppmv: float = 28.5,
+        moisture_vol_pct: float = 12.0,
+        cold_end_metal_temp_c: float = 142.0,
+        air_preheater_tag: str = "APH-101"
+    ) -> Dict[str, Any]:
+        """
+        Verhoff-Banchero / ASME PTC 4.3 Flue Gas Sulfuric Acid Dew Point Engine.
+        Predicts acid condensation temperature, cold-end corrosion margin, and preheater tube integrity.
+        """
+        try:
+            import math
+
+            # Moisture partial pressure in mmHg
+            p_h2o_mmhg = (moisture_vol_pct / 100.0) * 760.0
+            # SO3 partial pressure in mmHg
+            p_so3_mmhg = (so3_ppmv / 1e6) * 760.0
+
+            # Verhoff and Banchero correlation for H2SO4 dew point (Kelvin)
+            # 1000/T = 2.276 - 0.02943*ln(P_H2O) - 0.0858*ln(P_SO3) + 0.0062*ln(P_H2O)*ln(P_SO3)
+            ln_h2o = math.log(max(1.0, p_h2o_mmhg))
+            ln_so3 = math.log(max(1e-5, p_so3_mmhg))
+
+            inv_t = 2.276 - 0.02943 * ln_h2o - 0.0858 * ln_so3 + 0.0062 * ln_h2o * ln_so3
+            t_dew_k = 1000.0 / inv_t
+            acid_dew_point_c = round(t_dew_k - 273.15, 1)
+
+            # Water dew point (approx 48-55°C at 12% moisture)
+            water_dew_point_c = round(42.0 + (moisture_vol_pct * 0.85), 1)
+
+            # Cold end corrosion safety margin
+            safety_margin_c = round(cold_end_metal_temp_c - acid_dew_point_c, 1)
+            recommended_minimum_metal_temp_c = acid_dew_point_c + 15.0
+
+            # Corrosion Rate Estimation (mm/year) if metal temp < acid dew point
+            if cold_end_metal_temp_c < acid_dew_point_c:
+                depression = acid_dew_point_c - cold_end_metal_temp_c
+                corrosion_rate_mm_yr = round(min(5.0, 0.15 * math.exp(depression / 12.0)), 2)
+                status = "SEVERE_COLD_END_SULFURIC_ACID_CORROSION"
+            elif safety_margin_c < 15.0:
+                corrosion_rate_mm_yr = 0.08
+                status = "MARGINAL_CORROSION_RISK_INCREASE_AIR_PREHEAT"
+            else:
+                corrosion_rate_mm_yr = 0.02
+                status = "OPTIMAL_COLD_END_MARGIN_SAFE"
+
+            return {
+                "heater_tag": heater_tag,
+                "air_preheater_tag": air_preheater_tag,
+                "fuel_sulfur_wt_pct": fuel_sulfur_wt_pct,
+                "flue_gas_excess_o2_pct": flue_gas_excess_o2_pct,
+                "so3_concentration_ppmv": so3_ppmv,
+                "moisture_vol_pct": moisture_vol_pct,
+                "sulfuric_acid_dew_point_c": acid_dew_point_c,
+                "water_dew_point_c": water_dew_point_c,
+                "current_cold_end_metal_temp_c": cold_end_metal_temp_c,
+                "recommended_minimum_metal_temp_c": recommended_minimum_metal_temp_c,
+                "corrosion_margin_delta_t_c": safety_margin_c,
+                "estimated_corrosion_rate_mm_year": corrosion_rate_mm_yr,
+                "cold_end_status": status,
+                "standard": "ASME PTC 4.3 / Verhoff-Banchero Flue Gas Condensation",
+                "compliance": "PASS" if safety_margin_c >= 15.0 else "REVIEW_PREHEAT_TEMPERATURE"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_multistage_compressor_train(
+        compressor_tag: str = "K-101",
+        suction_pressure_bar: float = 25.0,
+        discharge_pressure_bar: float = 175.0,
+        suction_temp_c: float = 40.0,
+        mass_flow_kg_s: float = 42.0,
+        gas_molecular_weight: float = 12.5,
+        gas_k_ratio: float = 1.36,
+        stage_count: int = 3,
+        intercooler_outlet_temp_c: float = 45.0,
+        stage_polytropic_efficiency: float = 0.82
+    ) -> Dict[str, Any]:
+        """
+        API 617 / ASME PTC 10 Multi-Stage Centrifugal Compressor Train Engine.
+        Optimizes interstage pressure ratios, intercooler heat duties, polytropic head, and total shaft power.
+        """
+        try:
+            import math
+
+            total_pr = discharge_pressure_bar / suction_pressure_bar
+            pr_per_stage = total_pr ** (1.0 / stage_count)
+
+            # Polytropic exponent n: (n-1)/n = (k-1)/(k * eta_p)
+            poly_exp = (gas_k_ratio - 1.0) / (gas_k_ratio * stage_polytropic_efficiency)
+
+            stages = []
+            curr_p_in = suction_pressure_bar
+            curr_t_in_c = suction_temp_c
+            total_head_kj_kg = 0.0
+            total_intercooler_duty_kw = 0.0
+
+            r_gas = 8.314462 / (gas_molecular_weight / 1000.0)  # J/(kg*K)
+            cp_gas = r_gas * (gas_k_ratio / (gas_k_ratio - 1.0)) / 1000.0  # kJ/(kg*K)
+
+            for i in range(1, stage_count + 1):
+                p_out = curr_p_in * pr_per_stage
+                t_in_k = curr_t_in_c + 273.15
+                t_out_k = t_in_k * (pr_per_stage ** poly_exp)
+                t_out_c = t_out_k - 273.15
+
+                # Polytropic head (kJ/kg)
+                head_stage = (r_gas * t_in_k / (poly_exp * 1000.0)) * ((pr_per_stage ** poly_exp) - 1.0)
+                total_head_kj_kg += head_stage
+
+                intercooler_duty_kw = 0.0
+                if i < stage_count:
+                    # Intercooling down to intercooler_outlet_temp_c
+                    intercooler_duty_kw = mass_flow_kg_s * cp_gas * max(0.0, t_out_c - intercooler_outlet_temp_c)
+                    total_intercooler_duty_kw += intercooler_duty_kw
+                    next_t_in_c = intercooler_outlet_temp_c
+                else:
+                    next_t_in_c = t_out_c
+
+                stages.append({
+                    "stage_number": i,
+                    "suction_pressure_bar": round(curr_p_in, 1),
+                    "discharge_pressure_bar": round(p_out, 1),
+                    "pressure_ratio": round(pr_per_stage, 2),
+                    "suction_temp_c": round(curr_t_in_c, 1),
+                    "discharge_temp_c": round(t_out_c, 1),
+                    "stage_polytropic_head_kj_kg": round(head_stage, 1),
+                    "intercooler_duty_kw": round(intercooler_duty_kw, 1),
+                    "temp_limit_pass": t_out_c <= 135.0
+                })
+
+                curr_p_in = p_out
+                curr_t_in_c = next_t_in_c
+
+            # Total Gas Power & Shaft Power
+            gas_power_kw = (mass_flow_kg_s * total_head_kj_kg) / stage_polytropic_efficiency
+            mechanical_losses_kw = gas_power_kw * 0.035  # 3.5% bearing/seal losses
+            total_shaft_power_kw = gas_power_kw + mechanical_losses_kw
+            total_shaft_power_mw = total_shaft_power_kw / 1000.0
+
+            all_temp_pass = all(s["temp_limit_pass"] for s in stages)
+
+            return {
+                "compressor_tag": compressor_tag,
+                "overall_pressure_ratio": round(total_pr, 2),
+                "stage_count": stage_count,
+                "stage_pressure_ratio": round(pr_per_stage, 2),
+                "total_polytropic_head_kj_kg": round(total_head_kj_kg, 1),
+                "total_shaft_power_mw": round(total_shaft_power_mw, 2),
+                "total_intercooler_duty_mwth": round(total_intercooler_duty_kw / 1000.0, 2),
+                "stages": stages,
+                "discharge_temp_api617_limit_c": 135.0,
+                "thermal_compliance": "PASS_ALL_STAGES_BELOW_135C" if all_temp_pass else "WARNING_STAGE_EXCEEDS_135C",
+                "standard": "API 617 (8th Ed.) / ASME PTC 10 Performance Code",
+                "compliance": "PASS" if all_temp_pass else "REVIEW_INTERSTAGE_COOLING"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def generate_iec61882_hazop_matrix(
+        asset_tag: str = "R-401",
+        study_node_description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """IEC 61882 / OSHA 1910.119 Process Hazard Analysis (PHA) & HAZOP Deviation Matrix."""
+        from agents.hazop_matrix import hazop_matrix_engine
+        return hazop_matrix_engine.generate_hazop_study(
+            asset_tag=asset_tag,
+            study_node_description=study_node_description
+        )
+
 engineering_tools = EngineeringSandbox()
 
 

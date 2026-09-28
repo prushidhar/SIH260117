@@ -203,8 +203,52 @@ def main():
     assert casc_data.get("total_assets_impacted") >= 2
     print(f"[+] /api/topology/trace/consequence: OK (Initiator: {casc_data.get('initiating_asset')}, Impacted Assets: {casc_data.get('total_assets_impacted')}, Risk: {casc_data.get('risk_assessment')})")
 
+    # 18. Autonomous IEC 61882 HAZOP Matrix Generator Endpoint
+    res_hazop = client.post("/api/safety/hazop/matrix", json={
+        "asset_tag": "R-401"
+    })
+    assert res_hazop.status_code == 200
+    hazop_data = res_hazop.json()
+    assert hazop_data.get("asset_tag") == "R-401"
+    assert hazop_data.get("total_deviations_evaluated", 0) >= 8
+    assert len(hazop_data.get("study_seal_sha256", "")) == 64
+    print(f"[+] /api/safety/hazop/matrix: OK (Asset: {hazop_data.get('asset_tag')}, Deviations: {hazop_data.get('total_deviations_evaluated')}, High/Crit: {hazop_data.get('high_or_critical_risks_count')}, Seal: {hazop_data.get('study_seal_sha256')[:16]}...)")
+
+    # 19. IEEE 1584 Arc Flash Hazard Evaluation Endpoint
+    res_arc = client.post("/api/electrical/arc-flash", json={
+        "equipment_tag": "MCC-101",
+        "system_voltage_kv": 6.6,
+        "bolted_fault_current_ka": 25.0,
+        "arcing_fault_clearing_time_s": 0.15,
+        "working_distance_mm": 914.0
+    })
+    assert res_arc.status_code == 200
+    arc_data = res_arc.json()
+    assert arc_data.get("equipment_tag") == "MCC-101"
+    assert "PPE CATEGORY" in arc_data.get("nfpa_70e_ppe_category", "")
+    assert arc_data.get("compliance") == "PASS_PPE_DEFINED"
+    print(f"[+] /api/electrical/arc-flash: OK (Tag: {arc_data.get('equipment_tag')}, Arcing I: {arc_data.get('arcing_fault_current_ka')} kA, Incident E: {arc_data.get('incident_energy_cal_cm2')} cal/cm², AFB: {arc_data.get('arc_flash_boundary_mm')} mm, PPE: {arc_data.get('nfpa_70e_ppe_category')})")
+
+    # 20. ASME PTC 4.3 Flue Gas Acid Dew Point Endpoint
+    res_acid = client.post("/api/thermal/acid-dewpoint", json={
+        "heater_tag": "F-101",
+        "fuel_sulfur_wt_pct": 1.85,
+        "flue_gas_excess_o2_pct": 3.2,
+        "so3_ppmv": 28.5,
+        "moisture_vol_pct": 12.0,
+        "cold_end_metal_temp_c": 155.0,
+        "air_preheater_tag": "APH-101"
+    })
+    assert res_acid.status_code == 200
+    acid_data = res_acid.json()
+    assert acid_data.get("heater_tag") == "F-101"
+    assert acid_data.get("air_preheater_tag") == "APH-101"
+    assert acid_data.get("sulfuric_acid_dew_point_c", 0) > 100.0
+    assert acid_data.get("corrosion_margin_delta_t_c", 0) > 0
+    print(f"[+] /api/thermal/acid-dewpoint: OK (Heater: {acid_data.get('heater_tag')}, APH: {acid_data.get('air_preheater_tag')}, H2SO4 Dew Point: {acid_data.get('sulfuric_acid_dew_point_c')} °C, Margin: +{acid_data.get('corrosion_margin_delta_t_c')} °C, Status: {acid_data.get('cold_end_status')})")
+
     print("\n" + "=" * 65)
-    print("ALL 17 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 20 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

@@ -1920,6 +1920,76 @@ async def trace_trip_cascade_consequences(req: CascadeTraceRequest):
     )
 
 
+class HazopStudyRequest(BaseModel):
+    asset_tag: str = "R-401"
+    study_node_description: Optional[str] = None
+
+
+@app.post("/api/safety/hazop/matrix")
+async def generate_hazop_matrix_study(req: HazopStudyRequest):
+    """
+    Autonomous IEC 61882 / OSHA 1910.119 Process Hazard Analysis (PHA) & HAZOP Deviation Matrix.
+    Evaluates systematic parameter deviations (Flow, Pressure, Temp, Composition) and generates risk rankings.
+    """
+    from agents.hazop_matrix import hazop_matrix_engine
+    return hazop_matrix_engine.generate_hazop_study(
+        asset_tag=req.asset_tag or "R-401",
+        study_node_description=req.study_node_description
+    )
+
+
+class ArcFlashRequest(BaseModel):
+    equipment_tag: Optional[str] = "MCC-101"
+    system_voltage_kv: Optional[float] = 6.6
+    bolted_fault_current_ka: Optional[float] = 25.0
+    arcing_fault_clearing_time_s: Optional[float] = 0.15
+    working_distance_mm: Optional[float] = 914.0
+
+
+@app.post("/api/electrical/arc-flash")
+async def evaluate_arc_flash_hazard(req: ArcFlashRequest):
+    """
+    IEEE 1584-2018 & NFPA 70E Arc Flash Hazard & Electrical Safety Calculation.
+    Computes arcing fault current, incident energy in cal/cm2, arc flash boundary, and required PPE category.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_ieee1584_arc_flash_hazard(
+        equipment_tag=req.equipment_tag or "MCC-101",
+        system_voltage_kv=req.system_voltage_kv or 6.6,
+        bolted_fault_current_ka=req.bolted_fault_current_ka or 25.0,
+        arcing_fault_clearing_time_s=req.arcing_fault_clearing_time_s or 0.15,
+        working_distance_mm=req.working_distance_mm or 914.0
+    )
+
+
+class AcidDewPointRequest(BaseModel):
+    heater_tag: Optional[str] = "F-101"
+    fuel_sulfur_wt_pct: Optional[float] = 1.85
+    flue_gas_excess_o2_pct: Optional[float] = 3.2
+    so3_ppmv: Optional[float] = 28.5
+    moisture_vol_pct: Optional[float] = 12.0
+    cold_end_metal_temp_c: Optional[float] = 142.0
+    air_preheater_tag: Optional[str] = "APH-101"
+
+
+@app.post("/api/thermal/acid-dewpoint")
+async def evaluate_acid_gas_dew_point(req: AcidDewPointRequest):
+    """
+    ASME PTC 4.3 & Verhoff-Banchero Flue Gas Sulfuric Acid Dew Point Engine.
+    Evaluates cold-end corrosion safety margins, air preheater basket integrity, and acid condensation risk.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_acid_gas_dew_point(
+        heater_tag=req.heater_tag or "F-101",
+        fuel_sulfur_wt_pct=req.fuel_sulfur_wt_pct or 1.85,
+        flue_gas_excess_o2_pct=req.flue_gas_excess_o2_pct or 3.2,
+        so3_ppmv=req.so3_ppmv or 28.5,
+        moisture_vol_pct=req.moisture_vol_pct or 12.0,
+        cold_end_metal_temp_c=req.cold_end_metal_temp_c or 142.0,
+        air_preheater_tag=req.air_preheater_tag or "APH-101"
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

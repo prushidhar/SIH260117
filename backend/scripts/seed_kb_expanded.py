@@ -641,12 +641,51 @@ Automated Sensor Drift, Reliability Indexing, and Fault Detection and Diagnostic
 - Redundant Channel Cross-Validation: Dual or triple-redundant sensors (1oo2, 2oo3) are evaluated using Mean Absolute Error (MAE) and voting residuals.
 - Frozen Sensor Diagnostic: Sensors exhibiting near-zero standard deviation (< 1e-4) over active process dynamics are flagged as frozen, open-circuit, or stuck transmitter electronics.
 - Sensor Reliability Index: Exponential health score R = 100 * exp(-|Delta_x| / Tol) indicating remaining instrument measurement confidence."""
+    },
+    {
+        "doc_id": "std-ieee-1584-arcflash",
+        "title": "IEEE 1584-2018 & NFPA 70E Arc Flash Hazard & Electrical Safety in Industrial Facilities",
+        "text": """IEEE 1584-2018 Guide for Performing Arc-Flash Hazard Calculations & NFPA 70E (2024 Edition):
+Electrical Arc Flash Hazard Assessment & Personal Protective Equipment (PPE):
+- Arcing Current (Ia): Determined from bolted three-phase fault current (Ibf), system nominal voltage (0.208 kV to 15 kV), electrode gap, and enclosure dimensions.
+- Incident Energy (E): Radiant and convective energy at working distance D (typically 914 mm / 36 in for switchgear):
+  E = (4.184 / 20) * Cf * En * (t / 0.2) * (610 / D)^x (cal/cm²)
+- Arc Flash Boundary (AFB): Distance from arcing point at which incident energy drops to 1.2 cal/cm² (onset of second-degree burn).
+- NFPA 70E PPE Categories:
+  1. Cat 1: <= 4 cal/cm² (Arc-rated shirt and pants)
+  2. Cat 2: <= 8 cal/cm² (Arc flash suit, face shield / balaclava)
+  3. Cat 3: <= 25 cal/cm² (Full arc flash suit, hood, insulated gloves)
+  4. Cat 4: <= 40 cal/cm² (Multi-layer arc flash suit, hood, hearing protection)
+  5. Incident energy > 40 cal/cm²: Dangerous; energized electrical work is strictly prohibited."""
+    },
+    {
+        "doc_id": "std-asme-ptc43-acid-dewpoint",
+        "title": "ASME PTC 4.3 & Verhoff-Banchero Flue Gas Acid Dew Point & Air Preheater Cold-End Corrosion",
+        "text": """ASME PTC 4.3 Air Heaters & Verhoff-Banchero Acid Gas Condensation Formulation:
+Flue Gas Sulfuric Acid Dew Point and Cold-End Corrosion Prevention:
+- Sulfuric Acid Dew Point (T_dew_H2SO4):
+  1000/T = 2.276 - 0.02943*ln(P_H2O) - 0.0858*ln(P_SO3) + 0.0062*ln(P_H2O)*ln(P_SO3) (Kelvin)
+  Where P_H2O and P_SO3 are partial pressures in mmHg.
+- Cold-End Acid Margin: Metal temperature of air preheater tubes and flue gas ducting must maintain at least 15°C margin above the calculated acid dew point (T_metal >= T_dew + 15°C).
+- Corrosion Mechanism: Below the acid dew point, concentrated H2SO4 (70-85 wt%) condenses on carbon steel surfaces, producing rapid localized thinning rates up to 5 mm/year and catastrophic basket collapse."""
+    },
+    {
+        "doc_id": "std-iec-61882-hazop",
+        "title": "IEC 61882:2016 Hazard and Operability Studies (HAZOP) & Process Hazard Analysis (PHA)",
+        "text": """IEC 61882:2016 Hazard and operability studies (HAZOP studies) - Application guide & OSHA 1910.119 PSM:
+Systematic Process Parameter Deviations & Safeguard Evaluation:
+- Standard Guide Words: MORE, LESS, NONE, REVERSE, AS WELL AS, PART OF, OTHER THAN.
+- Process Parameters: Flow, Pressure, Temperature, Level, Composition, Phase.
+- Risk Assessment Scoring: Risk = Severity (1 to 5) x Likelihood (1 to 5).
+  1. Low Risk (1-4): Acceptable with standard engineering controls.
+  2. Medium Risk (5-9): Action items required for next turnaround cycle.
+  3. High / Critical Risk (10-25): Mandatory high-integrity safety instrumented functions (SIF / SIS per IEC 61511) or independent protection layers (IPL)."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 41 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 44 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)

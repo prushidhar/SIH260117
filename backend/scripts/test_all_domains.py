@@ -24,6 +24,7 @@ from agents.deliverable_builder import deliverable_builder
 from security.network_monitor import network_monitor
 from database import db
 from security.audit_log import audit_ledger
+from verification.calculator import engineering_tools
 
 
 def test_card_1_ultrasonic_inspection():
@@ -1124,6 +1125,124 @@ def test_card_42_plant_topology_and_isolation_tracing():
     print('  PASS')
 
 
+def test_card_43_ieee1584_arc_flash_hazard():
+    print('\n--- TEST 43: IEEE 1584-2018 & NFPA 70E Arc Flash Hazard & Electrical Safety ---')
+    res = engineering_tools.calculate_ieee1584_arc_flash_hazard(
+        equipment_tag="MCC-101",
+        system_voltage_kv=6.6,
+        bolted_fault_current_ka=25.0,
+        arcing_fault_clearing_time_s=0.15,
+        working_distance_mm=914.0
+    )
+    assert 'error' not in res
+    assert res['equipment_tag'] == 'MCC-101'
+    assert res['arcing_fault_current_ka'] > 0
+    assert res['incident_energy_cal_cm2'] >= 0
+    assert res['arc_flash_boundary_mm'] > 0
+    assert 'PPE CATEGORY' in res['nfpa_70e_ppe_category']
+    assert res['limited_shock_approach_boundary_mm'] > 0
+    assert res['restricted_shock_approach_boundary_mm'] > 0
+    assert res['compliance'] == 'PASS_PPE_DEFINED'
+    print(f"  [+] Equipment: {res['equipment_tag']} ({res['system_voltage_kv']} kV, Bolted Fault: {res['bolted_fault_current_ka']} kA)")
+    print(f"  [+] Arcing Current: {res['arcing_fault_current_ka']} kA (Clearing: {res['arcing_clearing_time_s']}s)")
+    print(f"  [+] Incident Energy at {res['working_distance_mm']}mm: {res['incident_energy_cal_cm2']} cal/cm²")
+    print(f"  [+] Arc Flash Boundary (AFB): {res['arc_flash_boundary_mm']} mm")
+    print(f"  [+] NFPA 70E Classification: {res['nfpa_70e_ppe_category']}")
+    print(f"  [+] Shock Approach Boundaries: Limited={res['limited_shock_approach_boundary_mm']}mm, Restricted={res['restricted_shock_approach_boundary_mm']}mm")
+    print(f"  [+] Statutory Compliance: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_44_acid_gas_dew_point():
+    print('\n--- TEST 44: ASME PTC 4.3 & Verhoff-Banchero Flue Gas Sulfuric Acid Dew Point ---')
+    res = engineering_tools.calculate_acid_gas_dew_point(
+        heater_tag="F-101",
+        fuel_sulfur_wt_pct=1.85,
+        flue_gas_excess_o2_pct=3.2,
+        so3_ppmv=28.5,
+        moisture_vol_pct=12.0,
+        cold_end_metal_temp_c=155.0,
+        air_preheater_tag="APH-101"
+    )
+    assert 'error' not in res
+    assert res['heater_tag'] == 'F-101'
+    assert res['air_preheater_tag'] == 'APH-101'
+    assert res['sulfuric_acid_dew_point_c'] > 100.0
+    assert res['water_dew_point_c'] > 40.0
+    assert res['corrosion_margin_delta_t_c'] > 0
+    assert res['compliance'] in ('PASS', 'REVIEW_PREHEAT_TEMPERATURE')
+    print(f"  [+] Heater: {res['heater_tag']}, Air Preheater: {res['air_preheater_tag']}")
+    print(f"  [+] Flue Gas Composition: Sulfur={res['fuel_sulfur_wt_pct']}wt%, SO3={res['so3_concentration_ppmv']}ppmv, H2O={res['moisture_vol_pct']}%")
+    print(f"  [+] Condensation Limits: H2SO4 Dew Point={res['sulfuric_acid_dew_point_c']} °C, H2O Dew Point={res['water_dew_point_c']} °C")
+    print(f"  [+] Cold-End Metal Temperature: {res['current_cold_end_metal_temp_c']} °C (Recommended Min: {res['recommended_minimum_metal_temp_c']} °C)")
+    print(f"  [+] Acid Corrosion Safety Margin: +{res['corrosion_margin_delta_t_c']} °C (Corrosion Rate: {res['estimated_corrosion_rate_mm_year']} mm/yr)")
+    print(f"  [+] Cold-End Operating State: {res['cold_end_status']}")
+    print('  PASS')
+
+
+def test_card_45_multistage_compressor_train():
+    print('\n--- TEST 45: API 617 (8th Ed.) & ASME PTC 10 Multi-Stage Centrifugal Compressor Train ---')
+    res = engineering_tools.calculate_multistage_compressor_train(
+        compressor_tag="K-103",
+        suction_pressure_bar=25.0,
+        discharge_pressure_bar=175.0,
+        suction_temp_c=40.0,
+        mass_flow_kg_s=42.0,
+        gas_molecular_weight=12.5,
+        gas_k_ratio=1.36,
+        stage_count=3,
+        intercooler_outlet_temp_c=45.0,
+        stage_polytropic_efficiency=0.82
+    )
+    assert 'error' not in res
+    assert res['compressor_tag'] == 'K-103'
+    assert res['overall_pressure_ratio'] == 7.0
+    assert res['stage_count'] == 3
+    assert len(res['stages']) == 3
+    assert res['total_polytropic_head_kj_kg'] > 0
+    assert res['total_shaft_power_mw'] > 0
+    assert res['compliance'] == 'PASS'
+    for stg in res['stages']:
+        assert stg['temp_limit_pass'] is True
+    print(f"  [+] Compressor: {res['compressor_tag']} ({res['stage_count']}-Stage Centrifugal Train)")
+    print(f"  [+] Pressure Profile: {res['stages'][0]['suction_pressure_bar']} bar -> {res['stages'][-1]['discharge_pressure_bar']} bar (Overall PR: {res['overall_pressure_ratio']}:1, Stage PR: {res['stage_pressure_ratio']}:1)")
+    print(f"  [+] Total Polytropic Head: {res['total_polytropic_head_kj_kg']} kJ/kg")
+    print(f"  [+] Total Shaft Power Demand: {res['total_shaft_power_mw']} MW (Gas Power + 3.5% Mech Losses)")
+    print(f"  [+] Total Intercooler Heat Duty: {res['total_intercooler_duty_mwth']} MWth")
+    print(f"  [+] Stage 1: P={res['stages'][0]['suction_pressure_bar']}->{res['stages'][0]['discharge_pressure_bar']} bar, T_out={res['stages'][0]['discharge_temp_c']} °C (Pass: {res['stages'][0]['temp_limit_pass']})")
+    print(f"  [+] Stage 2: P={res['stages'][1]['suction_pressure_bar']}->{res['stages'][1]['discharge_pressure_bar']} bar, T_out={res['stages'][1]['discharge_temp_c']} °C (Pass: {res['stages'][1]['temp_limit_pass']})")
+    print(f"  [+] Stage 3: P={res['stages'][2]['suction_pressure_bar']}->{res['stages'][2]['discharge_pressure_bar']} bar, T_out={res['stages'][2]['discharge_temp_c']} °C (Pass: {res['stages'][2]['temp_limit_pass']})")
+    print(f"  [+] API 617 Thermal Compliance: {res['thermal_compliance']} (Limit: {res['discharge_temp_api617_limit_c']} °C)")
+    print('  PASS')
+
+
+def test_card_46_iec61882_hazop_matrix():
+    print('\n--- TEST 46: Autonomous IEC 61882 / OSHA 1910.119 Process Hazard Analysis (HAZOP) Matrix ---')
+    res = engineering_tools.generate_iec61882_hazop_matrix(asset_tag="R-401")
+    assert 'error' not in res
+    assert res['asset_tag'] == 'R-401'
+    assert res['total_deviations_evaluated'] >= 8
+    assert len(res['deviations']) >= 8
+    assert len(res['study_seal_sha256']) == 64
+    assert 'risk_matrix_summary' in res
+    guide_words = [d['guide_word'] for d in res['deviations']]
+    assert 'MORE' in guide_words
+    assert 'LESS' in guide_words
+    assert 'NONE' in guide_words
+    print(f"  [+] HAZOP Node: {res['study_node_description']} ({res['asset_name']})")
+    print(f"  [+] Standard Framework: {res['standard']}")
+    print(f"  [+] Total Systematic Deviations Evaluated: {res['total_deviations_evaluated']}")
+    print(f"  [+] Risk Tier Distribution: {res['risk_matrix_summary']} (High/Critical: {res['high_or_critical_risks_count']})")
+    print(f"  [+] First Deviation: [{res['deviations'][0]['parameter']} / {res['deviations'][0]['guide_word']}] -> {res['deviations'][0]['deviation']}")
+    print(f"      - Cause: {res['deviations'][0]['causes'][:60]}...")
+    print(f"      - Consequence: {res['deviations'][0]['consequences'][:60]}...")
+    print(f"      - Safeguards: {res['deviations'][0]['existing_safeguards']}")
+    print(f"      - Risk Score: {res['deviations'][0]['risk_score']} ({res['deviations'][0]['risk_tier']})")
+    print(f"      - CAPA Action: {res['deviations'][0]['recommended_capa_action'][:60]}...")
+    print(f"  [+] Cryptographic Study Seal: {res['study_seal_sha256'][:24]}...")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -1170,8 +1289,12 @@ if __name__ == "__main__":
     test_card_40_api650_seismic_sloshing_dynamics()
     test_card_41_hei_condenser_vacuum_performance()
     test_card_42_plant_topology_and_isolation_tracing()
+    test_card_43_ieee1584_arc_flash_hazard()
+    test_card_44_acid_gas_dew_point()
+    test_card_45_multistage_compressor_train()
+    test_card_46_iec61882_hazop_matrix()
     print("\n================================================================")
-    print("ALL 42 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 46 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
 
 
