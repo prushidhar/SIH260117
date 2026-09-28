@@ -41,6 +41,7 @@ import RgdSealCard from './components/RgdSealCard';
 import Api618ReciprocatingCompressorCard from './components/Api618ReciprocatingCompressorCard';
 import AsmeSec1BoilerCirculationCard from './components/AsmeSec1BoilerCirculationCard';
 import Api530HeaterTubeCreepCard from './components/Api530HeaterTubeCreepCard';
+import Api676ScrewPumpCard from './components/Api676ScrewPumpCard';
 
 interface RegistryProps {
   component: string;
@@ -248,6 +249,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 40. API Standard 530 (7th Edition) / ISO 13704 Heater-Tube Creep & Rupture Life
   if (compKey.includes('api530') || compKey.includes('heater_tube') || compKey.includes('tube_creep') || compKey.includes('larson_miller') || compKey.includes('creep_rupture') || compKey === 'api530heatertubecreepcard') {
     return <Api530HeaterTubeCreepCard {...props} />;
+  }
+
+  // 41. API Standard 676 (3rd Edition) / ISO 14847 Twin-Screw Positive Displacement Pump
+  if (compKey.includes('api676') || compKey.includes('screw_pump') || compKey.includes('twin_screw') || compKey.includes('rotary_pump') || compKey.includes('positive_displacement') || compKey === 'api676screwpumpcard') {
+    return <Api676ScrewPumpCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

@@ -988,6 +988,7 @@ export const useIndraStore = create<IndraState>()(
         const isApi618RecipQuery = /api[\s_-]?618|reciprocating|piston[\s_-]?compressor|k-201.*(recip|double[\s_-]?acting|bottle|crosshead|suction\s*pressure)|dampener\s*bottle|volumetric\s*efficiency/i.test(promptText);
         const isBoilerCirculationQuery = /asme[\s_-]?sec(tion)?[\s_-]?1|boiler[\s_-]?circulation|thermosiphon|dnbr|departure\s*from\s*nucleate|b-101|hrsg-102|downcomer\s*height|steam\s*drum\s*pressure/i.test(promptText);
         const isApi530CreepQuery = /api[\s_-]?530|heater[\s_-]?tube|tube[\s_-]?creep|larson[\s_-]?miller|creep[\s_-]?rupture|f-101|radiant[\s_-]?coil|tmt|tube\s*metal\s*temp|cumulative\s*creep/i.test(promptText);
+        const isApi676PumpQuery = /api[\s_-]?676|screw[\s_-]?pump|twin[\s_-]?screw|rotary[\s_-]?pump|positive[\s_-]?displacement|p-801|vacuum\s*residue|bitumen|slip\s*leakage|viscous\s*shear/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1467,6 +1468,31 @@ Creep rupture life prediction, Larson-Miller Parameter (LMP), and cumulative cre
 \`\`\`
 
 - **API 530 Creep Assessment Verdict:** At $580.0^\circ\text{C}$ ($1,076.0^\circ\text{F}$) Maximum Tube Metal Temperature (TMT) and $450.0\text{ psig}$ ($3.103\text{ MPa}$) coil design pressure, mean diameter hoop stress is $\sigma_{\text{hoop}} = 38.62\text{ MPa}$ ($5.60\text{ ksi}$) on a $6.50\text{ mm}$ corroded wall. Under $42.0\text{ kW/m}^2$ firebox radiant heat flux, the radial temperature gradient across the wall is $\Delta T = 9.75^\circ\text{C}$, yielding an effective operating stress $\sigma_{\text{eff}} = 41.25\text{ MPa}$. Using the API 530 Larson-Miller parameter ($LMP = 36.62$), predicted mean creep rupture life is $t_{\text{rupture}} = 224,500\text{ hours}$ ($25.6\text{ years}$). Cumulative creep damage for the $100,000\text{ h}$ target is $D_{\text{creep}} = 0.445$, well below the statutory retirement limit $D_{\text{creep}} \le 0.800$ (**PASS_API530_CREEP_LIFE_CONFIRMED**). Remaining creep life margin is $124,500\text{ hours}$ ($14.2\text{ years}$).`;
+        } else if (isApi676PumpQuery) {
+          finalMarkdown = `### API Standard 676 3rd Ed. / ISO 14847 Twin-Screw Pump Performance Analysis
+
+Rotary positive displacement hydraulics, internal clearance slip leakage, and NPSH cavitation evaluation for **P-801** (Heavy Vacuum Residue / Bitumen Twin-Screw Pump) per API Standard 676 3rd Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api676ScrewPumpCard",
+  "props": {
+    "pumpTag": "P-801",
+    "serviceDescription": "Heavy Vacuum Residue / Bitumen Twin-Screw Positive Displacement Pump",
+    "title": "API STANDARD 676 3RD ED. TWIN-SCREW PUMP PERFORMANCE & CAVITATION",
+    "operatingViscosityCst": 450.0,
+    "differentialPressureBar": 28.0,
+    "operatingSpeedRpm": 1450,
+    "suctionPressureBarg": 2.5,
+    "displacementPerRevL": 0.95,
+    "fluidDensityKgM3": 980.0,
+    "vaporPressureBara": 0.05,
+    "standardCode": "API Standard 676 (3rd Edition) / ISO 14847"
+  }
+}
+\`\`\`
+
+- **API 676 Hydraulic Verdict:** At $1,450\text{ RPM}$ and $450.0\text{ cSt}$ operating viscosity, theoretical displacement is $Q_{\text{th}} = 82.65\text{ m}^3/\text{h}$. Viscous radial clearance slip under $28.0\text{ bar}$ differential pressure is $Q_{\text{slip}} = 4.85\text{ m}^3/\text{h}$, yielding an actual delivered flow $Q_{\text{act}} = 77.80\text{ m}^3/\text{h}$ ($342.5\text{ GPM}$) with $\eta_v = 94.1\%$ volumetric efficiency. Total driver power is $83.5\text{ kW}$ ($112.0\text{ HP}$) comprised of $60.5\text{ kW}$ hydraulic work, $18.5\text{ kW}$ viscous shear friction, and $4.5\text{ kW}$ mechanical/timing gear losses. Under $2.5\text{ bar g}$ suction, available $NPSHA = 36.00\text{ m}$ comfortably exceeds the viscosity-corrected $NPSHR = 3.56\text{ m}$ by $+32.44\text{ m}$ (**PASS_API676_CAVITATION_MARGIN_CONFIRMED**).`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

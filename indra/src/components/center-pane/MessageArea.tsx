@@ -18,7 +18,8 @@ import {
   Volume2,
   Radio,
   Wind,
-  Disc
+  Disc,
+  Cog
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -211,6 +212,13 @@ const industrialWorkflows = [
     query: 'Evaluate API Standard 530 7th Edition heater tube creep and rupture life for radiant coil F-101-RAD-01 (Atmospheric Crude Heater Radiant Coil): maximum tube metal temperature 580.0 °C, design pressure 450.0 psig, operating life target 100,000 hours, radiant heat flux density 42.0 kW/m2. Render cross-sectional tube wall diagram with stress gradients, plot Larson-Miller parameter LMP logarithmic creep rupture curve for ASTM A335 Grade P9 (9Cr-1Mo), and verify cumulative creep damage margin (D_creep ≤ 0.80).',
     icon: Flame,
     badge: 'API 530 / Creep',
+  },
+  {
+    title: 'API Standard 676 Twin-Screw Pump Hydraulics & Cavitation',
+    desc: 'Viscous residue displacement flow, clearance slip leakage, motor BHP breakdown, and viscosity-corrected NPSHR margin.',
+    query: 'Evaluate API Standard 676 3rd Edition twin-screw positive displacement pump P-801 (Heavy Vacuum Residue / Bitumen Twin-Screw Pump): operating viscosity 450.0 cSt, differential pressure 28.0 bar, operating speed 1450 RPM, suction pressure 2.5 bar g. Render twin intermeshing screw rotors animation with axial displacement and internal slip leakage vectors, plot viscosity vs NPSHR correction curve, calculate volumetric efficiency, breakdown total motor BHP (hydraulic + viscous shear drag), and verify API 676 cavitation margin (NPSHA ≥ NPSHR + 0.6m).',
+    icon: Cog,
+    badge: 'API 676 / Screw Pump',
   },
 ];
 

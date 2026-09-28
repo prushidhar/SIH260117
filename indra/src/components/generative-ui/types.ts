@@ -43,6 +43,7 @@ export type GenerativeUIComponentType =
   | 'Api618ReciprocatingCompressorCard'
   | 'AsmeSec1BoilerCirculationCard'
   | 'Api530HeaterTubeCreepCard'
+  | 'Api676ScrewPumpCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -767,4 +768,20 @@ export interface Api530HeaterTubeCreepCardProps {
   tubeMaterial?: string; // Default: 'ASTM A335 Grade P9 (9Cr-1Mo)'
   standardCode?: string; // Default: 'API Standard 530 (7th Edition) / ISO 13704'
   apiEndpoint?: string; // Default: 'http://localhost:8000/api/heaters/api530/tube-creep'
+}
+
+// 41. API Standard 676 (3rd Edition) / ISO 14847 Twin-Screw Positive Displacement Pump
+export interface Api676ScrewPumpCardProps {
+  pumpTag?: string; // Default: 'P-801'
+  serviceDescription?: string; // Default: 'Heavy Vacuum Residue / Bitumen Twin-Screw Positive Displacement Pump'
+  title?: string;
+  operatingViscosityCst?: number; // Default: 450.0 cSt (50.0 to 5000.0)
+  differentialPressureBar?: number; // Default: 28.0 bar (5.0 to 60.0)
+  operatingSpeedRpm?: number; // Default: 1450 RPM (500 to 2000)
+  suctionPressureBarg?: number; // Default: 2.5 bar g (0.5 to 10.0)
+  displacementPerRevL?: number; // Default: 0.95 L/rev
+  fluidDensityKgM3?: number; // Default: 980.0 kg/m³
+  vaporPressureBara?: number; // Default: 0.05 bar a
+  standardCode?: string; // Default: 'API Standard 676 (3rd Edition) / ISO 14847'
+  apiEndpoint?: string; // Default: 'http://localhost:8000/api/pumps/api676/screw-pump'
 }
