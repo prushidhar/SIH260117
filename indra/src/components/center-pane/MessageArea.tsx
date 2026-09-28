@@ -14,7 +14,8 @@ import {
   Sparkles,
   Zap,
   Thermometer,
-  ShieldCheck
+  ShieldCheck,
+  Volume2
 } from 'lucide-react';
 import useIndraStore, { Message } from '@/store/indra-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
@@ -144,6 +145,13 @@ const industrialWorkflows = [
     query: 'Evaluate ISO 13849-1 and IEC 62061 machinery functional safety integrity for ESD Loop SIS-ESDV-401: Category 4 dual-channel architecture, Channel 1 MTTFd 48.0 yrs, Channel 2 MTTFd 42.0 yrs, Diagnostic Coverage DCavg 99.0%, Annex F CCF score 75/100. Compute symmetrized MTTFd, PFHd, and verify achieved Performance Level PL e.',
     icon: ShieldCheck,
     badge: 'ISO 13849 / SIL 3',
+  },
+  {
+    title: 'API 520 / EEMUA 158 Flare Acoustical Vibration (AIV)',
+    desc: 'Carucci-Mueller sound power level (Lw dB), tailpipe Mach number bar, D/t ratio stiffness, and sweepolet fatigue safeguards.',
+    query: 'Evaluate API 520 Part II and EEMUA 158 flare acoustical vibration (AIV) for PSV-101 tailpipe: mass flow 65.0 t/h, relieving pressure 35.0 bar a, backpressure 2.5 bar a, gas MW 22.0, tailpipe NPS 10" Sch 40. Render 180° decibel meter, verify API 520 0.70 Mach limit, and inspect EEMUA 158 wrap-around pad recommendations.',
+    icon: Volume2,
+    badge: 'API 520 / EEMUA 158',
   },
 ];
 

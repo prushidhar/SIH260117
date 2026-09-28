@@ -32,6 +32,7 @@ import ArcFlashHazardCard from './components/ArcFlashHazardCard';
 import AcidDewPointMeter from './components/AcidDewPointMeter';
 import CompressorTrainCard from './components/CompressorTrainCard';
 import FunctionalSafetyCard from './components/FunctionalSafetyCard';
+import FlareAivCard from './components/FlareAivCard';
 
 interface RegistryProps {
   component: string;
@@ -194,6 +195,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 31. ISO 13849-1 Machinery Functional Safety Integrity
   if (compKey.includes('iso13849') || compKey.includes('functional_safety_pl') || compKey.includes('functional_safety') || compKey.includes('iec62061') || compKey.includes('functionalsafety') || compKey === 'functionalsafetycard') {
     return <FunctionalSafetyCard {...props} />;
+  }
+
+  // 32. API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV)
+  if (compKey.includes('flare_aiv') || compKey.includes('api520_aiv') || compKey.includes('acoustic_vibration') || compKey.includes('flareaiv') || compKey.includes('aiv') || compKey === 'flareaivcard') {
+    return <FlareAivCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

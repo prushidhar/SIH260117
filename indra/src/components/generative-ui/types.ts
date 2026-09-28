@@ -34,6 +34,7 @@ export type GenerativeUIComponentType =
   | 'AcidDewPointMeter'
   | 'CompressorTrainCard'
   | 'FunctionalSafetyCard'
+  | 'FlareAivCard'
   | string;
 
 export interface GenerativeUISpec {
@@ -614,6 +615,22 @@ export interface FunctionalSafetyCardProps {
   proofTestIntervalHrs?: number; // Default: 8760 hrs (1 yr)
   requiredPl?: 'a' | 'b' | 'c' | 'd' | 'e'; // Default: 'e'
 }
+
+// 32. API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV)
+export interface FlareAivCardProps {
+  assetTag?: string; // Default: 'PSV-101'
+  location?: string; // Default: 'PSV-101 TAILPIPE'
+  title?: string;
+  massFlowTh?: number; // Default: 65.0 t/h
+  upstreamPressureBar?: number; // Default: 35.0 bar a
+  backpressureBar?: number; // Default: 2.5 bar a
+  gasMolecularWeight?: number; // Default: 22.0 kg/kmol
+  specificHeatRatio?: number; // Default: 1.28
+  gasTempC?: number; // Default: 60.0 °C
+  pipeNpsInches?: string; // Default: '10"'
+  pipeSchedule?: string; // Default: 'Sch 40'
+}
+
 
 
 

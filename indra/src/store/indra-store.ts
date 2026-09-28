@@ -979,6 +979,7 @@ export const useIndraStore = create<IndraState>()(
         const isAcidDewPointQuery = /acid[\s_-]?dew[\s_-]?point|ptc[\s_-]?4\.?3|aph-101|air[\s_-]?preheater|cold[\s_-]?end|sulfuric\s*acid\s*condensation/i.test(promptText);
         const isCompressorTrainQuery = /compressor[\s_-]?train|api[\s_-]?617[\s_-]?train|k-103|multi[\s_-]?stage[\s_-]?compressor|stage[\s_-]?casing|intercooler\s*duty/i.test(promptText);
         const isFunctionalSafetyQuery = /functional\s*safety|iso\s*13849|iec\s*62061|performance\s*level|mttfd|diagnostic\s*coverage|common\s*cause|ccf|pfhd/i.test(promptText);
+        const isFlareAivQuery = /flare[\s_-]?aiv|aiv|acoustical[\s_-]?vibration|sound\s*power\s*level|eemua\s*158|carucci[\s_-]?mueller|psv-101\s*tailpipe|psv\s*tailpipe|tailpipe\s*mach/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1232,6 +1233,31 @@ Comprehensive Category 4 / SIL 3 safety instrumented function assessment for **S
 \`\`\`
 
 - **Safety Integrity Assessment:** Dual-channel Category 4 architecture verified. Symmetrized MTTFd computed at 45.0 Years (HIGH), Diagnostic Coverage DCavg at 99.0% (HIGH), and Annex F CCF score at 75/100 (PASS ≥ 65). Achieved Performance Level: **PL e** with PFHd = 2.47e-08 /hr (IEC 62061 SIL 3 claim equivalent).`;
+        } else if (isFlareAivQuery) {
+          finalMarkdown = `### API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV) Assessment
+
+Comprehensive high-frequency acoustic fatigue screening for **PSV-101 Tailpipe** per API 520 Part II, EEMUA 158, and Carucci-Mueller acoustic power methodologies.
+
+\`\`\`gen-ui
+{
+  "component": "FlareAivCard",
+  "props": {
+    "assetTag": "PSV-101",
+    "location": "PSV-101 TAILPIPE",
+    "title": "API 520 PART II & EEMUA 158 FLARE ACOUSTICAL VIBRATION (AIV)",
+    "massFlowTh": 65.0,
+    "upstreamPressureBar": 35.0,
+    "backpressureBar": 2.5,
+    "gasMolecularWeight": 22.0,
+    "specificHeatRatio": 1.28,
+    "gasTempC": 60.0,
+    "pipeNpsInches": "10\"",
+    "pipeSchedule": "Sch 40"
+  }
+}
+\`\`\`
+
+- **Acoustical Vibration Assessment:** Computed Sound Power Level is 158.3 dB (MODERATE AIV FATIGUE RISK). Radiated acoustic energy is 6.76 kW into the pipe wall. Tailpipe gas velocity is 168.5 m/s (Mach 0.43, compliant with API 520 statutory 0.70 Mach limit). EEMUA 158 integrity requires 360° welded wrap-around wear pads at pipe clamps and sweepolet contoured branch fittings.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 
