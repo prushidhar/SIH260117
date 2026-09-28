@@ -67,61 +67,13 @@ if exist "D:\models\qwen2.5-coder-1.5b-instruct-q4_k_m.gguf" (
 )
 
 echo.
-echo  Enforcing Sovereign Air-Gap Containment (0-WAN / IEC 62443)...
-set "HF_HUB_OFFLINE=1"
-set "TRANSFORMERS_OFFLINE=1"
-set "HF_DATASETS_OFFLINE=1"
-set "NO_PROXY=*"
-set "no_proxy=*"
-set "HF_HOME=D:\huggingface_cache"
-
-echo  Starting INDRA Backend (FastAPI :8000 on 127.0.0.1 loopback)...
-start "INDRA Backend" cmd /k "title INDRA Backend && cd /d "%PROJECT%\backend" && set "HF_HUB_OFFLINE=1" && set "TRANSFORMERS_OFFLINE=1" && set "HF_DATASETS_OFFLINE=1" && set "NO_PROXY=*" && "%PYTHON%" -m uvicorn main:app --host 127.0.0.1 --port 8000"
-
-:: Wait for backend to initialize
-echo  Waiting for backend (127.0.0.1:8000) to initialize...
-:wait_backend
-timeout /t 2 /nobreak >nul
-netstat -ano | findstr ":8000" | findstr "LISTENING" >nul 2>&1
-if errorlevel 1 (
-    <nul set /p=.
-    goto wait_backend
-)
-echo.
-echo  [OK] Backend online on http://127.0.0.1:8000
-
-:: ─── Start Frontend ────────────────────────────────────────────────────────
-if defined NPM_CMD (
-    echo  Starting INDRA Frontend (Next.js :3000)...
-    start "INDRA Frontend" cmd /k "title INDRA Frontend && cd /d "%FRONTEND_DIR%" && set "PATH=%NODE_DIR%;%%PATH%%" && "%NPM_CMD%" run dev"
-    
-    echo  Waiting for frontend (127.0.0.1:3000) to bind...
-    :wait_frontend
-    timeout /t 2 /nobreak >nul
-    netstat -ano | findstr ":3000" | findstr "LISTENING" >nul 2>&1
-    if errorlevel 1 (
-        <nul set /p=.
-        goto wait_frontend
-    )
-    echo.
-    echo  [OK] Frontend online on http://127.0.0.1:3000
-
-    if exist "%FRONTEND_DIR%\node_modules\electron\dist\electron.exe" (
-        echo  [OK] Launching Native Electron Desktop Shell...
-        start "" "%FRONTEND_DIR%\node_modules\electron\dist\electron.exe" "%FRONTEND_DIR%\electron\main.js"
-    ) else (
-        echo  Opening INDRA Workbench in browser...
-        start "" "http://localhost:3000/workbench"
-    )
-) else (
-    echo  [WARN] Frontend skipped - Node.js not found
-    echo  [INFO] Backend API available at: http://localhost:8000/docs
-    start "" "http://localhost:8000/docs"
-)
-
 echo.
 echo  ============================================================
-echo   INDRA is running!
+echo   Starting INDRA Sovereign AI Workbench Desktop Supervisor...
+echo  ============================================================
+echo.
+"%PYTHON%" "%PROJECT%\desktop_launcher.py"
+
 echo   Workbench:      http://localhost:3000/workbench
 echo   Knowledge Base: http://localhost:3000/kb
 echo   Audit Ledger:   http://localhost:3000/audit
