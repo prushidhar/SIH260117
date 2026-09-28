@@ -974,6 +974,7 @@ export const useIndraStore = create<IndraState>()(
         const isReliefValveQuery = /relief\s*valve|psv|psv-101|api\s*520|api\s*526|choked\s*flow|accumulation/i.test(promptText);
         const isRcaQuery = /rca|root\s*cause|5[\s_-]?why|bowtie|bow[\s_-]?tie|fishbone|ishikawa|fault\s*tree|fta/i.test(promptText);
         const isSensorDriftQuery = /sensor[\s_-]?drift|fdd|iso\s*13374|vdi\s*2888|tt-101|calibration|voting\s*comparator/i.test(promptText);
+        const isHazopQuery = /hazop|pha|process\s*hazard|iec\s*61882|r-401|guide[\s_-]?word|deviation\s*matrix/i.test(promptText);
         const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
         const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
         const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
@@ -1121,6 +1122,24 @@ Condition monitoring and dual-channel redundancy adjudication for **TT-101** on 
 \`\`\`
 
 - **FDD Diagnosis:** Dual-channel redundancy comparison confirmed. Statistical drift velocity at +0.28 °C/sample indicates progressive thermocouple decalibration.`;
+        } else if (isHazopQuery) {
+          finalMarkdown = `### Autonomous IEC 61882 Process Hazard Analysis (HAZOP) Study
+
+Comprehensive deviation matrix for Reactor **R-401** evaluated across standard guide words per IEC 61882:2016 and OSHA 1910.119 PSM compliance.
+
+\`\`\`gen-ui
+{
+  "component": "HazopMatrixWidget",
+  "props": {
+    "assetTag": "R-401",
+    "title": "AUTONOMOUS IEC 61882 HAZOP DEVIATION MATRIX",
+    "standard": "IEC 61882:2016 / OSHA 1910.119 PSM",
+    "studyId": "HAZOP-2026-R401-REV3"
+  }
+}
+\`\`\`
+
+- **HAZOP Summary:** 9 deviation nodes evaluated. 4 Critical/High risk scenarios identified requiring mandatory independent SIS trips and API 521 flare header capacity verification.`;
         } else if (isBlowdownQuery) {
           finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
 

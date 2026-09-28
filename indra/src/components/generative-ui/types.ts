@@ -29,6 +29,7 @@ export type GenerativeUIComponentType =
   | 'ReliefValveSizingWidget'
   | 'RootCauseAnalysisWidget'
   | 'SensorDriftFddCard'
+  | 'HazopMatrixWidget'
   | string;
 
 export interface GenerativeUISpec {
@@ -512,6 +513,33 @@ export interface SensorDriftFddCardProps {
   redundancyDiscrepancyMae?: number;
   sensorReliabilityIndex?: number;
 }
+
+// 27. Autonomous IEC 61882 HAZOP Deviation Matrix
+export interface HazopItem {
+  id: string;
+  guideWord: string; // MORE, LESS, NO, REVERSE, AS WELL AS, PART OF, OTHER THAN
+  parameter: 'FLOW' | 'PRESSURE' | 'TEMPERATURE' | 'COMPOSITION' | 'LEVEL' | string;
+  deviation: string;
+  causes: string[];
+  consequences: string[];
+  safeguards: string[];
+  severity: number; // 1 - 5
+  likelihood: number; // 1 - 5
+  riskScore: number; // S * L
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  capaAction: string;
+  status?: 'OPEN' | 'ASSIGNED' | 'VERIFIED';
+}
+
+export interface HazopMatrixWidgetProps {
+  assetTag?: string;
+  title?: string;
+  standard?: string;
+  studyId?: string;
+  sha256Seal?: string;
+  deviations?: HazopItem[];
+}
+
 
 
 

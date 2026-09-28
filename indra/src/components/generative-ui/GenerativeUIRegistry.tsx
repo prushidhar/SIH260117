@@ -27,6 +27,7 @@ import TegDehydrationWidget from './components/TegDehydrationWidget';
 import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
 import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
 import SensorDriftFddCard from './components/SensorDriftFddCard';
+import HazopMatrixWidget from './components/HazopMatrixWidget';
 
 interface RegistryProps {
   component: string;
@@ -164,6 +165,11 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   // 26. ISO 13374 Condition Monitoring, Sensor Drift & Fault Diagnostics
   if (compKey.includes('sensor_drift') || compKey.includes('sensordrift') || compKey.includes('fdd') || compKey.includes('calibration') || compKey.includes('iso13374') || compKey === 'sensordriftfddcard') {
     return <SensorDriftFddCard {...props} />;
+  }
+
+  // 27. Autonomous IEC 61882 HAZOP Deviation Matrix
+  if (compKey.includes('hazop') || compKey.includes('hazop_matrix') || compKey.includes('pha_study') || compKey === 'hazopmatrixwidget') {
+    return <HazopMatrixWidget {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card

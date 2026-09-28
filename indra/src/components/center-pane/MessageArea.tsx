@@ -107,6 +107,13 @@ const industrialWorkflows = [
     icon: Activity,
     badge: 'ISO 13374 / FDD',
   },
+  {
+    title: 'Autonomous IEC 61882 HAZOP Deviation Matrix',
+    desc: 'Guide-word hazard identification, risk scoring (S × L), existing safeguards, and statutory CAPA tracking for R-401.',
+    query: 'Generate autonomous IEC 61882 / OSHA 1910.119 Process Hazard Analysis (PHA) HAZOP deviation matrix for gas-phase exothermic reactor R-401 across guide words MORE, LESS, REVERSE, OTHER THAN. Formulate risk scores and recommended CAPA safeguards.',
+    icon: ShieldAlert,
+    badge: 'IEC 61882 / HAZOP',
+  },
 ];
 
 /**
