@@ -374,8 +374,101 @@ def main():
     assert vent_data.get("compliance") == "PASS_EXPLOSION_VENTING_CERTIFIED"
     print(f"[+] /api/safety/nfpa68/explosion-venting: OK (Tag: {vent_data.get('enclosure_tag')}, Class: {vent_data.get('dust_explosion_class')}, Av: {vent_data.get('required_vent_area_m2')} m2, Recoil: {vent_data.get('explosion_reaction_recoil_force_kn')} kN, Cert: {vent_data.get('compliance')})")
 
+    # 28. ASME B31.3 Piping Thermal Flexibility & Expansion Endpoint
+    res_flex = client.post("/api/piping/asme/thermal-flexibility", json={
+        "pipe_tag": "EXP-PIPE-101",
+        "nominal_pipe_size_in": 12.0,
+        "pipe_outer_diameter_mm": 323.85,
+        "wall_thickness_mm": 17.48,
+        "pipe_length_m": 45.0,
+        "operating_temperature_c": 350.0,
+        "ambient_temperature_c": 20.0,
+        "thermal_expansion_coeff_mm_m_c": 0.0135,
+        "modulus_of_elasticity_cold_gpa": 203.0,
+        "allowable_stress_cold_mpa": 138.0,
+        "allowable_stress_hot_mpa": 115.0,
+        "longitudinal_sustained_stress_mpa": 45.0,
+        "expansion_loop_height_m": 6.0,
+        "expansion_loop_width_m": 4.0
+    })
+    assert res_flex.status_code == 200
+    flex_data = res_flex.json()
+    assert flex_data.get("pipe_tag") == "EXP-PIPE-101"
+    assert flex_data.get("compliance") == "PASS_FLEXIBILITY_SATISFIED"
+    print(f"[+] /api/piping/asme/thermal-flexibility: OK (Tag: {flex_data.get('pipe_tag')}, Growth: {flex_data.get('thermal_expansion_growth_mm')}mm, Stress: {flex_data.get('calculated_thermal_expansion_stress_mpa')} MPa vs Allowable: {flex_data.get('allowable_displacement_stress_range_mpa')} MPa, Thrust: {flex_data.get('anchor_thrust_force_kn')} kN, Status: {flex_data.get('compliance')})")
+
+    # 29. API 661 / ISO 13706 Air-Cooled Heat Exchanger (Fin-Fan) Endpoint
+    res_fan = client.post("/api/exchangers/api661/fin-fan", json={
+        "exchanger_tag": "AFC-101",
+        "process_fluid": "Atmospheric Overhead Vapor",
+        "heat_duty_mw": 14.5,
+        "process_flow_kg_s": 32.0,
+        "process_inlet_temp_c": 125.0,
+        "process_outlet_temp_c": 45.0,
+        "ambient_air_dry_bulb_c": 35.0,
+        "air_outlet_temp_design_c": 68.0,
+        "tube_od_mm": 25.4,
+        "tube_length_m": 9.144,
+        "tubes_per_bay": 240,
+        "number_of_bays": 2,
+        "fin_height_mm": 15.875,
+        "fin_spacing_fins_per_meter": 433.0,
+        "fans_per_bay": 2,
+        "fan_diameter_m": 3.658,
+        "fan_efficiency": 0.65
+    })
+    assert res_fan.status_code == 200
+    fan_data = res_fan.json()
+    assert fan_data.get("exchanger_tag") == "AFC-101"
+    assert fan_data.get("compliance") == "PASS_API661_THERMAL_CAPACITY_CONFIRMED"
+    print(f"[+] /api/exchangers/api661/fin-fan: OK (Tag: {fan_data.get('exchanger_tag')}, Duty: {fan_data.get('heat_duty_mw')} MW, Bare Area: {fan_data.get('bare_surface_area_m2')} m2, Extended Area: {fan_data.get('extended_finned_area_m2')} m2, Fan Power: {fan_data.get('fan_shaft_power_kw_per_fan')} kW/fan, Status: {fan_data.get('compliance')})")
+
+    # 30. IEC 60079-10-1 / API RP 505 Hazardous Area Classification Endpoint
+    res_hac = client.post("/api/safety/iec60079/hazardous-area", json={
+        "cell_tag": "HAC-CELL-101",
+        "gas_mixture_name": "Propane / Light Hydrocarbon Mix",
+        "operating_pressure_bar_g": 24.0,
+        "operating_temp_c": 40.0,
+        "molecular_weight": 44.1,
+        "lower_explosive_limit_vol_pct": 2.1,
+        "upper_explosive_limit_vol_pct": 9.5,
+        "isentropic_exponent_gamma": 1.13,
+        "potential_leak_hole_diameter_mm": 2.5,
+        "discharge_coefficient_cd": 0.62,
+        "enclosure_ventilation_type": "forced_mechanical",
+        "ambient_air_velocity_m_s": 0.50,
+        "ventilation_availability": "good",
+        "release_grade": "secondary"
+    })
+    assert res_hac.status_code == 200
+    hac_data = res_hac.json()
+    assert hac_data.get("cell_tag") == "HAC-CELL-101"
+    assert "Zone 2" in hac_data.get("iec_zone_classification", "")
+    assert hac_data.get("compliance") == "PASS_HAZARDOUS_ZONE_DELIMITED"
+    print(f"[+] /api/safety/iec60079/hazardous-area: OK (Tag: {hac_data.get('cell_tag')}, Regime: {hac_data.get('flow_regime')}, Release: {hac_data.get('flammable_gas_release_rate_g_s')} g/s, r_z: {hac_data.get('hazardous_zone_boundary_distance_m')}m, IEC: {hac_data.get('iec_zone_classification')}, Status: {hac_data.get('compliance')})")
+
+    # 31. NORSOK M-710 Rapid Gas Decompression (RGD) Qualification Endpoint
+    res_rgd = client.post("/api/materials/norsok/rgd-seal", json={
+        "seal_tag": "RGD-SEAL-101",
+        "elastomer_material": "FFKM (Perfluoroelastomer) 90 Shore A",
+        "gas_medium": "Sour Gas (85% CH4, 10% CO2, 5% H2S)",
+        "system_pressure_bar_g": 280.0,
+        "operating_temp_c": 145.0,
+        "decompression_rate_bar_per_min": 70.0,
+        "number_of_decompression_cycles": 5,
+        "elastomer_shear_modulus_g_mpa": 12.5,
+        "gas_solubility_coeff_cm3_cm3_bar": 0.045,
+        "diffusion_coefficient_cm2_s": 4.5e-6,
+        "cross_section_thickness_mm": 5.33
+    })
+    assert res_rgd.status_code == 200
+    rgd_data = res_rgd.json()
+    assert rgd_data.get("seal_tag") == "RGD-SEAL-101"
+    assert rgd_data.get("compliance") == "PASS_NORSOK_M710_QUALIFIED"
+    print(f"[+] /api/materials/norsok/rgd-seal: OK (Tag: {rgd_data.get('seal_tag')}, Material: {rgd_data.get('elastomer_material')}, Cavitation: {rgd_data.get('effective_internal_cavitation_stress_mpa')} MPa, Margin: {rgd_data.get('blistering_resistance_margin_factor')}x, Rating: {rgd_data.get('norsok_m710_crack_rating')}, Status: {rgd_data.get('compliance')})")
+
     print("\n" + "=" * 65)
-    print("ALL 27 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 31 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

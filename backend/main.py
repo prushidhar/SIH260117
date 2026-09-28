@@ -2220,6 +2220,178 @@ async def evaluate_explosion_venting(req: ExplosionVentingRequest):
     )
 
 
+class PipingThermalFlexibilityRequest(BaseModel):
+    pipe_tag: Optional[str] = "EXP-PIPE-101"
+    nominal_pipe_size_in: Optional[float] = 12.0
+    pipe_outer_diameter_mm: Optional[float] = 323.85
+    wall_thickness_mm: Optional[float] = 17.48
+    pipe_length_m: Optional[float] = 45.0
+    operating_temperature_c: Optional[float] = 350.0
+    ambient_temperature_c: Optional[float] = 20.0
+    thermal_expansion_coeff_mm_m_c: Optional[float] = 0.0135
+    modulus_of_elasticity_cold_gpa: Optional[float] = 203.0
+    allowable_stress_cold_mpa: Optional[float] = 138.0
+    allowable_stress_hot_mpa: Optional[float] = 115.0
+    longitudinal_sustained_stress_mpa: Optional[float] = 45.0
+    expansion_loop_height_m: Optional[float] = 6.0
+    expansion_loop_width_m: Optional[float] = 4.0
+
+
+@app.post("/api/piping/asme/thermal-flexibility")
+async def evaluate_piping_thermal_flexibility(req: PipingThermalFlexibilityRequest):
+    """
+    ASME B31.3 § 319 / Appendix X Piping Flexibility Analysis & Thermal Expansion.
+    Calculates thermal expansion delta-L, allowable displacement stress range (SA),
+    expansion loop guided cantilever stresses, anchor reaction thrust forces, and code compliance.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_asme_b313_piping_thermal_flexibility(
+        pipe_tag=req.pipe_tag or "EXP-PIPE-101",
+        nominal_pipe_size_in=req.nominal_pipe_size_in or 12.0,
+        pipe_outer_diameter_mm=req.pipe_outer_diameter_mm or 323.85,
+        wall_thickness_mm=req.wall_thickness_mm or 17.48,
+        pipe_length_m=req.pipe_length_m or 45.0,
+        operating_temperature_c=req.operating_temperature_c or 350.0,
+        ambient_temperature_c=req.ambient_temperature_c or 20.0,
+        thermal_expansion_coeff_mm_m_c=req.thermal_expansion_coeff_mm_m_c or 0.0135,
+        modulus_of_elasticity_cold_gpa=req.modulus_of_elasticity_cold_gpa or 203.0,
+        allowable_stress_cold_mpa=req.allowable_stress_cold_mpa or 138.0,
+        allowable_stress_hot_mpa=req.allowable_stress_hot_mpa or 115.0,
+        longitudinal_sustained_stress_mpa=req.longitudinal_sustained_stress_mpa or 45.0,
+        expansion_loop_height_m=req.expansion_loop_height_m or 6.0,
+        expansion_loop_width_m=req.expansion_loop_width_m or 4.0
+    )
+
+
+class FinFanCoolerRequest(BaseModel):
+    exchanger_tag: Optional[str] = "AFC-101"
+    process_fluid: Optional[str] = "Atmospheric Overhead Vapor"
+    heat_duty_mw: Optional[float] = 14.5
+    process_flow_kg_s: Optional[float] = 32.0
+    process_inlet_temp_c: Optional[float] = 125.0
+    process_outlet_temp_c: Optional[float] = 45.0
+    ambient_air_dry_bulb_c: Optional[float] = 35.0
+    air_outlet_temp_design_c: Optional[float] = 68.0
+    tube_od_mm: Optional[float] = 25.4
+    tube_length_m: Optional[float] = 9.144
+    tubes_per_bay: Optional[int] = 240
+    number_of_bays: Optional[int] = 2
+    fin_height_mm: Optional[float] = 15.875
+    fin_spacing_fins_per_meter: Optional[float] = 433.0
+    fans_per_bay: Optional[int] = 2
+    fan_diameter_m: Optional[float] = 3.658
+    fan_efficiency: Optional[float] = 0.65
+
+
+@app.post("/api/exchangers/api661/fin-fan")
+async def evaluate_fin_fan_cooler(req: FinFanCoolerRequest):
+    """
+    API Standard 661 7th Ed. / ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers).
+    Calculates bare/extended heat transfer surface, LMTD crossflow rating, airside mass flow,
+    fan static pressure, shaft power per fan, and thermal performance rating.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_api661_air_cooled_heat_exchanger(
+        exchanger_tag=req.exchanger_tag or "AFC-101",
+        process_fluid=req.process_fluid or "Atmospheric Overhead Vapor",
+        heat_duty_mw=req.heat_duty_mw or 14.5,
+        process_flow_kg_s=req.process_flow_kg_s or 32.0,
+        process_inlet_temp_c=req.process_inlet_temp_c or 125.0,
+        process_outlet_temp_c=req.process_outlet_temp_c or 45.0,
+        ambient_air_dry_bulb_c=req.ambient_air_dry_bulb_c or 35.0,
+        air_outlet_temp_design_c=req.air_outlet_temp_design_c or 68.0,
+        tube_od_mm=req.tube_od_mm or 25.4,
+        tube_length_m=req.tube_length_m or 9.144,
+        tubes_per_bay=req.tubes_per_bay or 240,
+        number_of_bays=req.number_of_bays or 2,
+        fin_height_mm=req.fin_height_mm or 15.875,
+        fin_spacing_fins_per_meter=req.fin_spacing_fins_per_meter or 433.0,
+        fans_per_bay=req.fans_per_bay or 2,
+        fan_diameter_m=req.fan_diameter_m or 3.658,
+        fan_efficiency=req.fan_efficiency or 0.65
+    )
+
+
+class HazardousAreaRequest(BaseModel):
+    cell_tag: Optional[str] = "HAC-CELL-101"
+    gas_mixture_name: Optional[str] = "Propane / Light Hydrocarbon Mix"
+    operating_pressure_bar_g: Optional[float] = 24.0
+    operating_temp_c: Optional[float] = 40.0
+    molecular_weight: Optional[float] = 44.1
+    lower_explosive_limit_vol_pct: Optional[float] = 2.1
+    upper_explosive_limit_vol_pct: Optional[float] = 9.5
+    isentropic_exponent_gamma: Optional[float] = 1.13
+    potential_leak_hole_diameter_mm: Optional[float] = 2.5
+    discharge_coefficient_cd: Optional[float] = 0.62
+    enclosure_ventilation_type: Optional[str] = "forced_mechanical"
+    ambient_air_velocity_m_s: Optional[float] = 0.50
+    ventilation_availability: Optional[str] = "good"
+    release_grade: Optional[str] = "secondary"
+
+
+@app.post("/api/safety/iec60079/hazardous-area")
+async def evaluate_hazardous_area_classification(req: HazardousAreaRequest):
+    """
+    IEC 60079-10-1:2020 / API RP 505 Hazardous Area Classification & Vent Dispersion Distance.
+    Calculates sonic/subsonic gas release rate, LEL mass, dispersion boundary radius,
+    Zone 0/1/2 or Class I Div 1/2 classification, and T-class rating.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_iec60079_hazardous_area_classification(
+        cell_tag=req.cell_tag or "HAC-CELL-101",
+        gas_mixture_name=req.gas_mixture_name or "Propane / Light Hydrocarbon Mix",
+        operating_pressure_bar_g=req.operating_pressure_bar_g or 24.0,
+        operating_temp_c=req.operating_temp_c or 40.0,
+        molecular_weight=req.molecular_weight or 44.1,
+        lower_explosive_limit_vol_pct=req.lower_explosive_limit_vol_pct or 2.1,
+        upper_explosive_limit_vol_pct=req.upper_explosive_limit_vol_pct or 9.5,
+        isentropic_exponent_gamma=req.isentropic_exponent_gamma or 1.13,
+        potential_leak_hole_diameter_mm=req.potential_leak_hole_diameter_mm or 2.5,
+        discharge_coefficient_cd=req.discharge_coefficient_cd or 0.62,
+        enclosure_ventilation_type=req.enclosure_ventilation_type or "forced_mechanical",
+        ambient_air_velocity_m_s=req.ambient_air_velocity_m_s or 0.50,
+        ventilation_availability=req.ventilation_availability or "good",
+        release_grade=req.release_grade or "secondary"
+    )
+
+
+class RgdSealRequest(BaseModel):
+    seal_tag: Optional[str] = "RGD-SEAL-101"
+    elastomer_material: Optional[str] = "FFKM (Perfluoroelastomer) 90 Shore A"
+    gas_medium: Optional[str] = "Sour Gas (85% CH4, 10% CO2, 5% H2S)"
+    system_pressure_bar_g: Optional[float] = 280.0
+    operating_temp_c: Optional[float] = 145.0
+    decompression_rate_bar_per_min: Optional[float] = 70.0
+    number_of_decompression_cycles: Optional[int] = 5
+    elastomer_shear_modulus_g_mpa: Optional[float] = 12.5
+    gas_solubility_coeff_cm3_cm3_bar: Optional[float] = 0.045
+    diffusion_coefficient_cm2_s: Optional[float] = 4.5e-6
+    cross_section_thickness_mm: Optional[float] = 5.33
+
+
+@app.post("/api/materials/norsok/rgd-seal")
+async def evaluate_rgd_seal_qualification(req: RgdSealRequest):
+    """
+    NORSOK M-710 / ISO 23936-2 Rapid Gas Decompression (RGD) Qualification.
+    Evaluates Henry's Law dissolved gas saturation, decompression cavitation stress,
+    Gent-Lindley bubble nucleation limit, diffusion lag ratio, and NORSOK M-710 crack rating.
+    """
+    from verification.calculator import engineering_tools
+    return engineering_tools.calculate_norsok_m710_rapid_gas_decompression(
+        seal_tag=req.seal_tag or "RGD-SEAL-101",
+        elastomer_material=req.elastomer_material or "FFKM (Perfluoroelastomer) 90 Shore A",
+        gas_medium=req.gas_medium or "Sour Gas (85% CH4, 10% CO2, 5% H2S)",
+        system_pressure_bar_g=req.system_pressure_bar_g or 280.0,
+        operating_temp_c=req.operating_temp_c or 145.0,
+        decompression_rate_bar_per_min=req.decompression_rate_bar_per_min or 70.0,
+        number_of_decompression_cycles=req.number_of_decompression_cycles or 5,
+        elastomer_shear_modulus_g_mpa=req.elastomer_shear_modulus_g_mpa or 12.5,
+        gas_solubility_coeff_cm3_cm3_bar=req.gas_solubility_coeff_cm3_cm3_bar or 0.045,
+        diffusion_coefficient_cm2_s=req.diffusion_coefficient_cm2_s or 4.5e-6,
+        cross_section_thickness_mm=req.cross_section_thickness_mm or 5.33
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

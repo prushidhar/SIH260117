@@ -1446,6 +1446,142 @@ def test_card_53_nfpa68_explosion_venting():
     print('  PASS')
 
 
+def test_card_54_asme_b313_piping_thermal_flexibility():
+    print('\n--- TEST 54: ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion ---')
+    res = engineering_tools.calculate_asme_b313_piping_thermal_flexibility(
+        pipe_tag="EXP-PIPE-101",
+        nominal_pipe_size_in=12.0,
+        pipe_outer_diameter_mm=323.85,
+        wall_thickness_mm=17.48,
+        pipe_length_m=45.0,
+        operating_temperature_c=350.0,
+        ambient_temperature_c=20.0,
+        thermal_expansion_coeff_mm_m_c=0.0135,
+        modulus_of_elasticity_cold_gpa=203.0,
+        allowable_stress_cold_mpa=138.0,
+        allowable_stress_hot_mpa=115.0,
+        longitudinal_sustained_stress_mpa=45.0,
+        expansion_loop_height_m=6.0,
+        expansion_loop_width_m=4.0
+    )
+    assert 'error' not in res
+    assert res['pipe_tag'] == 'EXP-PIPE-101'
+    assert res['thermal_expansion_growth_mm'] > 150.0
+    assert res['allowable_displacement_stress_range_mpa'] > 250.0
+    assert res['calculated_thermal_expansion_stress_mpa'] <= res['allowable_displacement_stress_range_mpa']
+    assert res['compliance'] == 'PASS_FLEXIBILITY_SATISFIED'
+    print(f"  [+] Pipe Line: {res['pipe_tag']} (NPS {res['nominal_pipe_size_in']}\", Length: {res['pipe_length_m']}m)")
+    print(f"  [+] Thermal Expansion Growth: {res['thermal_expansion_growth_mm']} mm (Delta T: {res['temperature_difference_c']} °C)")
+    print(f"  [+] Expansion Loop: {res['expansion_loop_height_m']}m H x {res['expansion_loop_width_m']}m W (Inertia: {res['pipe_moment_of_inertia_cm4']} cm^4)")
+    print(f"  [+] Thermal Stress: SE={res['calculated_thermal_expansion_stress_mpa']} MPa vs Allowable SA={res['allowable_displacement_stress_range_mpa']} MPa (Margin: +{res['stress_margin_pct']}%)")
+    print(f"  [+] Anchor Reactions: Thrust={res['anchor_thrust_force_kn']} kN, Moment={res['anchor_bending_moment_kn_m']} kN*m")
+    print(f"  [+] Statutory Verdict: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_55_api661_air_cooled_heat_exchanger():
+    print('\n--- TEST 55: API Standard 661 / ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers) ---')
+    res = engineering_tools.calculate_api661_air_cooled_heat_exchanger(
+        exchanger_tag="AFC-101",
+        process_fluid="Atmospheric Overhead Vapor",
+        heat_duty_mw=14.5,
+        process_flow_kg_s=32.0,
+        process_inlet_temp_c=125.0,
+        process_outlet_temp_c=45.0,
+        ambient_air_dry_bulb_c=35.0,
+        air_outlet_temp_design_c=68.0,
+        tube_od_mm=25.4,
+        tube_length_m=9.144,
+        tubes_per_bay=240,
+        number_of_bays=2,
+        fin_height_mm=15.875,
+        fin_spacing_fins_per_meter=433.0,
+        fans_per_bay=2,
+        fan_diameter_m=3.658,
+        fan_efficiency=0.65
+    )
+    assert 'error' not in res
+    assert res['exchanger_tag'] == 'AFC-101'
+    assert res['heat_duty_mw'] == 14.5
+    assert res['extended_finned_area_m2'] > 5000.0
+    assert res['total_fans_count'] == 4
+    assert res['fan_shaft_power_kw_per_fan'] > 0
+    assert res['compliance'] == 'PASS_API661_THERMAL_CAPACITY_CONFIRMED'
+    print(f"  [+] Exchanger: {res['exchanger_tag']} (Duty: {res['heat_duty_mw']} MWth, Fluid: {res['process_fluid']})")
+    print(f"  [+] Surface Areas: Bare={res['bare_surface_area_m2']} m², Extended Finned={res['extended_finned_area_m2']} m² (Fin Ratio: {res['fin_surface_enhancement_ratio']}x)")
+    print(f"  [+] Crossflow Thermal LMTD: {res['log_mean_temperature_difference_c']} °C -> Effective: {res['effective_mean_temperature_difference_c']} °C (U_bare: {res['overall_heat_transfer_coeff_u_bare_w_m2_k']} W/m²K)")
+    print(f"  [+] Airflow Aerodynamics: Mass Flow={res['air_mass_flow_kg_s']} kg/s, Volumetric={res['total_air_volumetric_flow_m3_s']} m³/s ({res['total_fans_count']} fans)")
+    print(f"  [+] Fan Power: {res['fan_shaft_power_kw_per_fan']} kW/fan (Total Power: {res['total_electric_fan_power_kw']} kW, Pressure Drop: {res['bundle_static_pressure_drop_pa']} Pa)")
+    print(f"  [+] API 661 Rating: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_56_iec60079_hazardous_area_classification():
+    print('\n--- TEST 56: IEC 60079-10-1:2020 / API RP 505 Hazardous Area Classification & Dispersion ---')
+    res = engineering_tools.calculate_iec60079_hazardous_area_classification(
+        cell_tag="HAC-CELL-101",
+        gas_mixture_name="Propane / Light Hydrocarbon Mix",
+        operating_pressure_bar_g=24.0,
+        operating_temp_c=40.0,
+        molecular_weight=44.1,
+        lower_explosive_limit_vol_pct=2.1,
+        upper_explosive_limit_vol_pct=9.5,
+        isentropic_exponent_gamma=1.13,
+        potential_leak_hole_diameter_mm=2.5,
+        discharge_coefficient_cd=0.62,
+        enclosure_ventilation_type="forced_mechanical",
+        ambient_air_velocity_m_s=0.50,
+        ventilation_availability="good",
+        release_grade="secondary"
+    )
+    assert 'error' not in res
+    assert res['cell_tag'] == 'HAC-CELL-101'
+    assert 'SONIC' in res['flow_regime']
+    assert res['flammable_gas_release_rate_g_s'] > 0
+    assert res['hazardous_zone_boundary_distance_m'] > 0
+    assert 'Zone 2' in res['iec_zone_classification']
+    assert res['compliance'] == 'PASS_HAZARDOUS_ZONE_DELIMITED'
+    print(f"  [+] Classification Cell: {res['cell_tag']} (Gas: {res['gas_mixture']}, Pressure: {res['operating_pressure_bar_g']} bar g)")
+    print(f"  [+] Leak Discharge: Hole={res['leak_orifice_diameter_mm']}mm -> Flow Regime: {res['flow_regime']} (Release Rate: {res['flammable_gas_release_rate_g_s']} g/s)")
+    print(f"  [+] Flammability Limit: LEL={res['lower_explosive_limit_vol_pct']} vol% ({res['lower_explosive_limit_mass_g_m3']} g/m³)")
+    print(f"  [+] Dispersion Boundary Distance (rz): {res['hazardous_zone_boundary_distance_m']} meters from release point")
+    print(f"  [+] Statutory Zones: IEC 60079 -> {res['iec_zone_classification']} | API RP 505 -> {res['api_rp_505_classification']}")
+    print(f"  [+] Electrical Apparatus: Group={res['recommended_apparatus_gas_group']}, T-Class={res['temperature_class']}")
+    print(f"  [+] Safety Certification: {res['compliance']}")
+    print('  PASS')
+
+
+def test_card_57_norsok_m710_rapid_gas_decompression():
+    print('\n--- TEST 57: NORSOK M-710 Rev 3 / ISO 23936-2 Rapid Gas Decompression (RGD) Qualification ---')
+    res = engineering_tools.calculate_norsok_m710_rapid_gas_decompression(
+        seal_tag="RGD-SEAL-101",
+        elastomer_material="FFKM (Perfluoroelastomer) 90 Shore A",
+        gas_medium="Sour Gas (85% CH4, 10% CO2, 5% H2S)",
+        system_pressure_bar_g=280.0,
+        operating_temp_c=145.0,
+        decompression_rate_bar_per_min=70.0,
+        number_of_decompression_cycles=5,
+        elastomer_shear_modulus_g_mpa=12.5,
+        gas_solubility_coeff_cm3_cm3_bar=0.045,
+        diffusion_coefficient_cm2_s=4.5e-6,
+        cross_section_thickness_mm=5.33
+    )
+    assert 'error' not in res
+    assert res['seal_tag'] == 'RGD-SEAL-101'
+    assert res['system_pressure_bar_g'] == 280.0
+    assert res['dissolved_gas_saturation_cm3_cm3'] > 10.0
+    assert res['blistering_resistance_margin_factor'] >= 1.0
+    assert '1000' in res['norsok_m710_crack_rating'] or '0000' in res['norsok_m710_crack_rating']
+    assert res['compliance'] == 'PASS_NORSOK_M710_QUALIFIED'
+    print(f"  [+] Seal Assembly: {res['seal_tag']} (Material: {res['elastomer_material']}, Service: {res['gas_medium']})")
+    print(f"  [+] Gas Loading: Pressure={res['system_pressure_bar_g']} bar g, Temp={res['operating_temp_c']} °C -> Saturation: {res['dissolved_gas_saturation_cm3_cm3']} cm³/cm³")
+    print(f"  [+] Decompression Kinetics: Rate={res['decompression_rate_bar_per_min']} bar/min (t_decomp: {res['decompression_time_seconds']}s vs tau_diffusion: {res['matrix_diffusion_time_seconds']}s, Lag: {res['diffusion_trapped_gas_lag_ratio']}x)")
+    print(f"  [+] Cavitation Mechanics: Internal Stress={res['effective_internal_cavitation_stress_mpa']} MPa vs Gent-Lindley Limit={res['critical_gent_lindley_cavitation_limit_mpa']} MPa")
+    print(f"  [+] Blistering Margin: {res['blistering_resistance_margin_factor']}x -> NORSOK M-710 Rating: {res['norsok_m710_crack_rating']}")
+    print(f"  [+] Statutory Qualification: {res['status']} ({res['compliance']})")
+    print('  PASS')
+
+
 if __name__ == "__main__":
     print("================================================================")
     print("INDRA Sovereign AI Workbench — Full Domain & Deliverable Suite")
@@ -1503,9 +1639,14 @@ if __name__ == "__main__":
     test_card_51_asme_conical_reducer_transition()
     test_card_52_iso1940_rotor_balancing_tolerance()
     test_card_53_nfpa68_explosion_venting()
+    test_card_54_asme_b313_piping_thermal_flexibility()
+    test_card_55_api661_air_cooled_heat_exchanger()
+    test_card_56_iec60079_hazardous_area_classification()
+    test_card_57_norsok_m710_rapid_gas_decompression()
     print("\n================================================================")
-    print("ALL 53 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 57 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+
 
 
 

@@ -1244,6 +1244,114 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_asme_b313_piping_thermal_flexibility",
+                    "description": "ASME B31.3 § 319 / Appendix X Piping Flexibility Analysis: thermal growth delta-L, allowable displacement stress range (SA), expansion loop stress, anchor thrust forces, and code compliance.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "pipe_tag": {"type": "string", "description": "Piping line tag", "default": "EXP-PIPE-101"},
+                            "nominal_pipe_size_in": {"type": "number", "description": "Nominal pipe size inches", "default": 12.0},
+                            "pipe_outer_diameter_mm": {"type": "number", "description": "Outer diameter mm", "default": 323.85},
+                            "wall_thickness_mm": {"type": "number", "description": "Pipe wall thickness mm", "default": 17.48},
+                            "pipe_length_m": {"type": "number", "description": "Total length between anchors meters", "default": 45.0},
+                            "operating_temperature_c": {"type": "number", "description": "Operating temperature °C", "default": 350.0},
+                            "ambient_temperature_c": {"type": "number", "description": "Ambient installation temperature °C", "default": 20.0},
+                            "thermal_expansion_coeff_mm_m_c": {"type": "number", "description": "Thermal expansion coefficient mm/m/°C", "default": 0.0135},
+                            "modulus_of_elasticity_cold_gpa": {"type": "number", "description": "Cold Young modulus GPa", "default": 203.0},
+                            "allowable_stress_cold_mpa": {"type": "number", "description": "Basic allowable stress cold Sc MPa", "default": 138.0},
+                            "allowable_stress_hot_mpa": {"type": "number", "description": "Basic allowable stress hot Sh MPa", "default": 115.0},
+                            "longitudinal_sustained_stress_mpa": {"type": "number", "description": "Longitudinal sustained stress SL MPa", "default": 45.0},
+                            "expansion_loop_height_m": {"type": "number", "description": "Expansion loop height meters", "default": 6.0},
+                            "expansion_loop_width_m": {"type": "number", "description": "Expansion loop width meters", "default": 4.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api661_air_cooled_heat_exchanger",
+                    "description": "API Standard 661 7th Ed. / ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers): bare and extended surface areas, LMTD crossflow, air mass flow rate, fan static pressure, and motor shaft power.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "exchanger_tag": {"type": "string", "description": "Fin-fan cooler tag", "default": "AFC-101"},
+                            "process_fluid": {"type": "string", "description": "Process stream name", "default": "Atmospheric Overhead Vapor"},
+                            "heat_duty_mw": {"type": "number", "description": "Thermal duty MW", "default": 14.5},
+                            "process_flow_kg_s": {"type": "number", "description": "Process mass flow kg/s", "default": 32.0},
+                            "process_inlet_temp_c": {"type": "number", "description": "Process inlet temperature °C", "default": 125.0},
+                            "process_outlet_temp_c": {"type": "number", "description": "Process outlet temperature °C", "default": 45.0},
+                            "ambient_air_dry_bulb_c": {"type": "number", "description": "Ambient dry bulb temperature °C", "default": 35.0},
+                            "air_outlet_temp_design_c": {"type": "number", "description": "Design air outlet temperature °C", "default": 68.0},
+                            "tube_od_mm": {"type": "number", "description": "Tube outer diameter mm", "default": 25.4},
+                            "tube_length_m": {"type": "number", "description": "Tube length meters", "default": 9.144},
+                            "tubes_per_bay": {"type": "integer", "description": "Number of tubes per bay", "default": 240},
+                            "number_of_bays": {"type": "integer", "description": "Total cooler bays", "default": 2},
+                            "fin_height_mm": {"type": "number", "description": "Fin height mm", "default": 15.875},
+                            "fin_spacing_fins_per_meter": {"type": "number", "description": "Fins per meter", "default": 433.0},
+                            "fans_per_bay": {"type": "integer", "description": "Number of fans per bay", "default": 2},
+                            "fan_diameter_m": {"type": "number", "description": "Fan diameter meters", "default": 3.658},
+                            "fan_efficiency": {"type": "number", "description": "Fan static efficiency", "default": 0.65}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_iec60079_hazardous_area_classification",
+                    "description": "IEC 60079-10-1:2020 / API RP 505 Hazardous Area Classification: sonic/subsonic gas release rate, LEL mass, dispersion boundary radius, Zone 0/1/2 or Class I Div 1/2, and T-class rating.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "cell_tag": {"type": "string", "description": "Area classification cell tag", "default": "HAC-CELL-101"},
+                            "gas_mixture_name": {"type": "string", "description": "Gas mixture name", "default": "Propane / Light Hydrocarbon Mix"},
+                            "operating_pressure_bar_g": {"type": "number", "description": "Operating pressure bar g", "default": 24.0},
+                            "operating_temp_c": {"type": "number", "description": "Operating temperature °C", "default": 40.0},
+                            "molecular_weight": {"type": "number", "description": "Molecular weight", "default": 44.1},
+                            "lower_explosive_limit_vol_pct": {"type": "number", "description": "LEL vol %", "default": 2.1},
+                            "upper_explosive_limit_vol_pct": {"type": "number", "description": "UEL vol %", "default": 9.5},
+                            "isentropic_exponent_gamma": {"type": "number", "description": "Gas Cp/Cv ratio", "default": 1.13},
+                            "potential_leak_hole_diameter_mm": {"type": "number", "description": "Leak hole diameter mm", "default": 2.5},
+                            "discharge_coefficient_cd": {"type": "number", "description": "Discharge coefficient Cd", "default": 0.62},
+                            "enclosure_ventilation_type": {"type": "string", "description": "natural or forced_mechanical", "default": "forced_mechanical"},
+                            "ambient_air_velocity_m_s": {"type": "number", "description": "Ambient ventilation air velocity m/s", "default": 0.50},
+                            "ventilation_availability": {"type": "string", "description": "good, fair, or poor", "default": "good"},
+                            "release_grade": {"type": "string", "description": "continuous, primary, or secondary", "default": "secondary"}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_norsok_m710_rapid_gas_decompression",
+                    "description": "NORSOK M-710 Rev 3 / ISO 23936-2 Rapid Gas Decompression (RGD) Qualification: dissolved gas Henry saturation, Gent-Lindley bubble cavitation stress, diffusion lag ratio, and crack rating.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "seal_tag": {"type": "string", "description": "Seal assembly tag", "default": "RGD-SEAL-101"},
+                            "elastomer_material": {"type": "string", "description": "Elastomer compound specification", "default": "FFKM (Perfluoroelastomer) 90 Shore A"},
+                            "gas_medium": {"type": "string", "description": "Gas service composition", "default": "Sour Gas (85% CH4, 10% CO2, 5% H2S)"},
+                            "system_pressure_bar_g": {"type": "number", "description": "System pressure bar g", "default": 280.0},
+                            "operating_temp_c": {"type": "number", "description": "Operating temperature °C", "default": 145.0},
+                            "decompression_rate_bar_per_min": {"type": "number", "description": "Decompression depressurization rate bar/min", "default": 70.0},
+                            "number_of_decompression_cycles": {"type": "integer", "description": "NORSOK test cycles", "default": 5},
+                            "elastomer_shear_modulus_g_mpa": {"type": "number", "description": "Elastomer shear modulus G MPa", "default": 12.5},
+                            "gas_solubility_coeff_cm3_cm3_bar": {"type": "number", "description": "Gas solubility coefficient cm3/cm3/bar", "default": 0.045},
+                            "diffusion_coefficient_cm2_s": {"type": "number", "description": "Gas diffusion coefficient cm2/s", "default": 4.5e-6},
+                            "cross_section_thickness_mm": {"type": "number", "description": "O-ring cross-section diameter mm", "default": 5.33}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -1308,7 +1416,11 @@ class ToolRegistry:
             "calculate_api537_flare_thermal_radiation_and_steam",
             "calculate_asme_conical_reducer_transition",
             "calculate_iso1940_rotor_balancing_tolerance",
-            "calculate_nfpa68_explosion_venting"
+            "calculate_nfpa68_explosion_venting",
+            "calculate_asme_b313_piping_thermal_flexibility",
+            "calculate_api661_air_cooled_heat_exchanger",
+            "calculate_iec60079_hazardous_area_classification",
+            "calculate_norsok_m710_rapid_gas_decompression"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

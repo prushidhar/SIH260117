@@ -765,12 +765,63 @@ Deflagration Pressure Relief for Silos, Dust Collectors, and Process Enclosures:
 - Vent Area (Av) Equation: Sized to ensure internal deflagration pressure does not exceed the vessel's reduced design pressure P_red:
   A_v0 = 1e-4 * (1 + 1.54 * P_stat^1.33) * K_st * V^0.75 * sqrt(P_max / P_red - 1)
 - Duct Inertia Penalty: Vent discharge ducts exceeding 3 meters introduce significant backpressure, requiring enlargement of vent relief area and verification of structural recoil thrust forces."""
+    },
+    {
+        "doc_id": "std-asme-b313-appendix-x-thermal-flexibility",
+        "title": "ASME B31.3 Appendix X & § 319 Piping Flexibility Analysis & Thermal Expansion Stress",
+        "text": """ASME B31.3 Process Piping § 319 & Appendix X (Piping Flexibility Analysis):
+Rules for Thermal Expansion, Cold Spring, and Allowable Displacement Stress Range:
+- Thermal Growth Calculation: Delta_L = L * alpha * (T_op - T_amb).
+- Allowable Displacement Stress Range (SA) per § 302.3.5:
+  S_A = f * [1.25 * (S_c + S_h) - S_L]
+  Where S_c is cold allowable stress, S_h is hot allowable stress, S_L is sustained longitudinal stress (pressure + weight), and f is cyclic stress range reduction factor (f = 1.0 for <= 7000 cycles).
+- Guided Cantilever & Expansion Loop Sizing: Loop absorbed deflection delta_y = Delta_L / 2.
+  Thermal displacement stress: S_E = (1.5 * E * D_o * delta_y) / H^2 * (H / (H + W)).
+- Anchor Reaction Forces: Thrust force F_anchor = 3 * E * I * delta_y / H^3.
+- Compliance: S_E <= S_A guarantees prevention of low-cycle plastic fatigue and anchor nozzle overload."""
+    },
+    {
+        "doc_id": "std-api-661-air-cooled-heat-exchangers",
+        "title": "API Standard 661 & ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers)",
+        "text": """API Standard 661 (7th Edition) / ISO 13706 Petroleum, Petrochemical and Natural Gas Industries — Air-Cooled Heat Exchangers:
+Thermal & Mechanical Rating of Fin-Fan Coolers:
+- Surface Areas: Bare external tube area and extended finned area with fin surface enhancement factor (typical 18x to 23x).
+- Crossflow LMTD Correction: Effective Delta_Tm = Ft * LMTD where crossflow correction factor Ft is typically 0.92 - 0.96 for multi-pass arrangements.
+- Airside Static Pressure Drop: Total bundle resistance including fin tube matrix (typically 120 - 220 Pa) and plenum losses.
+- Fan Aerodynamics: Fan volumetric flow, fan diameter (3.0 - 4.5 m), blade tip speed limits (maximum 61 m/s per API 661 for acoustic noise control).
+- Fan Shaft Power Demand: BHP = (Q_air * Delta_P_static) / (eta_fan * 1000). Direct or belt drive electric motor sizing."""
+    },
+    {
+        "doc_id": "std-iec-60079-10-1-hazardous-area",
+        "title": "IEC 60079-10-1:2020 & API RP 505 Hazardous Area Classification for Flammable Gases",
+        "text": """IEC 60079-10-1 (3rd Edition 2020) & API RP 505 / NFPA 497 Classification of Areas — Explosive Gas Atmospheres:
+Methodology for Determination of Hazardous Zones and Release Dispersion Boundaries:
+- Release Grade Classification:
+  1. Continuous: Flammable atmosphere present continuously or for long periods (> 1000 hr/yr) -> Zone 0.
+  2. Primary: Expected to occur periodically during normal operations (10 to 1000 hr/yr) -> Zone 1.
+  3. Secondary: Not expected in normal operation, rare and brief (< 10 hr/yr) -> Zone 2.
+- Release Rate Modeling (Wg): Sonic choked jet discharge through leak orifice (Cd = 0.62) or subsonic orifice expansion.
+- Hazardous Boundary Distance (rz): r_z = k * sqrt(W_g / (LEL_mass * u_w)) where u_w is ambient/ventilation air velocity.
+- Electrical Apparatus Protection: Equipment protection levels (Ga, Gb, Gc), gas explosion groups (IIA, IIB, IIC), and temperature classification (T1 to T6)."""
+    },
+    {
+        "doc_id": "std-norsok-m710-rgd-elastomers",
+        "title": "NORSOK M-710 Rev 3 & ISO 23936-2 Rapid Gas Decompression (RGD) Qualification of Elastomers",
+        "text": """NORSOK Standard M-710 (Revision 3) & ISO 23936-2 Petroleum and Natural Gas Industries — Materials for use in contact with media related to oil and gas production:
+Qualification of Non-Metallic Sealing Materials and Rapid Gas Decompression (RGD) Resistance:
+- Gas Absorption: Henry's Law solubility under high pressures (150 to 350 bar) in methane, carbon dioxide, and sour gas mixtures.
+- Decompression Stress Mechanism: When ambient depressurization rate (e.g. 70 bar/min) exceeds molecular gas diffusion through the polymer matrix, trapped dissolved gas creates localized internal tensile cavitation stress.
+- Gent-Lindley Cavitation Criterion: Void growth occurs when internal stress exceeds 2.5 * G (elastomer shear modulus).
+- NORSOK Crack Ratings:
+  Rating 0000: Completely crack-free cross section (undamaged).
+  Rating 1000: Micro-voids localized, maximum crack length < 0.5 mm, passing criterion.
+  Rating 2000 - 4000: Severe blistering and structural rupture, failed qualification."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 50 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 54 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)
