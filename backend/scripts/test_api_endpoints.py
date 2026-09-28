@@ -175,8 +175,36 @@ def main():
     assert len(scada_data.get("frame_checksum_sha256", "")) == 64
     print(f"[+] /api/scada/telemetry/stream: OK (Tag: {scada_data.get('asset_tag')}, Channels: {scada_data.get('total_channels')}, Seq: {scada_data.get('sequence_number')}, Checksum: {scada_data.get('frame_checksum_sha256')[:16]}...)")
 
+    # 15. Plant Topology Graph Endpoint
+    res_topo = client.get("/api/topology/graph")
+    assert res_topo.status_code == 200
+    topo_data = res_topo.json()
+    assert topo_data.get("total_nodes") >= 75
+    assert topo_data.get("total_process_edges") >= 30
+    print(f"[+] /api/topology/graph: OK ({topo_data.get('total_nodes')} Assets, {topo_data.get('total_process_edges')} Interconnections, Density: {topo_data.get('graph_density')})")
+
+    # 16. Emergency Isolation Tracing Endpoint
+    res_iso = client.post("/api/topology/trace/isolation", json={
+        "target_asset": "R-401"
+    })
+    assert res_iso.status_code == 200
+    iso_data = res_iso.json()
+    assert iso_data.get("isolation_feasibility") == "FEASIBLE_FAIL_SAFE"
+    assert len(iso_data.get("upstream_isolation_valves", [])) >= 1
+    print(f"[+] /api/topology/trace/isolation: OK (Asset: {iso_data.get('target_asset')}, Upstream Valves: {[v['valve_tag'] for v in iso_data.get('upstream_isolation_valves', [])]}, Feasibility: {iso_data.get('isolation_feasibility')})")
+
+    # 17. Trip Cascade Consequence Propagation Endpoint
+    res_casc = client.post("/api/topology/trace/consequence", json={
+        "initiating_asset": "P-101",
+        "max_depth": 3
+    })
+    assert res_casc.status_code == 200
+    casc_data = res_casc.json()
+    assert casc_data.get("total_assets_impacted") >= 2
+    print(f"[+] /api/topology/trace/consequence: OK (Initiator: {casc_data.get('initiating_asset')}, Impacted Assets: {casc_data.get('total_assets_impacted')}, Risk: {casc_data.get('risk_assessment')})")
+
     print("\n" + "=" * 65)
-    print("ALL 14 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
+    print("ALL 17 SOVEREIGN REST API ENDPOINTS VERIFIED WITH 100% SUCCESS!")
     print("=" * 65)
 
 if __name__ == "__main__":

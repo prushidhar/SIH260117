@@ -46,6 +46,10 @@ class EquipmentRegistry:
     def get_all(self) -> List[dict]:
         return list(self._items)
 
+    def get_all_equipment(self) -> List[dict]:
+        """Alias for get_all."""
+        return self.get_all()
+
     def get_by_type(self, equipment_type: str) -> List[dict]:
         t = equipment_type.lower()
         return [i for i in self._items if t in str(i.get("type", "")).lower()]

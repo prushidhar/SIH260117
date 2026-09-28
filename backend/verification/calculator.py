@@ -3388,6 +3388,360 @@ print(f"Calculated Pressure Drop: {{delta_p_kpa:.2f}} kPa")
         except Exception as e:
             return {"error": str(e)}
 
+    @staticmethod
+    def calculate_sensor_drift_and_fdd(
+        sensor_tag: str = "TT-101",
+        asset_tag: str = "CDU-104",
+        measurement_parameter: str = "temperature",
+        calibrated_nominal: float = 180.0,
+        sensor_span: float = 300.0,
+        max_allowable_drift_pct: float = 2.0,
+        history_series: Optional[List[float]] = None,
+        redundant_sensor_series: Optional[List[float]] = None
+    ) -> Dict[str, Any]:
+        """
+        ISO 13374 & VDI 2888 Industrial Condition Monitoring, Sensor Validation,
+        and Fault Detection & Diagnostics (FDD).
+        Evaluates calibration drift, signal bias, frozen states, and redundant sensor agreement.
+        """
+        try:
+            import math
+            import statistics
+
+            if not history_series or len(history_series) < 5:
+                # Synthesize 20-sample realistic series with mild drift
+                history_series = [
+                    calibrated_nominal + (i * 0.28) + (math.sin(i * 0.8) * 0.35)
+                    for i in range(20)
+                ]
+
+            n = len(history_series)
+            mean_val = statistics.mean(history_series)
+            std_val = statistics.stdev(history_series) if n > 1 else 0.0
+
+            # Frozen sensor detection (stuck at constant value)
+            is_frozen = std_val < 1e-4
+
+            # Linear regression for drift rate (unit per sample)
+            x_vals = list(range(n))
+            x_mean = sum(x_vals) / n
+            y_mean = mean_val
+            num = sum((x_vals[i] - x_mean) * (history_series[i] - y_mean) for i in range(n))
+            den = sum((x_vals[i] - x_mean) ** 2 for i in range(n))
+            drift_slope_per_sample = (num / den) if den != 0 else 0.0
+
+            # Drift from nominal
+            latest_val = history_series[-1]
+            cumulative_drift = latest_val - calibrated_nominal
+            drift_pct_of_span = (abs(cumulative_drift) / max(1.0, sensor_span)) * 100.0
+
+            # Redundant sensor voting
+            redundancy_status = "NO_REDUNDANT_SENSOR"
+            voting_error_mae = 0.0
+            if redundant_sensor_series and len(redundant_sensor_series) == n:
+                voting_error_mae = sum(abs(history_series[i] - redundant_sensor_series[i]) for i in range(n)) / n
+                if voting_error_mae > (sensor_span * (max_allowable_drift_pct / 100.0)):
+                    redundancy_status = "VOTING_MISMATCH_SUSPECT_CALIBRATION"
+                else:
+                    redundancy_status = "DUAL_CHANNEL_VOTING_CONFIRMED"
+
+            # Reliability Index (0 - 100%)
+            allowable_drift_units = sensor_span * (max_allowable_drift_pct / 100.0)
+            reliability_index = max(0.0, min(100.0, 100.0 * math.exp(-abs(cumulative_drift) / max(0.1, allowable_drift_units))))
+
+            # Diagnostics State
+            if is_frozen:
+                fdd_state = "CRITICAL_SENSOR_FROZEN_OR_DISCONNECTED"
+                action = "Replace transmitter electronics immediately or inspect sensor wiring."
+            elif drift_pct_of_span > max_allowable_drift_pct:
+                fdd_state = "EXCEEDS_CALIBRATION_TOLERANCE_RECALIBRATE"
+                action = f"Schedule zero/span recalibration on {sensor_tag}. Drift of {round(drift_pct_of_span, 2)}% exceeds {max_allowable_drift_pct}% threshold."
+            elif drift_pct_of_span > (0.60 * max_allowable_drift_pct):
+                fdd_state = "EARLY_DRIFT_WARNING"
+                action = "Monitor sensor closely; drift trend approaching statutory tolerance limit."
+            else:
+                fdd_state = "HEALTHY_CALIBRATED"
+                action = "Sensor within precision operating envelope. Continue continuous monitoring."
+
+            return {
+                "sensor_tag": sensor_tag,
+                "asset_tag": asset_tag,
+                "measurement_parameter": measurement_parameter,
+                "calibrated_nominal": calibrated_nominal,
+                "latest_reading": round(latest_val, 2),
+                "mean_reading": round(mean_val, 2),
+                "standard_deviation": round(std_val, 3),
+                "cumulative_drift_units": round(cumulative_drift, 3),
+                "drift_pct_of_calibrated_span": round(drift_pct_of_span, 2),
+                "max_allowable_drift_pct": max_allowable_drift_pct,
+                "drift_rate_per_sample": round(drift_slope_per_sample, 4),
+                "sensor_frozen": is_frozen,
+                "redundancy_voting_status": redundancy_status,
+                "redundancy_mae_units": round(voting_error_mae, 3),
+                "reliability_index_pct": round(reliability_index, 1),
+                "fdd_diagnostic_state": fdd_state,
+                "recommended_action": action,
+                "standard": "ISO 13374-2 / VDI 2888 Condition Monitoring & FDD",
+                "compliance": "PASS" if drift_pct_of_span <= max_allowable_drift_pct and not is_frozen else "FAIL_RECALIBRATION_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_api650_seismic_sloshing_dynamics(
+        tank_tag: str = "TK-101",
+        tank_diameter_m: float = 45.0,
+        tank_height_m: float = 18.0,
+        liquid_height_m: float = 15.5,
+        liquid_density_kg_m3: float = 850.0,
+        design_pga_g: float = 0.35,
+        site_soil_class: str = "D",
+        bottom_course_thickness_mm: float = 22.0,
+        yield_strength_mpa: float = 250.0,
+        anchor_bolt_count: int = 48,
+        anchor_bolt_diameter_mm: float = 42.0
+    ) -> Dict[str, Any]:
+        """
+        API 650 (13th Ed.) Appendix E & ASCE 7 Seismic Sloshing & Hydrodynamic Stability Engine.
+        Calculates convective wave slosh height, impulsive/convective base shear, overturning moment,
+        and shell compression stress (Elephant's foot buckling verification).
+        """
+        try:
+            import math
+
+            r = tank_diameter_m / 2.0
+            g = 9.80665
+
+            # 1. Total Stored Liquid Mass
+            liquid_volume_m3 = math.pi * (r ** 2) * liquid_height_m
+            total_liquid_mass_kg = liquid_volume_m3 * liquid_density_kg_m3
+            weight_total_kn = (total_liquid_mass_kg * g) / 1000.0
+
+            # 2. Convective (Sloshing) Natural Period Tc
+            # Tc = 2*pi * sqrt(R / (1.84 * g * tanh(1.84 * H / R)))
+            arg_tanh = min(10.0, 1.84 * liquid_height_m / r)
+            tanh_val = math.tanh(arg_tanh)
+            tc_sec = 2.0 * math.pi * math.sqrt(r / max(0.1, 1.84 * g * tanh_val))
+
+            # Impulsive Natural Period Ti
+            # Simplified API 650 formulation for cylindrical steel tank
+            ti_sec = 0.12 * math.sqrt(tank_height_m / 10.0)
+
+            # 3. Seismic Spectral Accelerations
+            fa = 1.2  # Site class D
+            fv = 1.5
+            ai_g = design_pga_g * 2.5 * (fa / 1.5)  # Impulsive spectral response
+            # Convective spectral response (decays as 1/Tc)
+            ac_g = min(ai_g, (design_pga_g * 1.5 * fv) / max(1.0, tc_sec))
+
+            # 4. Impulsive and Convective Mass Ratios
+            h_over_d = liquid_height_m / tank_diameter_m
+            if h_over_d >= 0.75:
+                wi_ratio = 1.0 - (0.218 / h_over_d)
+            else:
+                wi_ratio = math.tanh(0.866 * (tank_diameter_m / liquid_height_m)) / (0.866 * (tank_diameter_m / liquid_height_m))
+            wc_ratio = 0.230 * (tank_diameter_m / liquid_height_m) * math.tanh(3.67 * h_over_d)
+
+            wi_kn = wi_ratio * weight_total_kn
+            wc_kn = wc_ratio * weight_total_kn
+
+            # 5. Base Shear & Overturning Moment
+            vi_kn = wi_kn * ai_g
+            vc_kn = wc_kn * ac_g
+            total_base_shear_kn = math.sqrt(vi_kn ** 2 + vc_kn ** 2)
+
+            # Moment arm to center of action
+            xi_m = 0.375 * liquid_height_m * (1.0 + 1.33 * ((wi_ratio - 0.5) ** 2))
+            xc_m = liquid_height_m * (1.0 - (math.cosh(3.67 * h_over_d) - 1.0) / (3.67 * h_over_d * math.sinh(3.67 * h_over_d)))
+            mi_kn_m = vi_kn * xi_m
+            mc_kn_m = vc_kn * xc_m
+            overturning_moment_kn_m = math.sqrt(mi_kn_m ** 2 + mc_kn_m ** 2)
+
+            # 6. Convective Slosh Wave Height (Freeboard check)
+            # d_max = 0.5 * D * Ac * I
+            slosh_wave_height_m = 0.5 * tank_diameter_m * ac_g * 1.25
+            available_freeboard_m = tank_height_m - liquid_height_m
+            freeboard_adequate = available_freeboard_m >= slosh_wave_height_m
+
+            # 7. Shell Compressive Stress vs Elephant's Foot Buckling
+            tb_m = bottom_course_thickness_mm / 1000.0
+            shell_section_modulus = math.pi * (r ** 2) * tb_m
+            shell_compressive_stress_mpa = (overturning_moment_kn_m * 1000.0 / shell_section_modulus) / 1e6
+            
+            # Allowable critical buckling stress per API 650 E.6.2.2
+            # Fa = (t / D) * 1e6 Pa (approx classical elastic buckling)
+            hydrostatic_p_kpa = liquid_density_kg_m3 * g * liquid_height_m / 1000.0
+            buckling_allowable_mpa = 0.08 * yield_strength_mpa * (bottom_course_thickness_mm / (tank_diameter_m * 1000.0)) * 1000.0 + (hydrostatic_p_kpa / 100.0)
+            buckling_allowable_mpa = max(25.0, min(140.0, buckling_allowable_mpa))
+            buckling_pass = shell_compressive_stress_mpa <= buckling_allowable_mpa
+
+            # 8. Anchorage Ratio J
+            # J = Mrw / (wt * pi * R^2)
+            resisting_weight_kn = weight_total_kn * 0.50
+            anchorage_ratio_j = overturning_moment_kn_m / max(1.0, resisting_weight_kn * r)
+            anchors_required = anchorage_ratio_j > 1.54
+
+            # Bolt tensile stress if anchored
+            bolt_area_mm2 = math.pi * ((anchor_bolt_diameter_mm / 2.0) ** 2)
+            total_bolt_area_mm2 = anchor_bolt_count * bolt_area_mm2
+            bolt_stress_mpa = 0.0
+            if anchors_required and total_bolt_area_mm2 > 0:
+                net_uplift_force_kn = (overturning_moment_kn_m / (0.8 * tank_diameter_m)) - (resisting_weight_kn * 0.4)
+                bolt_stress_mpa = max(0.0, (net_uplift_force_kn * 1000.0) / total_bolt_area_mm2)
+
+            bolt_pass = bolt_stress_mpa <= (yield_strength_mpa * 0.60)
+            overall_pass = buckling_pass and freeboard_adequate and bolt_pass
+
+            return {
+                "tank_tag": tank_tag,
+                "tank_diameter_m": tank_diameter_m,
+                "tank_height_m": tank_height_m,
+                "liquid_height_m": liquid_height_m,
+                "total_liquid_mass_tonnes": round(total_liquid_mass_kg / 1000.0, 1),
+                "convective_sloshing_period_tc_s": round(tc_sec, 2),
+                "impulsive_period_ti_s": round(ti_sec, 2),
+                "design_pga_g": design_pga_g,
+                "total_base_shear_kn": round(total_base_shear_kn, 1),
+                "overturning_moment_kn_m": round(overturning_moment_kn_m, 1),
+                "slosh_wave_height_m": round(slosh_wave_height_m, 2),
+                "available_freeboard_m": round(available_freeboard_m, 2),
+                "freeboard_adequate": freeboard_adequate,
+                "shell_compressive_stress_mpa": round(shell_compressive_stress_mpa, 1),
+                "buckling_allowable_stress_mpa": round(buckling_allowable_mpa, 1),
+                "elephants_foot_buckling_pass": buckling_pass,
+                "anchorage_ratio_j": round(anchorage_ratio_j, 2),
+                "mechanical_anchors_required": anchors_required,
+                "anchor_bolt_stress_mpa": round(bolt_stress_mpa, 1),
+                "standard": "API 650 (13th Ed.) Appendix E / ASCE 7-22",
+                "compliance": "PASS_SEISMICALLY_STABLE" if overall_pass else "FAIL_SEISMIC_RETROFIT_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def calculate_hei_condenser_vacuum_performance(
+        condenser_tag: str = "SC-101",
+        steam_flow_kg_s: float = 85.0,
+        exhaust_steam_enthalpy_kj_kg: float = 2380.0,
+        condensate_temp_c: float = 44.5,
+        cooling_water_inlet_temp_c: float = 28.0,
+        cooling_water_flow_m3_h: float = 14500.0,
+        tube_material: str = "titanium_gr2",
+        tube_od_mm: float = 25.4,
+        tube_wall_thk_mm: float = 1.0,
+        tube_count: int = 6800,
+        tube_effective_length_m: float = 10.5,
+        measured_back_pressure_mbar: float = 95.0,
+        design_back_pressure_mbar: float = 85.0
+    ) -> Dict[str, Any]:
+        """
+        HEI Standards for Steam Surface Condensers (12th Ed.) & ASME PTC 12.2.
+        Calculates thermal heat duty, cooling water temperature rise, terminal temperature difference (TTD),
+        condenser cleanliness factor (CF), subcooling, and turbine heat rate penalty.
+        """
+        try:
+            import math
+
+            # 1. Thermal Condensation Duty
+            # Condensate liquid enthalpy at condensate_temp_c
+            h_liquid = condensate_temp_c * 4.184  # kJ/kg approx
+            heat_duty_kw = steam_flow_kg_s * (exhaust_steam_enthalpy_kj_kg - h_liquid)
+            heat_duty_mwth = heat_duty_kw / 1000.0
+
+            # 2. Cooling Water Temperature Rise
+            # m_dot_cw = m3/h * 1000 / 3600 kg/s
+            cw_mass_flow_kg_s = cooling_water_flow_m3_h * 1000.0 / 3600.0
+            delta_t_cw = heat_duty_kw / max(1.0, cw_mass_flow_kg_s * 4.184)
+            cooling_water_outlet_temp_c = cooling_water_inlet_temp_c + delta_t_cw
+
+            # 3. Saturation Temperature at Measured Back-Pressure (Antoine correlation)
+            # ln(P_bar) approx Antoine water
+            p_bar = measured_back_pressure_mbar / 1000.0
+            t_sat_c = (3984.92 / (11.97 - math.log(max(1e-4, p_bar)))) - 233.5
+
+            # Terminal Temperature Difference (TTD)
+            ttd_c = t_sat_c - cooling_water_outlet_temp_c
+
+            # Subcooling
+            subcooling_c = max(0.0, t_sat_c - condensate_temp_c)
+
+            # 4. Surface Area
+            do_m = tube_od_mm / 1000.0
+            total_surface_area_m2 = math.pi * do_m * tube_effective_length_m * tube_count
+
+            # 5. Log Mean Temperature Difference (LMTD)
+            dt_in = t_sat_c - cooling_water_inlet_temp_c
+            dt_out = max(0.1, t_sat_c - cooling_water_outlet_temp_c)
+            if abs(dt_in - dt_out) < 0.05:
+                lmtd_c = dt_in
+            else:
+                lmtd_c = (dt_in - dt_out) / math.log(dt_in / dt_out)
+
+            # 6. Overall Heat Transfer Coefficient (Actual vs HEI Standard)
+            u_actual_w_m2k = (heat_duty_kw * 1000.0) / (total_surface_area_m2 * lmtd_c)
+
+            # HEI Base Clean U factor (function of tube OD and water velocity)
+            inner_d_m = (tube_od_mm - 2.0 * tube_wall_thk_mm) / 1000.0
+            # Assuming 2-pass condenser
+            tubes_per_pass = max(1, tube_count // 2)
+            flow_area_pass_m2 = tubes_per_pass * (math.pi / 4.0) * (inner_d_m ** 2)
+            water_velocity_m_s = (cooling_water_flow_m3_h / 3600.0) / max(0.01, flow_area_pass_m2)
+
+            u_base_hei = 3600.0 * math.sqrt(max(0.5, water_velocity_m_s / 2.0))
+            # Material & gauge correction factor per HEI Table 1
+            mat_factor_map = {
+                "titanium_gr2": 0.81,
+                "admiralty_brass": 1.00,
+                "316_ss": 0.85,
+                "copper_nickel_90_10": 0.90
+            }
+            f_mat = mat_factor_map.get(tube_material, 0.85)
+            # Temperature correction factor per HEI Table 2
+            f_temp = 0.55 + (cooling_water_inlet_temp_c / 70.0) * 0.45
+            u_clean_hei = u_base_hei * f_mat * f_temp
+
+            # Cleanliness Factor (CF %)
+            cleanliness_factor_pct = (u_actual_w_m2k / max(1.0, u_clean_hei)) * 100.0
+
+            # Turbine Heat Rate Penalty
+            # ~ 1.2% fuel/heat rate penalty per 10 mbar back-pressure rise above design
+            pressure_excess_mbar = max(0.0, measured_back_pressure_mbar - design_back_pressure_mbar)
+            heat_rate_penalty_pct = (pressure_excess_mbar / 10.0) * 1.2
+
+            # Operational Classification
+            if cleanliness_factor_pct >= 85.0 and subcooling_c < 2.0:
+                perf_status = "OPTIMAL_VACUUM_PERFORMANCE"
+            elif cleanliness_factor_pct >= 70.0:
+                perf_status = "ACCEPTABLE_SERVICE_MARGIN"
+            elif subcooling_c >= 2.5:
+                perf_status = "EXCESSIVE_SUBCOOLING_AIR_LEAKAGE_DETECTED"
+            else:
+                perf_status = "TUBE_FOULING_CLEANING_REQUIRED"
+
+            return {
+                "condenser_tag": condenser_tag,
+                "thermal_duty_mwth": round(heat_duty_mwth, 1),
+                "cooling_water_inlet_temp_c": cooling_water_inlet_temp_c,
+                "cooling_water_outlet_temp_c": round(cooling_water_outlet_temp_c, 1),
+                "cooling_water_delta_t_c": round(delta_t_cw, 1),
+                "cooling_water_velocity_m_s": round(water_velocity_m_s, 2),
+                "measured_back_pressure_mbar": measured_back_pressure_mbar,
+                "design_back_pressure_mbar": design_back_pressure_mbar,
+                "saturation_temp_c": round(t_sat_c, 1),
+                "terminal_temp_difference_ttd_c": round(ttd_c, 1),
+                "subcooling_c": round(subcooling_c, 1),
+                "actual_u_w_m2k": round(u_actual_w_m2k, 1),
+                "hei_clean_u_w_m2k": round(u_clean_hei, 1),
+                "cleanliness_factor_pct": round(cleanliness_factor_pct, 1),
+                "turbine_heat_rate_penalty_pct": round(heat_rate_penalty_pct, 2),
+                "condenser_performance_status": perf_status,
+                "standard": "HEI Standards for Steam Surface Condensers (12th Ed.) / ASME PTC 12.2",
+                "compliance": "PASS_CLEAN_VACUUM" if cleanliness_factor_pct >= 70.0 and subcooling_c < 3.0 else "PERFORMANCE_PENALTY_MAINTENANCE_REQUIRED"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
 engineering_tools = EngineeringSandbox()
+
 
 

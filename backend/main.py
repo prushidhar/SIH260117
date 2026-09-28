@@ -1878,6 +1878,48 @@ async def stream_scada_telemetry(req: ScadaStreamRequest):
     return packet
 
 
+class IsolationTraceRequest(BaseModel):
+    target_asset: str = "R-401"
+
+
+class CascadeTraceRequest(BaseModel):
+    initiating_asset: str = "P-101"
+    max_depth: Optional[int] = 4
+
+
+@app.get("/api/topology/graph")
+async def get_plant_topology_graph():
+    """
+    Returns the comprehensive topological connectivity graph of the plant complex,
+    including 80 assets, interconnected process lines, fluid states, and design boundaries.
+    """
+    from topology.plant_graph import plant_topology
+    return plant_topology.get_full_topology()
+
+
+@app.post("/api/topology/trace/isolation")
+async def trace_emergency_isolation_valves(req: IsolationTraceRequest):
+    """
+    IEC 61511 / ISA-84 Automated Emergency Isolation Boundary Tracing.
+    Identifies the minimal set of upstream/downstream valves (ESDV, MOV, HV) and blowdown lines to isolate an asset.
+    """
+    from topology.plant_graph import plant_topology
+    return plant_topology.trace_emergency_isolation(req.target_asset)
+
+
+@app.post("/api/topology/trace/consequence")
+async def trace_trip_cascade_consequences(req: CascadeTraceRequest):
+    """
+    Simulates dynamic trip consequence propagation across process units,
+    identifying downstream starvation and upstream backpressure risks.
+    """
+    from topology.plant_graph import plant_topology
+    return plant_topology.trace_trip_cascade(
+        initiating_asset=req.initiating_asset,
+        max_depth=req.max_depth or 4
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -7824,5 +7824,118 @@
     },
     "previous_hash": "2c14a11304c43a0519f8c62d21a42058b2f69d85271b1bed07d57d8ec8eda304",
     "hash": "a92e7040b0fb454cd1902893bb2c0208e02996ee8a24def08edd4b41bd441451"
+  },
+  {
+    "timestamp": 1790570122.1209664,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "cc76e2d03a91bf15398eb3514a3cbdaf9a2fd47e4496b9cbbbfd8316d782ec27",
+      "file_count": 4
+    },
+    "previous_hash": "a92e7040b0fb454cd1902893bb2c0208e02996ee8a24def08edd4b41bd441451",
+    "hash": "844b05f7de19da28ee40049fc595f544c527ec87b8e7d2fcc425a8b6438125cf"
+  },
+  {
+    "timestamp": 1790570123.4980376,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "dd3366f9409c27084d8e5bc864e06c0fc7f08df5fb3b5ace02cf36d1291eb477"
+    },
+    "previous_hash": "844b05f7de19da28ee40049fc595f544c527ec87b8e7d2fcc425a8b6438125cf",
+    "hash": "2ab7a5b60977fe716d4684b4ad67aa50eb2a7f02cf1beff6935dd8542011ca34"
+  },
+  {
+    "timestamp": 1790570183.109872,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "de70696f69b1d6063c9331d32becdea2c6b510aea5754c0e9c3b8e55b2283049",
+      "file_count": 4
+    },
+    "previous_hash": "2ab7a5b60977fe716d4684b4ad67aa50eb2a7f02cf1beff6935dd8542011ca34",
+    "hash": "98b537556cf5c2bad514a465da606159a69047965ba7568562cae464ee2fcb9a"
+  },
+  {
+    "timestamp": 1790570184.16575,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "1f71e9d4bee6c958aa27c6194e030ba10aa20f4f86ff57fab1a766bbc1efeef5"
+    },
+    "previous_hash": "98b537556cf5c2bad514a465da606159a69047965ba7568562cae464ee2fcb9a",
+    "hash": "a4470fa093ab9b7aa5d2803d42cef5c45015a53f921f2a0e7bae50929e5480b5"
+  },
+  {
+    "timestamp": 1790570210.0435762,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "3b940f3b4d36d60220c41f843d9248e80040f9998c69b3bde34c5b72f9b1c124",
+      "file_count": 4
+    },
+    "previous_hash": "a4470fa093ab9b7aa5d2803d42cef5c45015a53f921f2a0e7bae50929e5480b5",
+    "hash": "9bc80832a079653a287cf47fa0420645472e0a02d5ace23be99fb25006b2836d"
+  },
+  {
+    "timestamp": 1790570210.9465897,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "7159f5950bccb62fc57b3c00297a3d2884c8c9a92e2e4e30b21daf442fd7cb2e"
+    },
+    "previous_hash": "9bc80832a079653a287cf47fa0420645472e0a02d5ace23be99fb25006b2836d",
+    "hash": "a21bdbd0c476d4d58b57b11a1418446095e9748c1c975a15ea40ff2977d18eb7"
+  },
+  {
+    "timestamp": 1790570421.0340564,
+    "event_type": "engineering_calculation_executed",
+    "payload": {
+      "tool": "calculate_tema_heat_exchanger_rating",
+      "task_id": "direct_calc",
+      "elapsed_ms": 116.63,
+      "is_error": false
+    },
+    "previous_hash": "a21bdbd0c476d4d58b57b11a1418446095e9748c1c975a15ea40ff2977d18eb7",
+    "hash": "cf120ded7f5ae7783a2ee8344f680f22646f5c0396ca584e4fff66dfc1ede196"
+  },
+  {
+    "timestamp": 1790570421.060115,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "consensus_task",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "5c40104aa4252eebcd0b001ef874d68575c7bb230b31cd50eb32ebce96c94699"
+    },
+    "previous_hash": "cf120ded7f5ae7783a2ee8344f680f22646f5c0396ca584e4fff66dfc1ede196",
+    "hash": "aca90cc283c92d9eb21d5b239d1caec0219a353d8094c0090272b2fc14272a6d"
+  },
+  {
+    "timestamp": 1790570421.1271274,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "eval-HEX-301",
+      "asset_tag": "HEX-301",
+      "verdict": "REJECTED_SAFETY_HOLD",
+      "consensus_score_pct": 75.0,
+      "cert_hash": "6fd0a56a91b3a4517633d9f0f91b00e3868f17c72307c005aad0de65f68c68c9"
+    },
+    "previous_hash": "aca90cc283c92d9eb21d5b239d1caec0219a353d8094c0090272b2fc14272a6d",
+    "hash": "5ca1cf09f793851d66fbfd6441cea80bf388812696ebf7c14da350d8d6277cac"
   }
 ]

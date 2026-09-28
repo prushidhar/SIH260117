@@ -942,6 +942,75 @@ class ToolRegistry:
                         "required": []
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_sensor_drift_and_fdd",
+                    "description": "ISO 13374 / VDI 2888 Condition Monitoring & Sensor Validation: statistical drift rate, span deviation, frozen sensor detection, and dual-channel voting agreement.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "sensor_tag": {"type": "string", "description": "Sensor tag", "default": "TT-101"},
+                            "asset_tag": {"type": "string", "description": "Asset tag", "default": "CDU-104"},
+                            "measurement_parameter": {"type": "string", "description": "Parameter name", "default": "temperature"},
+                            "calibrated_nominal": {"type": "number", "description": "Calibrated nominal value", "default": 180.0},
+                            "sensor_span": {"type": "number", "description": "Full measurement span", "default": 300.0},
+                            "max_allowable_drift_pct": {"type": "number", "description": "Maximum allowable drift % of span", "default": 2.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_api650_seismic_sloshing_dynamics",
+                    "description": "API 650 Appendix E & ASCE 7 Seismic Sloshing & Hydrodynamic Overturning: convective wave slosh height, base shear, overturning moment, and shell compression (Elephant's foot buckling).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tank_tag": {"type": "string", "description": "Tank asset tag", "default": "TK-101"},
+                            "tank_diameter_m": {"type": "number", "description": "Tank diameter in meters", "default": 45.0},
+                            "tank_height_m": {"type": "number", "description": "Tank height in meters", "default": 18.0},
+                            "liquid_height_m": {"type": "number", "description": "Liquid height in meters", "default": 15.5},
+                            "liquid_density_kg_m3": {"type": "number", "description": "Liquid density in kg/m3", "default": 850.0},
+                            "design_pga_g": {"type": "number", "description": "Peak ground acceleration in g", "default": 0.35},
+                            "site_soil_class": {"type": "string", "description": "ASCE 7 site soil class", "default": "D"},
+                            "bottom_course_thickness_mm": {"type": "number", "description": "Bottom course shell thickness mm", "default": 22.0},
+                            "yield_strength_mpa": {"type": "number", "description": "Steel yield strength in MPa", "default": 250.0},
+                            "anchor_bolt_count": {"type": "integer", "description": "Anchor bolt count", "default": 48},
+                            "anchor_bolt_diameter_mm": {"type": "number", "description": "Anchor bolt diameter in mm", "default": 42.0}
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_hei_condenser_vacuum_performance",
+                    "description": "HEI Standards for Steam Surface Condensers (12th Ed.) & ASME PTC 12.2: thermal duty, cooling water temperature rise, TTD, cleanliness factor (CF), subcooling air-leakage detection, and turbine heat rate penalty.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "condenser_tag": {"type": "string", "description": "Condenser tag", "default": "SC-101"},
+                            "steam_flow_kg_s": {"type": "number", "description": "Steam flow in kg/s", "default": 85.0},
+                            "exhaust_steam_enthalpy_kj_kg": {"type": "number", "description": "Exhaust steam enthalpy in kJ/kg", "default": 2380.0},
+                            "condensate_temp_c": {"type": "number", "description": "Condensate temperature in °C", "default": 44.5},
+                            "cooling_water_inlet_temp_c": {"type": "number", "description": "Cooling water inlet temp °C", "default": 28.0},
+                            "cooling_water_flow_m3_h": {"type": "number", "description": "Cooling water flow m3/h", "default": 14500.0},
+                            "tube_material": {"type": "string", "description": "Tube material", "default": "titanium_gr2"},
+                            "tube_od_mm": {"type": "number", "description": "Tube OD in mm", "default": 25.4},
+                            "tube_wall_thk_mm": {"type": "number", "description": "Tube wall thickness in mm", "default": 1.0},
+                            "tube_count": {"type": "integer", "description": "Total tube count", "default": 6800},
+                            "tube_effective_length_m": {"type": "number", "description": "Tube effective length in meters", "default": 10.5},
+                            "measured_back_pressure_mbar": {"type": "number", "description": "Measured back-pressure in mbar", "default": 95.0},
+                            "design_back_pressure_mbar": {"type": "number", "description": "Design back-pressure in mbar", "default": 85.0}
+                        },
+                        "required": []
+                    }
+                }
             }
         ]
 
@@ -992,7 +1061,10 @@ class ToolRegistry:
             "calculate_iec60079_hazardous_area_ex",
             "calculate_api579_crack_growth_paris_law",
             "calculate_asme_thermal_shock_transient",
-            "calculate_api2218_fireproofing_thermal_rating"
+            "calculate_api2218_fireproofing_thermal_rating",
+            "calculate_sensor_drift_and_fdd",
+            "calculate_api650_seismic_sloshing_dynamics",
+            "calculate_hei_condenser_vacuum_performance"
         ]
         if name in math_tools:
             return mcp_client.execute_tool(name, args)

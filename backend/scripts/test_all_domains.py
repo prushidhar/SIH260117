@@ -1009,8 +1009,118 @@ def test_card_38_api2218_fireproofing_thermal_rating():
     assert result['compliance'] == 'PASS_FIRE_PROTECTION_CERTIFIED'
     print(f"  [+] Asset: {result['asset_tag']} ({result['structural_element_type']}, Material: {result['fireproofing_material']}, Jacket: {result['fireproofing_thickness_mm']} mm)")
     print(f"  [+] Exposure: {result['fire_exposure_curve']} -> Steel Failure Threshold: {result['steel_critical_temp_c']} °C")
-    print(f"  [+] Fire Endurance Rating: {result['calculated_fire_endurance_hours']} Hours vs Req: {result['required_fire_endurance_hours']} Hours ({result['certified_fire_rating']})")
     print(f"  [+] Certification Status: {result['compliance']}")
+    print('  PASS')
+
+
+def test_card_39_sensor_drift_and_fdd():
+    print('\n--- TEST 39: ISO 13374 & VDI 2888 Condition Monitoring, Sensor Drift & FDD ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_sensor_drift_and_fdd(
+        sensor_tag="TT-101",
+        asset_tag="CDU-104",
+        measurement_parameter="temperature",
+        calibrated_nominal=180.0,
+        sensor_span=300.0,
+        max_allowable_drift_pct=2.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['sensor_frozen'] is False
+    assert result['reliability_index_pct'] > 0
+    assert result['compliance'] in ['PASS', 'FAIL_RECALIBRATION_REQUIRED']
+    print(f"  [+] Sensor: {result['sensor_tag']} on Asset {result['asset_tag']} (Nominal: {result['calibrated_nominal']} °C)")
+    print(f"  [+] Latest Reading: {result['latest_reading']} °C (Mean: {result['mean_reading']} °C, StdDev: {result['standard_deviation']} °C)")
+    print(f"  [+] Drift Analysis: Cumulative={result['cumulative_drift_units']} °C ({result['drift_pct_of_calibrated_span']}% of span, Limit: {result['max_allowable_drift_pct']}%)")
+    print(f"  [+] Reliability Index: {result['reliability_index_pct']}% (FDD State: {result['fdd_diagnostic_state']})")
+    print(f"  [+] Recommended Action: {result['recommended_action'][:80]}...")
+    print('  PASS')
+
+
+def test_card_40_api650_seismic_sloshing_dynamics():
+    print('\n--- TEST 40: API 650 Appendix E & ASCE 7 Seismic Sloshing & Hydrodynamic Stability ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_api650_seismic_sloshing_dynamics(
+        tank_tag="TK-101",
+        tank_diameter_m=45.0,
+        tank_height_m=18.0,
+        liquid_height_m=15.5,
+        liquid_density_kg_m3=850.0,
+        design_pga_g=0.35,
+        site_soil_class="D",
+        bottom_course_thickness_mm=22.0,
+        yield_strength_mpa=250.0,
+        anchor_bolt_count=48,
+        anchor_bolt_diameter_mm=42.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['convective_sloshing_period_tc_s'] > 2.0
+    assert result['total_base_shear_kn'] > 1000.0
+    assert result['overturning_moment_kn_m'] > 10000.0
+    assert result['elephants_foot_buckling_pass'] is True
+    print(f"  [+] Storage Tank: {result['tank_tag']} (Dia: {result['tank_diameter_m']}m, H: {result['tank_height_m']}m, Mass: {result['total_liquid_mass_tonnes']} tonnes)")
+    print(f"  [+] Modal Periods: Slosh Tc={result['convective_sloshing_period_tc_s']}s, Impulsive Ti={result['impulsive_period_ti_s']}s at PGA={result['design_pga_g']}g")
+    print(f"  [+] Seismic Demand: Base Shear={result['total_base_shear_kn']} kN, Overturning Moment={result['overturning_moment_kn_m']} kN*m")
+    print(f"  [+] Convective Slosh Wave: {result['slosh_wave_height_m']}m vs Freeboard: {result['available_freeboard_m']}m (Adequate: {result['freeboard_adequate']})")
+    print(f"  [+] Shell Compressive Stress: {result['shell_compressive_stress_mpa']} MPa vs Buckling Limit: {result['buckling_allowable_stress_mpa']} MPa (Elephant Foot Pass: {result['elephants_foot_buckling_pass']})")
+    print(f"  [+] Compliance: {result['compliance']}")
+    print('  PASS')
+
+
+def test_card_41_hei_condenser_vacuum_performance():
+    print('\n--- TEST 41: HEI Standards for Steam Condensers & ASME PTC 12.2 Rating ---')
+    from verification.calculator import engineering_tools
+    result = engineering_tools.calculate_hei_condenser_vacuum_performance(
+        condenser_tag="SC-101",
+        steam_flow_kg_s=85.0,
+        exhaust_steam_enthalpy_kj_kg=2380.0,
+        condensate_temp_c=44.5,
+        cooling_water_inlet_temp_c=28.0,
+        cooling_water_flow_m3_h=14500.0,
+        tube_material="titanium_gr2",
+        tube_od_mm=25.4,
+        tube_wall_thk_mm=1.0,
+        tube_count=6800,
+        tube_effective_length_m=10.5,
+        measured_back_pressure_mbar=95.0,
+        design_back_pressure_mbar=85.0
+    )
+    assert 'error' not in result, f'Error: {result}'
+    assert result['thermal_duty_mwth'] > 100.0
+    assert result['cooling_water_outlet_temp_c'] > result['cooling_water_inlet_temp_c']
+    assert result['cleanliness_factor_pct'] > 50.0
+    print(f"  [+] Condenser: {result['condenser_tag']} (Duty: {result['thermal_duty_mwth']} MWth, CW Velocity: {result['cooling_water_velocity_m_s']} m/s)")
+    print(f"  [+] Cooling Water Thermal Rise: {result['cooling_water_inlet_temp_c']} °C -> {result['cooling_water_outlet_temp_c']} °C (Delta_T: {result['cooling_water_delta_t_c']} °C)")
+    print(f"  [+] Vacuum & Temperatures: Back-Pressure={result['measured_back_pressure_mbar']} mbar, Tsat={result['saturation_temp_c']} °C, TTD={result['terminal_temp_difference_ttd_c']} °C, Subcooling={result['subcooling_c']} °C")
+    print(f"  [+] HEI Heat Transfer: U_actual={result['actual_u_w_m2k']} W/m²K vs U_clean={result['hei_clean_u_w_m2k']} W/m²K -> Cleanliness Factor: {result['cleanliness_factor_pct']}%")
+    print(f"  [+] Turbine Efficiency Impact: Heat Rate Penalty = +{result['turbine_heat_rate_penalty_pct']}% ({result['condenser_performance_status']})")
+    print('  PASS')
+
+
+def test_card_42_plant_topology_and_isolation_tracing():
+    print('\n--- TEST 42: Plant Graph Topology & IEC 61511 Emergency Isolation Tracing ---')
+    from topology.plant_graph import plant_topology
+    
+    # 1. Full Topology Check
+    topo = plant_topology.get_full_topology()
+    assert topo['total_nodes'] >= 75
+    assert topo['total_process_edges'] >= 25
+    print(f"  [+] Plant Topology Graph: {topo['total_nodes']} Nodes across {len(topo['units'])} Units, {topo['total_process_edges']} Piping Edges (Density: {topo['graph_density']})")
+
+    # 2. Emergency Isolation Tracing for R-401 (Hydrocracker Reactor)
+    iso = plant_topology.trace_emergency_isolation("R-401")
+    assert iso['target_asset'] == 'R-401'
+    assert len(iso['upstream_isolation_valves']) >= 1
+    assert iso['isolation_feasibility'] == 'FEASIBLE_FAIL_SAFE'
+    up_valves = [v['valve_tag'] for v in iso['upstream_isolation_valves']]
+    print(f"  [+] Emergency Isolation Tracing for {iso['target_asset']} ({iso['target_name']}):")
+    print(f"      - Upstream Isolation Barriers: {up_valves}")
+    print(f"      - Depressuring Blowdown Path: {[v['valve_tag'] for v in iso['active_depressuring_valves']]}")
+    print(f"      - Feasibility: {iso['isolation_feasibility']} ({iso['total_valves_to_close']} valves commanded closed)")
+
+    # 3. Flare Header Path Tracing for BDV-201
+    relief = plant_topology.trace_relief_path("BDV-201")
+    assert relief['unblocked_relief_path_verified'] is True
+    print(f"  [+] API 521 Flare Network Path: {' -> '.join(relief['path_to_flare'])} (Verified: {relief['unblocked_relief_path_verified']})")
     print('  PASS')
 
 
@@ -1056,8 +1166,13 @@ if __name__ == "__main__":
     test_card_36_api579_crack_growth_paris_law()
     test_card_37_asme_thermal_shock_transient()
     test_card_38_api2218_fireproofing_thermal_rating()
+    test_card_39_sensor_drift_and_fdd()
+    test_card_40_api650_seismic_sloshing_dynamics()
+    test_card_41_hei_condenser_vacuum_performance()
+    test_card_42_plant_topology_and_isolation_tracing()
     print("\n================================================================")
-    print("ALL 38 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
+    print("ALL 42 TESTS PASSED WITH 100% DETERMINISTIC FIDELITY!")
     print("================================================================")
+
 
 

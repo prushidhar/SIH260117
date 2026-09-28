@@ -602,12 +602,51 @@ Fireproofing Practices in Petroleum and Petrochemical Processing Plants:
   1-Hour Rating: Minimum fireproofing thickness for secondary pipe racks.
   2-Hour Rating: Mandatory for vessel skirts, structural columns supporting operating weight > 4500 kg.
   3-Hour Rating: Standard for high-hazard hydrocracking units, toxic inventory columns, and pressurized sphere legs."""
+    },
+    {
+        "doc_id": "std-hei-condensers",
+        "title": "HEI Standards for Steam Surface Condensers & ASME PTC 12.2 Steam Power Plant Performance",
+        "text": """Heat Exchange Institute (HEI) Standards for Steam Surface Condensers (12th Edition) & ASME PTC 12.2:
+Surface Condenser Thermal and Vacuum Performance Rating:
+- Thermal Condensation Duty: Q = m_steam * (h_exhaust - h_condensate)
+- Circulating Water Temperature Rise: Delta_T_cw = Q / (m_cw * Cp_water)
+- Saturation Pressure and Vacuum: Saturation temperature T_sat determined from measured condenser back-pressure via Antoine relation.
+- Terminal Temperature Difference (TTD): TTD = T_sat - T_cw_out. Normal design TTD is between 3°C and 8°C.
+- Subcooling: Delta_T_sub = T_sat - T_condensate. Subcooling > 2.0°C indicates excessive air leakage or air removal system failure.
+- Cleanliness Factor (CF): CF = (U_actual / U_clean_HEI) * 100%. HEI clean overall heat transfer coefficient accounts for tube OD, water velocity, material correction factor (Titanium = 0.81, Admiralty = 1.00), and water inlet temperature.
+- Turbine Heat Rate Impact: A 10 mbar deterioration in condenser vacuum imposes an approximate 1.2% heat rate (fuel consumption) penalty on steam turbine performance."""
+    },
+    {
+        "doc_id": "std-api-650-seismic",
+        "title": "API 650 Appendix E & ASCE 7 Seismic Design & Hydrodynamic Sloshing of Storage Tanks",
+        "text": """API Standard 650 (13th Edition) Appendix E: Seismic Design of Storage Tanks & ASCE 7-22:
+Hydrodynamic Sloshing and Structural Stability of Flat-Bottom Storage Tanks:
+- Two-Response Spectrum Model:
+  1. Impulsive Mode (Period Ti): Rigid liquid mass oscillating synchronously with tank shell.
+  2. Convective Mode (Period Tc): Free liquid sloshing wave motion governed by:
+     Tc = 2*pi * sqrt[ (D/2) / (1.84 * g * tanh(1.84 * H_L / (D/2))) ]
+- Slosh Wave Height (d_max): d_max = 0.5 * D * Ac * I. If d_max exceeds available freeboard (H_tank - H_liquid), sloshing wave impacts the floating or fixed roof, causing tearing or product release.
+- Overturning Moment (M_rw) and Base Shear (V_total = sqrt(Vi² + Vc²)).
+- Shell Compression and Elephant's Foot Buckling: Peak shell compressive stress at bottom course must remain below classical elastic-plastic buckling threshold (API 650 E.6.2.2).
+- Anchorage Ratio J: J = M_rw / (w_t * pi * R²). If J > 1.54, mechanical anchor bolts or holding straps are mandatory to prevent tank uplift."""
+    },
+    {
+        "doc_id": "std-iso-13374-fdd",
+        "title": "ISO 13374 & VDI 2888 Condition Monitoring, Sensor Validation, and Fault Detection & Diagnostics",
+        "text": """ISO 13374 (Condition Monitoring and Diagnostics of Machine Systems) & VDI 2888:
+Automated Sensor Drift, Reliability Indexing, and Fault Detection and Diagnostics (FDD):
+- Sensor Calibration Drift: Linear drift rate (units/sample) and cumulative deviation from calibrated zero/span:
+  Drift% = (|Delta_x| / Span) * 100%
+- Statutory Calibration Tolerance: Process safety loops require recalibration when drift exceeds 2.0% of calibrated span.
+- Redundant Channel Cross-Validation: Dual or triple-redundant sensors (1oo2, 2oo3) are evaluated using Mean Absolute Error (MAE) and voting residuals.
+- Frozen Sensor Diagnostic: Sensors exhibiting near-zero standard deviation (< 1e-4) over active process dynamics are flagged as frozen, open-circuit, or stuck transmitter electronics.
+- Sensor Reliability Index: Exponential health score R = 100 * exp(-|Delta_x| / Tol) indicating remaining instrument measurement confidence."""
     }
 ]
 
 def main():
     print("=" * 60)
-    print("INDRA Sovereign AI — Expanding Knowledge Base to 38 Standard Documents")
+    print("INDRA Sovereign AI — Expanding Knowledge Base to 41 Standard Documents")
     print("=" * 60)
 
     os.makedirs(STORE_PATH, exist_ok=True)
