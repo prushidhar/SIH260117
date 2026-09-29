@@ -36,7 +36,7 @@ class ReportSynthesizer:
         is_conv = False
         if re.search(r'^(hi|hello|hey|greetings|good\s+(morning|afternoon|evening)|howdy)\b', p_lower):
             is_conv = True
-        elif any(phrase in p_lower for phrase in ['who are you', 'what can you do', 'introduce yourself', 'what is indra', 'your capabilities', 'what do you do']):
+        elif any(phrase in p_lower for phrase in ['who are you', 'what can you do', 'what can u do', 'what do you do', 'what do u do', 'introduce yourself', 'what is indra', 'your capabilities', 'capabilities', 'tell me what you can do', 'how can you help']):
             is_conv = True
         elif p_lower in ['thanks', 'thank you', 'ok', 'okay', 'great', 'awesome', 'cool']:
             is_conv = True

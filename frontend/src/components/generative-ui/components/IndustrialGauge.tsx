@@ -1,10 +1,15 @@
 'use client';
 
-import React, { useState, useId } from 'react';
-import { Crosshair, AlertTriangle, CheckCircle2, ShieldAlert, Sliders, BellOff, Volume2 } from 'lucide-react';
+import React, { useState, useId, useEffect, useRef, useCallback } from 'react';
+import { Crosshair, AlertTriangle, CheckCircle2, ShieldAlert, Sliders, BellOff, Volume2, Bell } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
 import type { IndustrialGaugeProps } from '../types';
+
+// Number of history samples to keep
+const HISTORY_LEN = 60;
+const TREND_WINDOW = 5;
+const RATE_WINDOW  = 10;
 
 export default function IndustrialGauge({
   tag = 'P-101',
@@ -17,16 +22,46 @@ export default function IndustrialGauge({
   status: initialStatus,
   subtitle,
   allowTesting = true,
-}: IndustrialGaugeProps) {
+  liveSimulate = false,
+}: IndustrialGaugeProps & { liveSimulate?: boolean }) {
   const [currentValue, setCurrentValue] = useState<number>(initialValue);
   const [showTestControls, setShowTestControls] = useState<boolean>(false);
   const [isAcknowledged, setIsAcknowledged] = useState<boolean>(false);
+  const [history, setHistory] = useState<number[]>([initialValue]);
+  const [showAlarmInput, setShowAlarmInput] = useState<boolean>(false);
+  const [alarmInputVal, setAlarmInputVal] = useState<string>('');
+  const [customTripValue, setCustomTripValue] = useState<number | null>(null);
   const clipId = useId();
 
   const { selectTag } = useIndraStore();
+  const liveSimRef = useRef<number>(0);
 
-  // Determine threshold status dynamically based on current value
-  const normalLimit = thresholds?.normal ?? max * 0.7;
+  // Live Auto-Oscillation
+  useEffect(() => {
+    if (!liveSimulate) return;
+    liveSimRef.current = 0;
+    const interval = setInterval(() => {
+      liveSimRef.current += 0.1;
+      const t = liveSimRef.current;
+      const oscillation = Math.sin(t) * (max - min) * 0.08;
+      setCurrentValue((prev) => {
+        const next = Math.max(min, Math.min(max, initialValue + oscillation));
+        return parseFloat(next.toFixed(1));
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [liveSimulate, initialValue, min, max]);
+
+  // Rolling History Buffer
+  useEffect(() => {
+    setHistory((prev) => {
+      const next = [...prev, currentValue];
+      return next.slice(-HISTORY_LEN);
+    });
+  }, [currentValue]);
+
+  // Threshold Status
+  const normalLimit  = thresholds?.normal  ?? max * 0.7;
   const warningLimit = thresholds?.warning ?? max * 0.85;
 
   let currentStatus: 'optimal' | 'warning' | 'critical' = 'optimal';
@@ -38,20 +73,29 @@ export default function IndustrialGauge({
     currentStatus = 'optimal';
   }
 
-  // Geometry for 240-degree radial arc
-  // Angles in degrees: start at 150 deg (bottom left), end at 390 deg (bottom right, equivalent to 30 deg)
-  const radius = 80;
-  const cx = 100;
-  const cy = 100;
+  // Gauge Geometry
+  const radius      = 80;
+  const cx          = 100;
+  const cy          = 100;
   const strokeWidth = 14;
+  const startAngle  = 150;
+  const endAngle    = 390;
+  const totalAngle  = endAngle - startAngle;
 
-  const startAngle = 150;
-  const endAngle = 390;
-  const totalAngle = endAngle - startAngle; // 240 deg
-
-  const clampedVal = Math.min(Math.max(currentValue, min), max);
-  const fraction = (clampedVal - min) / (max - min || 1);
+  const clampedVal  = Math.min(Math.max(currentValue, min), max);
+  const fraction    = (clampedVal - min) / (max - min || 1);
   const needleAngle = startAngle + fraction * totalAngle;
+
+  // Threshold tick angles
+  const normalFraction  = (normalLimit  - min) / (max - min || 1);
+  const warningFraction = (warningLimit - min) / (max - min || 1);
+  const normalAngle     = startAngle + normalFraction  * totalAngle;
+  const warningAngle    = startAngle + warningFraction * totalAngle;
+
+  // Custom alarm angle
+  const customAlarmAngle = customTripValue !== null
+    ? startAngle + ((Math.min(Math.max(customTripValue, min), max) - min) / (max - min || 1)) * totalAngle
+    : null;
 
   const polarToCartesian = (centerX: number, centerY: number, r: number, angleInDegrees: number) => {
     const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
@@ -63,19 +107,62 @@ export default function IndustrialGauge({
 
   const describeArc = (x: number, y: number, r: number, startA: number, endA: number) => {
     const start = polarToCartesian(x, y, r, endA);
-    const end = polarToCartesian(x, y, r, startA);
+    const end   = polarToCartesian(x, y, r, startA);
     const largeArcFlag = endA - startA <= 180 ? '0' : '1';
     return ['M', start.x, start.y, 'A', r, r, 0, largeArcFlag, 0, end.x, end.y].join(' ');
   };
 
-  const bgArcPath = describeArc(cx, cy, radius, startAngle, endAngle);
+  const bgArcPath    = describeArc(cx, cy, radius, startAngle, endAngle);
   const valueArcPath = describeArc(cx, cy, radius, startAngle, Math.max(startAngle + 0.1, needleAngle));
 
-  // Needle tip
-  const needleTip = polarToCartesian(cx, cy, radius - 10, needleAngle);
-  const needleBaseLeft = polarToCartesian(cx, cy, 6, needleAngle + 90);
+  // Needle paths
+  const needleTip       = polarToCartesian(cx, cy, radius - 10, needleAngle);
+  const needleBaseLeft  = polarToCartesian(cx, cy, 6, needleAngle + 90);
   const needleBaseRight = polarToCartesian(cx, cy, 6, needleAngle - 90);
-  const needlePath = `M ${needleBaseLeft.x} ${needleBaseLeft.y} L ${needleTip.x} ${needleTip.y} L ${needleBaseRight.x} ${needleBaseRight.y} Z`;
+  const needlePath      = `M ${needleBaseLeft.x} ${needleBaseLeft.y} L ${needleTip.x} ${needleTip.y} L ${needleBaseRight.x} ${needleBaseRight.y} Z`;
+
+  // Tick mark helper
+  const tickMark = (angle: number, color: string) => {
+    const inner = polarToCartesian(cx, cy, radius - strokeWidth / 2 - 2, angle);
+    const outer = polarToCartesian(cx, cy, radius + strokeWidth / 2 + 3, angle);
+    return <line key={angle} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={color} strokeWidth="2" strokeLinecap="round" />;
+  };
+
+  // Sparkline coordinates
+  const sparklineWidth  = 80;
+  const sparklineHeight = 20;
+  const sparklineMin    = min;
+  const sparklineMax    = max;
+  const sparklinePoints = history.map((val, idx) => {
+    const x = (idx / (HISTORY_LEN - 1 || 1)) * sparklineWidth;
+    const y = sparklineHeight - ((val - sparklineMin) / (sparklineMax - sparklineMin || 1)) * sparklineHeight;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+
+  // Trend direction
+  const recentHistory = history.slice(-TREND_WINDOW);
+  let trend: 'up' | 'down' | 'stable' = 'stable';
+  if (recentHistory.length >= 2) {
+    const delta = recentHistory[recentHistory.length - 1] - recentHistory[0];
+    if (delta > 0.3) trend = 'up';
+    else if (delta < -0.3) trend = 'down';
+  }
+
+  // Rate of Change
+  const rateWindow = history.slice(-RATE_WINDOW);
+  let ratePerMin = 0;
+  if (rateWindow.length >= 2) {
+    const delta = rateWindow[rateWindow.length - 1] - rateWindow[0];
+    ratePerMin = parseFloat((delta * 6).toFixed(1));
+  }
+
+  // Percent of max
+  const pctOfMax = Math.min(100, Math.max(0, ((currentValue - min) / (max - min || 1)) * 100));
+
+  // Zone labels inside the arc
+  const zoneLabelStart   = polarToCartesian(cx, cy, radius - 22, startAngle + 20);
+  const zoneLabelWarning = polarToCartesian(cx, cy, radius - 22, normalAngle + 15);
+  const zoneLabelCrit    = polarToCartesian(cx, cy, radius - 22, warningAngle + 15);
 
   const handleLocateTag = () => {
     if (tag) {
@@ -88,56 +175,75 @@ export default function IndustrialGauge({
     }
   };
 
+  const handleSetAlarm = useCallback(() => {
+    const v = parseFloat(alarmInputVal);
+    if (!isNaN(v) && v >= min && v <= max) {
+      setCustomTripValue(v);
+    }
+    setShowAlarmInput(false);
+    setAlarmInputVal('');
+  }, [alarmInputVal, min, max]);
+
+  // Status Styles
   const statusColors = {
     optimal: {
-      border: 'border-emerald-500/30',
-      badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      stroke: '#10b981',
-      glow: 'rgba(16, 185, 129, 0.4)',
-      text: 'text-emerald-600 dark:text-emerald-400',
-      label: 'OPTIMAL SERVICE',
-      icon: CheckCircle2,
+      border:    'border-emerald-500/30',
+      badge:     'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      stroke:    '#10b981',
+      glow:      'rgba(16, 185, 129, 0.4)',
+      text:      'text-emerald-600 dark:text-emerald-400',
+      label:     'OPTIMAL SERVICE',
+      icon:      CheckCircle2,
+      boxShadow: undefined as string | undefined,
     },
     warning: {
-      border: 'border-amber-500/40',
-      badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
-      stroke: '#f59e0b',
-      glow: 'rgba(245, 158, 11, 0.45)',
-      text: 'text-amber-600 dark:text-amber-400',
-      label: 'ELEVATED (WARNING)',
-      icon: AlertTriangle,
+      border:    'border-amber-500/40',
+      badge:     'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+      stroke:    '#f59e0b',
+      glow:      'rgba(245, 158, 11, 0.45)',
+      text:      'text-amber-600 dark:text-amber-400',
+      label:     'ELEVATED (WARNING)',
+      icon:      AlertTriangle,
+      boxShadow: undefined as string | undefined,
     },
     critical: {
-      border: 'border-rose-500/50',
-      badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
-      stroke: '#ef4444',
-      glow: 'rgba(239, 68, 68, 0.5)',
-      text: 'text-rose-600 dark:text-rose-400',
-      label: 'CRITICAL THRESHOLD',
-      icon: ShieldAlert,
+      border:    'border-rose-500/50',
+      badge:     'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
+      stroke:    '#ef4444',
+      glow:      'rgba(239, 68, 68, 0.5)',
+      text:      'text-rose-600 dark:text-rose-400',
+      label:     'CRITICAL THRESHOLD',
+      icon:      ShieldAlert,
+      boxShadow: '0 0 0 2px #ef4444, 0 0 20px rgba(239,68,68,0.3)',
     },
   }[currentStatus];
 
   const StatusIcon = statusColors.icon;
 
   return (
-    <div className={`p-4 rounded-2xl bg-white dark:bg-zinc-900 border ${statusColors.border} shadow-sm transition-all text-slate-800 dark:text-zinc-200`}>
-      {/* Header with Tag, Status, and P&ID Link */}
+    <div
+      className={`p-4 rounded-xl bg-white dark:bg-zinc-900 border ${statusColors.border} shadow-sm transition-all text-slate-800 dark:text-zinc-200`}
+      style={statusColors.boxShadow ? { boxShadow: statusColors.boxShadow } : undefined}
+    >
+      {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/80 gap-2">
         <div className="flex items-center gap-2">
           {tag && (
             <button
               onClick={handleLocateTag}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold transition-all cursor-pointer group"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-mono text-xs font-bold transition-all cursor-pointer group"
               title="Center camera on P&ID diagram"
             >
-              <Crosshair className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:rotate-45 transition-transform" />
+              <Crosshair className="w-3.5 h-3.5 text-slate-500 group-hover:rotate-45 transition-transform" />
               <span>{tag}</span>
             </button>
           )}
-          <h4 className="text-xs font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-            {title}
-          </h4>
+          <div>
+            <h4 className="text-xs font-bold tracking-tight text-slate-900 dark:text-zinc-100">{title}</h4>
+            {subtitle && (
+              <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5">{subtitle}</div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -149,7 +255,7 @@ export default function IndustrialGauge({
           {allowTesting && (
             <button
               onClick={() => setShowTestControls(!showTestControls)}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors"
+              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors"
               title="Toggle Interactive Value Simulation"
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -165,8 +271,8 @@ export default function IndustrialGauge({
           <svg viewBox="0 0 200 170" className="w-full h-full overflow-visible">
             <defs>
               <linearGradient id={`grad-${clipId}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#10b981" />
-                <stop offset="60%" stopColor="#f59e0b" />
+                <stop offset="0%"   stopColor="#10b981" />
+                <stop offset="60%"  stopColor="#f59e0b" />
                 <stop offset="100%" stopColor="#ef4444" />
               </linearGradient>
               <filter id={`glow-${clipId}`} x="-20%" y="-20%" width="140%" height="140%">
@@ -182,33 +288,33 @@ export default function IndustrialGauge({
               className="text-slate-100 dark:text-zinc-800/90"
               strokeWidth={strokeWidth}
               strokeLinecap="round"
-            />
+            >
+              <title>Full gauge arc: {min} to {max} {unit}</title>
+            </path>
 
-            {/* Threshold Zones Tick Marks */}
+            {/* Outer zone dashes */}
             <path
-              d={describeArc(cx, cy, radius + 11, startAngle, startAngle + 0.6 * totalAngle)}
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="2"
-              strokeDasharray="1 5"
-              className="opacity-70"
-            />
+              d={describeArc(cx, cy, radius + 11, startAngle, startAngle + normalFraction * totalAngle)}
+              fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="1 5" className="opacity-70"
+            >
+              <title>Normal operating zone: {min} to {normalLimit} {unit}</title>
+            </path>
             <path
-              d={describeArc(cx, cy, radius + 11, startAngle + 0.6 * totalAngle, startAngle + 0.85 * totalAngle)}
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="2"
-              strokeDasharray="1 5"
-              className="opacity-80"
-            />
+              d={describeArc(cx, cy, radius + 11, startAngle + normalFraction * totalAngle, startAngle + warningFraction * totalAngle)}
+              fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="1 5" className="opacity-80"
+            >
+              <title>Warning zone: {normalLimit} to {warningLimit} {unit}</title>
+            </path>
             <path
-              d={describeArc(cx, cy, radius + 11, startAngle + 0.85 * totalAngle, endAngle)}
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeDasharray="1 5"
-              className="opacity-90"
-            />
+              d={describeArc(cx, cy, radius + 11, startAngle + warningFraction * totalAngle, endAngle)}
+              fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="1 5" className="opacity-90"
+            >
+              <title>Critical zone: {warningLimit} to {max} {unit}</title>
+            </path>
+
+            {/* Threshold Tick Marks at normalLimit and warningLimit */}
+            {tickMark(normalAngle,  '#10b981')}
+            {tickMark(warningAngle, '#f59e0b')}
 
             {/* Dynamic Value Arc */}
             <path
@@ -221,42 +327,92 @@ export default function IndustrialGauge({
               className="transition-all duration-300 ease-out"
             />
 
+            {/* Custom alarm dashed line */}
+            {customAlarmAngle !== null && (() => {
+              const inner = polarToCartesian(cx, cy, radius - strokeWidth / 2 - 4, customAlarmAngle);
+              const outer = polarToCartesian(cx, cy, radius + strokeWidth / 2 + 6, customAlarmAngle);
+              return (
+                <line
+                  x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                  stroke="#6366f1" strokeWidth="2" strokeDasharray="3 2" strokeLinecap="round"
+                />
+              );
+            })()}
+
+            {/* Zone Labels inside the arc */}
+            <text x={zoneLabelStart.x}   y={zoneLabelStart.y}   textAnchor="middle" fontSize="8" fill="#10b981" fontFamily="monospace" fontWeight="bold">O</text>
+            <text x={zoneLabelWarning.x} y={zoneLabelWarning.y} textAnchor="middle" fontSize="8" fill="#f59e0b" fontFamily="monospace" fontWeight="bold">W</text>
+            <text x={zoneLabelCrit.x}    y={zoneLabelCrit.y}    textAnchor="middle" fontSize="8" fill="#ef4444" fontFamily="monospace" fontWeight="bold">C</text>
+
             {/* Min / Max Labels */}
-            <text x="32" y="152" className="text-[9px] fill-slate-400 dark:fill-zinc-500 font-mono font-bold" textAnchor="middle">
-              {min}
-            </text>
-            <text x="168" y="152" className="text-[9px] fill-slate-400 dark:fill-zinc-500 font-mono font-bold" textAnchor="middle">
-              {max}
-            </text>
+            <text x="32"  y="152" className="text-[9px] fill-slate-400 dark:fill-zinc-500 font-mono font-bold" textAnchor="middle">{min}</text>
+            <text x="168" y="152" className="text-[9px] fill-slate-400 dark:fill-zinc-500 font-mono font-bold" textAnchor="middle">{max}</text>
 
             {/* Needle */}
-            <path
-              d={needlePath}
-              fill={statusColors.stroke}
-              className="transition-all duration-300 ease-out drop-shadow-sm"
-            />
+            <path d={needlePath} fill={statusColors.stroke} className="transition-all duration-300 ease-out drop-shadow-sm" />
 
             {/* Center Pivot Hub */}
             <circle cx={cx} cy={cy} r="9" className="fill-slate-900 dark:fill-zinc-100 drop-shadow-sm" />
             <circle cx={cx} cy={cy} r="4" fill={statusColors.stroke} />
           </svg>
+
+          {/* Sparkline below gauge */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2" title="Last 60 readings">
+            <svg width={sparklineWidth} height={sparklineHeight} className="overflow-visible">
+              {history.length >= 2 && (
+                <polyline
+                  points={sparklinePoints}
+                  fill="none"
+                  stroke={statusColors.stroke}
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={0.7}
+                />
+              )}
+            </svg>
+          </div>
         </div>
 
         {/* Digital Readout & Limits Panel */}
         <div className="flex flex-col items-center sm:items-start space-y-2">
+          {/* Value + trend arrow */}
           <div className="flex items-baseline gap-1.5 font-mono">
             <span className={`text-4xl font-black tracking-tight ${statusColors.text}`}>
               {currentValue.toFixed(1)}
             </span>
-            <span className="text-sm font-bold text-slate-500 dark:text-zinc-400 uppercase">
-              {unit}
+            <span className="text-sm font-bold text-slate-500 dark:text-zinc-400 uppercase">{unit}</span>
+            <span
+              className={`text-lg font-bold ${trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-rose-500' : 'text-slate-400'}`}
+              title={`Trend: ${trend}`}
+            >
+              {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '─'}
             </span>
+          </div>
+
+          {/* Percent-of-max mini bar */}
+          <div className="w-full">
+            <div className="flex justify-between text-[9px] font-mono text-slate-400 mb-0.5">
+              <span>% of max</span>
+              <span>{pctOfMax.toFixed(1)}%</span>
+            </div>
+            <div className="h-1 w-full bg-slate-200 dark:bg-zinc-700 rounded-md overflow-hidden">
+              <div
+                className="h-full rounded-md transition-all duration-300"
+                style={{ width: `${pctOfMax}%`, backgroundColor: statusColors.stroke }}
+              />
+            </div>
+          </div>
+
+          {/* Rate of Change */}
+          <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">
+            Rate of Change: <span className={`font-bold ${ratePerMin > 0 ? 'text-amber-500' : ratePerMin < 0 ? 'text-blue-500' : 'text-slate-400'}`}>{ratePerMin > 0 ? '+' : ''}{ratePerMin} {unit}/min</span>
           </div>
 
           <div className="text-[11px] text-slate-500 dark:text-zinc-400 flex flex-col gap-1 font-mono">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 dark:text-zinc-500">Design Range:</span>
-              <span className="font-semibold text-slate-700 dark:text-zinc-300">{min} - {max} {unit}</span>
+              <span className="font-semibold text-slate-700 dark:text-zinc-300">{min} to {max} {unit}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-slate-400 dark:text-zinc-500">Warning Trip:</span>
@@ -264,56 +420,64 @@ export default function IndustrialGauge({
             </div>
           </div>
 
-          {/* Alarm Ack button if abnormal */}
-          {currentStatus !== 'optimal' && (
+          {/* Set Alarm Button */}
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setIsAcknowledged(!isAcknowledged)}
-              className={`mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer ${
-                isAcknowledged
-                  ? 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700'
-                  : 'bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
-              }`}
+              onClick={() => setShowAlarmInput((v) => !v)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 transition-all cursor-pointer"
             >
-              {isAcknowledged ? (
-                <>
-                  <BellOff className="w-3 h-3" />
-                  <span>ALARM ACKNOWLEDGED</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-3 h-3 animate-bounce" />
-                  <span>ACKNOWLEDGE ALARM</span>
-                </>
-              )}
+              <Bell className="w-3 h-3" /> SET ALARM
             </button>
+            {customTripValue !== null && (
+              <span className="text-[9px] font-mono text-indigo-500">Trip @ {customTripValue} {unit}</span>
+            )}
+          </div>
+
+          {/* Inline Alarm Input Dialog */}
+          {showAlarmInput && (
+            <div className="flex items-center gap-1 mt-1">
+              <input
+                type="number"
+                min={min}
+                max={max}
+                value={alarmInputVal}
+                onChange={(e) => setAlarmInputVal(e.target.value)}
+                placeholder={`${min}-${max}`}
+                className="w-20 px-2 py-0.5 text-xs font-mono rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200"
+              />
+              <button
+                onClick={handleSetAlarm}
+                className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setShowAlarmInput(false)}
+                className="px-1.5 py-0.5 text-[10px] font-mono rounded-md text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Interactive Simulation Drawer */}
+      {/* Interactive Value Slider */}
       {showTestControls && (
-        <div className="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-zinc-800/80 bg-slate-50/70 dark:bg-zinc-950/40 p-3 rounded-xl space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-600 dark:text-zinc-400 font-medium">Interactive Dynamic Sweep:</span>
-            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{currentValue.toFixed(1)} {unit}</span>
+        <div className="mt-2 pt-3 border-t border-slate-100 dark:border-zinc-800/80 space-y-2">
+          <div className="flex justify-between text-xs font-mono text-slate-500 dark:text-zinc-400">
+            <span>Simulate Sensor Value:</span>
+            <span className="font-bold text-slate-800 dark:text-zinc-200">{currentValue} {unit}</span>
           </div>
           <input
             type="range"
             min={min}
             max={max}
-            step={(max - min) / 100 || 1}
+            step={0.5}
             value={currentValue}
-            onChange={(e) => {
-              setCurrentValue(parseFloat(e.target.value));
-              setIsAcknowledged(false);
-            }}
-            className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+            onChange={(e) => setCurrentValue(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-md appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-400"
           />
-          <div className="flex justify-between text-[9px] font-mono text-slate-400 dark:text-zinc-500">
-            <span>{min} (Low)</span>
-            <span>{normalLimit} (Warn)</span>
-            <span>{max} (Trip)</span>
-          </div>
         </div>
       )}
     </div>

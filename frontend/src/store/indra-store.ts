@@ -960,7 +960,7 @@ export const useIndraStore = create<IndraState>()(
         const isFatigueQuery = /fatigue|miner|palmgren|goodman|damage\s*fraction/i.test(promptText);
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
-        const isGreeting = /^\s*(hi|hello|hey|what can (you|u) do|what is your name|who are you|help|capabilities|what do you do)\s*$/i.test(promptText.trim()) || promptText.trim().length <= 3;
+        const isGreeting = /(^(hi|hello|hey|greetings|howdy)\b)|(what can (you|u) do|what do (you|u) do|who are you|capabilities|introduce yourself|what is indra|help me|what are your functions)/i.test(promptText.trim()) || promptText.trim().length <= 3;
 
         let finalMarkdown = '';
         if (isGreeting) {

@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash, Presentation, Archive } from 'lucide-react';
+import { Package, FileText, Sheet, Download, Check, ShieldCheck, Hash, Presentation, Archive, Trash2, RefreshCw } from 'lucide-react';
 import useIndraStore, { type Deliverable } from '@/store/indra-store';
 
 export default function Deliverables() {
-  const { deliverables, currentTaskId } = useIndraStore();
+  const { deliverables, currentTaskId, setInputValue } = useIndraStore();
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
 
   const handleDownloadBundle = () => {
     const taskId = currentTaskId || 'current';
     window.open(`http://localhost:8000/api/deliverables/${taskId}/bundle`, '_blank');
+  };
+
+  const handleClearAll = () => {
+    useIndraStore.setState({ deliverables: [] });
   };
 
   const getFileIcon = (type: string = '') => {
@@ -37,14 +41,14 @@ export default function Deliverables() {
     switch (type.toLowerCase()) {
       case 'xlsx':
       case 'excel':
-        return 'ASME B31.3 HEALTH WORKBOOK';
+        return 'HEALTH WORKBOOK';
       case 'pptx':
       case 'ppt':
       case 'presentation':
         return 'EXECUTIVE BOARD DECK';
       case 'docx':
       case 'word':
-        return 'MAINTENANCE APPROVAL NOTE';
+        return 'STATUTORY NOTE';
       default:
         return 'SOVEREIGN DELIVERABLE';
     }
@@ -72,12 +76,21 @@ export default function Deliverables() {
         <span className="ml-auto text-[9px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-mono font-bold border border-slate-200 dark:border-zinc-700">
           {deliverables.length}
         </span>
+        {deliverables.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+            title="Clear all deliverables"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {deliverables.length > 1 && (
         <button
           onClick={handleDownloadBundle}
-          className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+          className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
           title="Download all generated deliverables as a cryptographically sealed ZIP bundle"
         >
           <Archive className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -86,8 +99,26 @@ export default function Deliverables() {
       )}
 
       {deliverables.length === 0 ? (
-        <div className="text-slate-400 dark:text-zinc-500 text-xs italic text-center py-6 px-3 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-900/30 leading-relaxed">
-          No deliverables generated yet. Prompt an ASME B31.3 audit or P&ID inspection to produce native reports.
+        <div className="space-y-3">
+          <div className="text-slate-400 dark:text-zinc-500 text-xs italic text-center py-6 px-3 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-900/30 leading-relaxed">
+            No deliverables generated yet. Prompt an ASME B31.3 audit or P&ID inspection to produce native reports.
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold">Suggested Prompts:</span>
+            {[
+              'Evaluate ASME B31.3 wall thickness for P-101',
+              'Generate pump vibration telemetry report',
+              'Full P&ID inspection for HX-4201',
+            ].map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => setInputValue(suggestion)}
+                className="w-full text-left p-2 rounded-md bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700/60 text-[11px] font-mono text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer truncate"
+              >
+                &bull; {suggestion}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -128,37 +159,39 @@ export default function Deliverables() {
 
                 {/* SHA-256 Hash Indicator */}
                 {item.hash && (
-                  <div className="flex items-center gap-1.5 mt-2 text-[9px] font-mono text-slate-500 dark:text-zinc-400 bg-white dark:bg-zinc-950 px-2 py-1 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 truncate">
+                  <div className="flex items-center gap-1.5 mt-2 text-[9px] font-mono text-slate-500 dark:text-zinc-400 bg-white dark:bg-zinc-950 px-2 py-1 rounded-md border border-slate-200/80 dark:border-zinc-800/80 truncate">
                     <Hash className="w-3 h-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                     <span className="truncate">SHA256: {item.hash}</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-200/70 dark:border-zinc-800/60">
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">{item.size}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">{item.size || 'Size N/A'}</span>
                   <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">{item.timestamp || item.generatedAt}</span>
                   
-                  <button 
-                    onClick={() => handleDownload(item)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer shadow-2xs ${
-                      isDownloaded 
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
-                        : 'bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                    title="Download native binary artifact from sovereign backend"
-                  >
-                    {isDownloaded ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        <span>Downloaded</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3 h-3 text-slate-500 dark:text-zinc-400" />
-                        <span>Download</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => handleDownload(item)}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer shadow-2xs ${
+                        isDownloaded 
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
+                          : 'bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                      title="Download native binary artifact from sovereign backend"
+                    >
+                      {isDownloaded ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span>Downloaded</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3 h-3 text-slate-500 dark:text-zinc-400" />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

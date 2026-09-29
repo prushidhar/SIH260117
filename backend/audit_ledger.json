@@ -8821,5 +8821,384 @@
     "previous_hash": "c3fc97db9bc6827af5bfcc0e773fcd7acbf1245ef3af48ff5e7ef63cd491b75a",
     "file_checksum": "1c2538f5bddd0cc14e48e3812fd3b418cf47eea7d7a64f680b8b5913423a4520",
     "hash": "2678ffff7fc9a36e41b0a47c3358e494a62e4e8d5e1255ff86fd922af039330b"
+  },
+  {
+    "timestamp": 1790691418.403884,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-377fc330",
+      "prompt": "hi"
+    },
+    "previous_hash": "2678ffff7fc9a36e41b0a47c3358e494a62e4e8d5e1255ff86fd922af039330b",
+    "hash": "2a3da11fd88481784d40acd272730ef01ef4fc4f1f50d773da6d8c0b14e86493"
+  },
+  {
+    "timestamp": 1790691418.6861184,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-377fc330",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "2a3da11fd88481784d40acd272730ef01ef4fc4f1f50d773da6d8c0b14e86493",
+    "hash": "36657cd01070a3be5040a5c44cf6315071d936c27a9007ede6daf7488209ca0e"
+  },
+  {
+    "timestamp": 1790691418.7232032,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-377fc330",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "36657cd01070a3be5040a5c44cf6315071d936c27a9007ede6daf7488209ca0e",
+    "hash": "965ea9ba07ee39f3051d78bb048951a9d6f221fd4e9f4c010f3bcf9bc98861ff"
+  },
+  {
+    "timestamp": 1790691434.9244442,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-30a81bf2",
+      "prompt": "what can you do"
+    },
+    "previous_hash": "965ea9ba07ee39f3051d78bb048951a9d6f221fd4e9f4c010f3bcf9bc98861ff",
+    "hash": "67a7228a58afebee4c21364a98987b32a8b3f50a4f9702f8bf51a98efae13927"
+  },
+  {
+    "timestamp": 1790691435.1283252,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-30a81bf2",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "67a7228a58afebee4c21364a98987b32a8b3f50a4f9702f8bf51a98efae13927",
+    "hash": "3999412af441327361b23f50ed42739a10ba9bbfe6d1bf10ba616aac2dbc8319"
+  },
+  {
+    "timestamp": 1790691435.1598456,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-30a81bf2",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "3999412af441327361b23f50ed42739a10ba9bbfe6d1bf10ba616aac2dbc8319",
+    "hash": "7e2d0076313d3dc6d7feb90c52bee7ea44aefd21c542a7e7ab819e605dfa2d26"
+  },
+  {
+    "timestamp": 1790691470.198921,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-efa019cf",
+      "prompt": "Calculate minimum required pipe wall thickness under ASME B31.3 for design pressure 24.0 bar, temperature 180\u00b0C, and ASTM A106 Grade B pipe."
+    },
+    "previous_hash": "7e2d0076313d3dc6d7feb90c52bee7ea44aefd21c542a7e7ab819e605dfa2d26",
+    "hash": "f1a101a782d804618bb307d66832504f9b8290da2598eb5fb0cf5fac2544c742"
+  },
+  {
+    "timestamp": 1790691470.402334,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "kb_search",
+      "args": {
+        "query": "ASME B31.3 Process Piping straight pipe wall thickness allowable stress"
+      },
+      "result": {
+        "results": [
+          {
+            "id": "std-asme-b313_chunk_0",
+            "title": "ASME B31.3 Process Piping Design & Inspection Standards",
+            "snippet": "ASME B31.3 Process Piping Code (2022 Edition) Paragraph 304.1.2: Minimum required straight pipe wall thickness t under internal design pressure P: Formula: t = (P * D) / (2 * (S * E * W + P * Y)) + c Where: - P: internal design gauge pressure (psig or MPa) - D: outside diameter of pipe (inches or mm...",
+            "relevance_score": 47.855,
+            "code_reference": "ASME B31.3 Process Piping Design & Inspection Standards"
+          },
+          {
+            "id": "doc-insp-cdu104_chunk_0",
+            "title": "Ultrasonic Inspection Report \u2014 Crude Distillation Line CDU-Pipe-104",
+            "snippet": "Sovereign Refineries & Petrochemicals Ltd. STATUTORY PLANT ASSET INTEGRITY INSPECTION REPORT: INSP-2025-084-UT Unit: Crude Distillation Unit II (CDU-II) Asset Identification: CDU-Pipe-104 (Atmospheric Crude Transfer Header Line) Governing Standards: ASME B31.3 Chapter II, API 570, ASME Section V Art...",
+            "relevance_score": 44.363,
+            "code_reference": "Ultrasonic Inspection Report \u2014 Crude Distillation Line CDU-Pipe-104"
+          },
+          {
+            "id": "std-asme-b313-appendix-x-thermal-flexibility_chunk_0",
+            "title": "ASME B31.3 Appendix X & \u00a7 319 Piping Flexibility Analysis & Thermal Expansion Stress",
+            "snippet": "ASME B31.3 Process Piping \u00a7 319 & Appendix X (Piping Flexibility Analysis): Rules for Thermal Expansion, Cold Spring, and Allowable Displacement Stress Range: - Thermal Growth Calculation: Delta_L = L * alpha * (T_op - T_amb). - Allowable Displacement Stress Range (SA) per \u00a7 302.3.5: S_A = f * [1.25...",
+            "relevance_score": 42.511,
+            "code_reference": "ASME B31.3 Appendix X & \u00a7 319 Piping Flexibility Analysis & Thermal Expansion Stress"
+          },
+          {
+            "id": "std-api-570_chunk_0",
+            "title": "API 570 Piping Inspection Code \u2014 Fitness for Service & Corrosion Rates",
+            "snippet": "API 570 Piping Inspection Code (4th Edition): In-service inspection, rating, repair, and alteration of metallic and fiberglass piping systems. Section 7: Inspection Data Evaluation, Maximum Allowable Working Pressure, and Remaining Life. Remaining Life calculation: Remaining Life (years) = (t_actual...",
+            "relevance_score": 41.478,
+            "code_reference": "API 570 Piping Inspection Code \u2014 Fitness for Service & Corrosion Rates"
+          },
+          {
+            "id": "std-asme-b311_chunk_0",
+            "title": "ASME B31.1 Power Piping Code \u2014 Steam Headers & Boiler External Piping",
+            "snippet": "ASME B31.1 Power Piping Code (2022 Edition): Piping Systems in Electric Power Generating Stations, Industrial Plants, and District Heating: - Boiler External Piping (BEP): Piping connecting the boiler drum to the first isolation or stop valve. Governed strictly by ASME Section I requirements and cer...",
+            "relevance_score": 37.516,
+            "code_reference": "ASME B31.1 Power Piping Code \u2014 Steam Headers & Boiler External Piping"
+          }
+        ]
+      },
+      "execution_time_ms": 5.38
+    },
+    "previous_hash": "f1a101a782d804618bb307d66832504f9b8290da2598eb5fb0cf5fac2544c742",
+    "hash": "035db7a99f8a4def4d8921fed93fec716540a619ebdb3663f826740429cd2978"
+  },
+  {
+    "timestamp": 1790691470.5533319,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "calculate_pipe_thickness_asme_b313",
+      "args": {
+        "pressure_psig": 348.09,
+        "outer_diameter_in": 10.0,
+        "stress_value_psi": 20000.0,
+        "joint_quality_factor": 1.0,
+        "corrosion_allowance_in": 0.125
+      },
+      "result": {
+        "status": "success",
+        "design_pressure_psig": 348.09,
+        "outer_diameter_inches": 10.0,
+        "allowable_stress_psi": 20000.0,
+        "joint_quality_factor_e": 1.0,
+        "material_coefficient_y": 0.4,
+        "corrosion_allowance_inches": 0.125,
+        "t_design_inches": 0.0864,
+        "t_minimum_required_inches": 0.2114,
+        "recommended_commercial_schedule": "Sch 40 (Standard) (0.365 in nominal wall, +72.6% safety margin)",
+        "formula_used": "t = (P * D) / (2 * (S * E * W + P * Y)) + c",
+        "code_reference": "ASME B31.3 Process Piping (2022) Paragraph 304.1.2",
+        "verified": true
+      },
+      "execution_time_ms": 115.84
+    },
+    "previous_hash": "035db7a99f8a4def4d8921fed93fec716540a619ebdb3663f826740429cd2978",
+    "hash": "c3f45d0fcb2f64d0392b9c4ebf7b91baedfaa0ccf389006cc788c197c9101c39"
+  },
+  {
+    "timestamp": 1790691470.5884447,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-efa019cf",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 3
+    },
+    "previous_hash": "c3f45d0fcb2f64d0392b9c4ebf7b91baedfaa0ccf389006cc788c197c9101c39",
+    "hash": "d08f0fa9d578cf16d880139c5ff30c103cc8577752f664e6a89b61d0523ed038"
+  },
+  {
+    "timestamp": 1790691470.6176312,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-efa019cf",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 3
+    },
+    "previous_hash": "d08f0fa9d578cf16d880139c5ff30c103cc8577752f664e6a89b61d0523ed038",
+    "hash": "39defa3e54e8bd927589c0481b1274de8bf533744a65dea08741beb150e98f53"
+  },
+  {
+    "timestamp": 1790691470.837466,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-efa019cf\\artifacts\\INDRA_PIPE_THICKNESS_A106.docx"
+    },
+    "previous_hash": "39defa3e54e8bd927589c0481b1274de8bf533744a65dea08741beb150e98f53",
+    "file_checksum": "41c1a97f346ded846fda28ed732de2d426142dd92f8350c4fe3f45fbab598562",
+    "hash": "2fd97250a17aba1f94c7ac889eb821b0a1d7f0bcf26eb340d8bee4569bd70b31"
+  },
+  {
+    "timestamp": 1790691470.9305093,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-efa019cf\\artifacts\\INDRA_PIPE_THICKNESS_A106_DATA.xlsx"
+    },
+    "previous_hash": "2fd97250a17aba1f94c7ac889eb821b0a1d7f0bcf26eb340d8bee4569bd70b31",
+    "file_checksum": "9e63553d2feb96e41352632a1d60decc75f7ba4db54e4a0abb353b54e72445a9",
+    "hash": "d6c55bfad186380107e7e8c42882ebc3371dc5feaa5b428a9815eb708c845210"
+  },
+  {
+    "timestamp": 1790691471.4970715,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-efa019cf\\artifacts\\A106_Board_Review.pptx"
+    },
+    "previous_hash": "d6c55bfad186380107e7e8c42882ebc3371dc5feaa5b428a9815eb708c845210",
+    "file_checksum": "12ab1d2191bab09962220f80cc4669b988d8c9c6a4ec848d11b049839142e1b9",
+    "hash": "50657bf9d65f65477f9994e7271babcaa70ba0874719e41be992f51d8fe7fa19"
+  },
+  {
+    "timestamp": 1790691513.140134,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-ab9eb3ae",
+      "prompt": "Write a clean Python script to calculate pressure drop across a 100m pipeline using the Darcy-Weisbach equation and Colebrook-White friction factor."
+    },
+    "previous_hash": "50657bf9d65f65477f9994e7271babcaa70ba0874719e41be992f51d8fe7fa19",
+    "hash": "a99390f26d1e26e48bb9d54e7327f5bcbc05e0f13dbd7f668327191f40dc96a2"
+  },
+  {
+    "timestamp": 1790691513.3876958,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "kb_search",
+      "args": {
+        "query": "Darcy Weisbach Colebrook White pipe friction factor pressure drop head loss ISO 5167 Crane TP 410"
+      },
+      "result": {
+        "results": [
+          {
+            "id": "std-crane-tp410_chunk_0",
+            "title": "Crane TP 410 / ISO 5167 Fluid Flow & Darcy-Weisbach Hydraulics",
+            "snippet": "Crane Technical Paper No. 410 \u2014 Flow of Fluids Through Valves, Fittings and Pipe: Darcy-Weisbach Equation for Frictional Pressure Drop: Delta_P = f * (L / D) * (rho * v^2 / 2) Head Loss: h_f = f * (L / D) * (v^2 / (2 * g)) Where: - f: Darcy-Weisbach friction factor - L: pipe length (meters) - D: int...",
+            "relevance_score": 25.629,
+            "code_reference": "Crane TP 410 / ISO 5167 Fluid Flow & Darcy-Weisbach Hydraulics"
+          },
+          {
+            "id": "std-api-676-screw-pumps_chunk_0",
+            "title": "API Standard 676 3rd Ed. & ISO 14847 Positive Displacement Rotary Twin-Screw Pumps",
+            "snippet": "API Standard 676 (3rd Edition) / ISO 14847 Rotary Positive Displacement Pumps for Petroleum & Gas Service: Twin and Triple Screw Pump Hydraulics, Slip Flow, and Viscous Performance: - Theoretical Capacity: Q_th = V_displacement_per_rev * RPM. - Internal Laminar Slip: High viscosity suppresses intern...",
+            "relevance_score": 7.848,
+            "code_reference": "API Standard 676 3rd Ed. & ISO 14847 Positive Displacement Rotary Twin-Screw Pumps"
+          },
+          {
+            "id": "std-asme-b313_chunk_0",
+            "title": "ASME B31.3 Process Piping Design & Inspection Standards",
+            "snippet": "ASME B31.3 Process Piping Code (2022 Edition) Paragraph 304.1.2: Minimum required straight pipe wall thickness t under internal design pressure P: Formula: t = (P * D) / (2 * (S * E * W + P * Y)) + c Where: - P: internal design gauge pressure (psig or MPa) - D: outside diameter of pipe (inches or mm...",
+            "relevance_score": 5.925,
+            "code_reference": "ASME B31.3 Process Piping Design & Inspection Standards"
+          },
+          {
+            "id": "std-asme-ptc6_chunk_0",
+            "title": "ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Carbon Offset",
+            "snippet": "ASME PTC 6 (Steam Turbines) & IAPWS-IF97 Formulation for Steam Thermodynamic Properties: Cogeneration (Combined Heat and Power - CHP) Plant Evaluation: - Steam expansion across turbine stages: Isentropic enthalpy drop: Delta_H_isen = h_inlet - h_isentropic_exhaust Actual enthalpy drop: Delta_H_actua...",
+            "relevance_score": 4.988,
+            "code_reference": "ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Carbon Offset"
+          },
+          {
+            "id": "std-api-661-air-cooled-heat-exchangers_chunk_0",
+            "title": "API Standard 661 & ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers)",
+            "snippet": "API Standard 661 (7th Edition) / ISO 13706 Petroleum, Petrochemical and Natural Gas Industries \u2014 Air-Cooled Heat Exchangers: Thermal & Mechanical Rating of Fin-Fan Coolers: - Surface Areas: Bare external tube area and extended finned area with fin surface enhancement factor (typical 18x to 23x). - C...",
+            "relevance_score": 4.968,
+            "code_reference": "API Standard 661 & ISO 13706 Air-Cooled Heat Exchangers (Fin-Fan Coolers)"
+          }
+        ]
+      },
+      "execution_time_ms": 2.67
+    },
+    "previous_hash": "a99390f26d1e26e48bb9d54e7327f5bcbc05e0f13dbd7f668327191f40dc96a2",
+    "hash": "8f3e1bf06e7dd03d02e94bd5a4617de9b5b07668949238051a366dbf83dc6342"
+  },
+  {
+    "timestamp": 1790691513.570954,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "calculate_darcy_weisbach_pressure_drop",
+      "args": {
+        "flow_rate_m3_s": 0.05,
+        "pipe_diameter_m": 100.0,
+        "pipe_length_m": 100.0,
+        "equipment_tag": "Plant Asset"
+      },
+      "result": {
+        "status": "success",
+        "equipment_tag": "Plant Asset",
+        "flow_rate_m3_s": 0.05,
+        "pipe_diameter_m": 100.0,
+        "pipe_length_m": 100.0,
+        "fluid_velocity_m_s": 0.0,
+        "reynolds_number": 634.2,
+        "flow_regime": "Laminar Flow",
+        "relative_roughness": 0.0,
+        "darcy_friction_factor": 0.10091,
+        "head_loss_meters": 0.0,
+        "pressure_drop_kpa": 0.0,
+        "pressure_drop_bar": 0.0,
+        "pressure_drop_psi": 0.0,
+        "governing_equation": "Colebrook-White & Darcy-Weisbach: h_f = f * (L/D) * (v^2 / 2g)",
+        "governing_standard": "Crane Technical Paper 410 / ISO 5167",
+        "generated_python_script": "\"\"\"\nDarcy-Weisbach Fluid Friction & Hydraulic Solver (Deterministic Air-Gapped)\nFluid: Density=998.2 kg/m3, Viscosity=0.001002 Pa.s\nPipe: ID=100.0m, Length=100.0m, Roughness=4.5e-05m\n\"\"\"\nimport math\n\nflow_rate = 0.05       # m3/s\ndiameter = 100.0        # m\nlength = 100.0          # m\nroughness = 4.5e-05     # m\nrho = 998.2            # kg/m3\nmu = 0.001002             # Pa.s\ng = 9.80665              # m/s2\n\narea = (math.pi / 4.0) * (diameter ** 2)\nv = flow_rate / area\nRe = (rho * v * diameter) / mu\n\nrel_e = roughness / diameter\nf = 0.02\nfor _ in range(20):\n    val = (rel_e / 3.7) + (2.51 / (Re * math.sqrt(f)))\n    f = 1.0 / (-2.0 * math.log10(val)) ** 2\n\nhead_loss = f * (length / diameter) * (v ** 2 / (2 * g))\ndelta_p_kpa = (rho * g * head_loss) / 1000.0\n\nprint(f\"Fluid Velocity: {v:.3f} m/s\")\nprint(f\"Reynolds Number: {Re:.2e} (Laminar Flow)\")\nprint(f\"Colebrook Friction Factor: {f:.5f}\")\nprint(f\"Darcy-Weisbach Head Loss: {head_loss:.3f} m\")\nprint(f\"Calculated Pressure Drop: {delta_p_kpa:.2f} kPa\")\n",
+        "verified": true
+      },
+      "execution_time_ms": 128.96
+    },
+    "previous_hash": "8f3e1bf06e7dd03d02e94bd5a4617de9b5b07668949238051a366dbf83dc6342",
+    "hash": "bf18f9a8933cdfd0e2ed1d1bc817c68a39bc9847e021eca86130bc02c107b183"
+  },
+  {
+    "timestamp": 1790691513.6303606,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-ab9eb3ae",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 2
+    },
+    "previous_hash": "bf18f9a8933cdfd0e2ed1d1bc817c68a39bc9847e021eca86130bc02c107b183",
+    "hash": "6e36a9572b54754e872db07d8d99ef4f95bfd5a6f298c383760170e4c5473774"
+  },
+  {
+    "timestamp": 1790691513.667193,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-ab9eb3ae",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 2
+    },
+    "previous_hash": "6e36a9572b54754e872db07d8d99ef4f95bfd5a6f298c383760170e4c5473774",
+    "hash": "3051600a4cb3b464c2640f92a4343c3993f5c751a9c67adc00ff0a9718da5219"
+  },
+  {
+    "timestamp": 1790691513.9968731,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-ab9eb3ae\\artifacts\\INDRA_FLUID_DARCY_WEISBACH_EQUIP_01.docx"
+    },
+    "previous_hash": "3051600a4cb3b464c2640f92a4343c3993f5c751a9c67adc00ff0a9718da5219",
+    "file_checksum": "d74dd2c6acf397c11f512f387c1b266cb4fba99a46a7eda091a3203b71814809",
+    "hash": "d5171fbd84e0f29f47f43e836a34f1195adbaaa650c696de1d9730276cc36d0a"
+  },
+  {
+    "timestamp": 1790691514.1248314,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-ab9eb3ae\\artifacts\\INDRA_FLUID_DARCY_WEISBACH_EQUIP01_DATA.xlsx"
+    },
+    "previous_hash": "d5171fbd84e0f29f47f43e836a34f1195adbaaa650c696de1d9730276cc36d0a",
+    "file_checksum": "95da7e8b4794796b2c7a94f8f51c9d4a7106f2f24671ea050fcf3bda5440a6b4",
+    "hash": "b7a784d016ecb4c3a62a306c5e003ba67a40433f88744380d0a105f860baa9be"
+  },
+  {
+    "timestamp": 1790691514.5178328,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-ab9eb3ae\\artifacts\\EQUIP-01_Board_Review.pptx"
+    },
+    "previous_hash": "b7a784d016ecb4c3a62a306c5e003ba67a40433f88744380d0a105f860baa9be",
+    "file_checksum": "6bf782e759439a666fe7e178adda6d02772719a2cb63c5ac87f60f6afea62fd6",
+    "hash": "ced35132cb0cd7e9d5c97cbcce58e52943b8653309e9da0ef5e9a2d00c66f74b"
+  },
+  {
+    "timestamp": 1790691556.1167004,
+    "event_type": "sandbox_executed",
+    "payload": {
+      "exit_code": 0,
+      "elapsed_ms": 92.31,
+      "stdout_bytes": 171
+    },
+    "previous_hash": "ced35132cb0cd7e9d5c97cbcce58e52943b8653309e9da0ef5e9a2d00c66f74b",
+    "hash": "7129f260b0ee78b3b20a68a29245349d3384ffe7dc74cc7b530952e8140ee770"
   }
 ]
