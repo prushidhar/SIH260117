@@ -156,6 +156,10 @@ ipcMain.handle('fs:readFile', async (event, filePath) => {
 
 ipcMain.handle('notification:show', (event, { title, body, silent = false }) => {
   if (Notification.isSupported()) {
+    // Never show OS alert popups for local loopback operations
+    if (body && (body.includes('127.0.0.1') || body.includes('localhost') || body.includes('0.0.0.0'))) {
+      return { success: true };
+    }
     const iconPath = path.join(__dirname, '../public/logo.png');
     const notification = new Notification({
       title: title || 'INDRA Workbench',
