@@ -133,16 +133,16 @@ export default function ProximityProbeCard({
 
     if (!statusX.isOk || !statusY.isOk) {
       verdict = 'SYSTEM_FAULT_DEGRADED';
-      verdictLabel = 'PROBE FAULT DETECTED — VOTING DEGRADED (API 670 BYPASS)';
+      verdictLabel = 'PROBE FAULT DETECTED - VOTING DEGRADED (API 670 BYPASS)';
       verdictColor = 'text-rose-400 bg-rose-950/40 border-rose-500/40';
     } else if (chanXStatus === 'TRIP' && chanYStatus === 'TRIP') {
       verdict = 'TRIP_COMMAND_ISSUED_2OO2';
-      verdictLabel = 'TRIP_COMMAND_ISSUED_2OO2 — ESD SOLENOID DE-ENERGIZED';
+      verdictLabel = 'TRIP_COMMAND_ISSUED_2OO2 - ESD SOLENOID DE-ENERGIZED';
       verdictColor = 'text-rose-400 bg-rose-950/50 border-rose-500 animate-pulse';
       isTripped = true;
     } else if (chanXStatus === 'TRIP' || chanYStatus === 'TRIP') {
       verdict = 'ALARM_WARNING_1OO2';
-      verdictLabel = 'TRIP INHIBITED (1oo2 CONFIRMATION PENDING) — MACHINE RUNNING';
+      verdictLabel = 'TRIP INHIBITED (1oo2 CONFIRMATION PENDING) - MACHINE RUNNING';
       verdictColor = 'text-amber-400 bg-amber-950/40 border-amber-500/40';
       isAlarm = true;
     } else if (chanXStatus === 'ALARM' || chanYStatus === 'ALARM') {
@@ -152,7 +152,7 @@ export default function ProximityProbeCard({
       isAlarm = true;
     } else {
       verdict = 'NORMAL_ROTATING_STABILITY';
-      verdictLabel = 'NORMAL_ROTATING_STABILITY — ALL PARAMETERS WITHIN SPEC';
+      verdictLabel = 'NORMAL_ROTATING_STABILITY - ALL PARAMETERS WITHIN SPEC';
       verdictColor = 'text-emerald-400 bg-emerald-950/20 border-emerald-500/30';
     }
 
@@ -315,12 +315,12 @@ export default function ProximityProbeCard({
     const shaSeal = '7c39b1a5e2f084d9c0172e81ba6d8491ae02';
     const deliverable = {
       id: `api670-${Date.now()}`,
-      name: `API 670 Machinery Protection Dossier — ${assetTag}`,
+      name: `API 670 Machinery Protection Dossier - ${assetTag}`,
       filename: `API670_Machinery_Protection_${assetTag}.pdf`,
       type: 'pdf',
       size: '2.3 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `API 670 Proximity Probe & Orbit Analysis — ${assetTag}`,
+      title: `API 670 Proximity Probe & Orbit Analysis - ${assetTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Radial shaft vibration & 2oo2 voting audit for ${assetTag} (${bearingLocation}). Probe X: ${vibX} µm pk-pk (${calculations.chanXStatus}, DC ${dcX}V), Probe Y: ${vibY} µm pk-pk (${calculations.chanYStatus}, DC ${dcY}V). 1X Orbit Major: ${calculations.majorAxisPkPk} µm, Eccentricity: ${calculations.orbitEccentricity}. 2oo2 Decision: ${calculations.verdictLabel}.`,
       hash: shaSeal,
@@ -358,7 +358,7 @@ export default function ProximityProbeCard({
               </span>
               <button
                 onClick={handleLocate}
-                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                 title="Locate K-101 Journal Bearing in P&ID"
               >
                 <Crosshair className="w-3 h-3 group-hover:rotate-45 transition-transform" />

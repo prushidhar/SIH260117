@@ -329,12 +329,12 @@ export default function PipingFlexibilityCard({
     // Save deliverable in Zustand store
     const deliverable = {
       id: `flexibility-${Date.now()}`,
-      name: `ASME B31.3 Flexibility Assessment — ${pipeLineTag}`,
+      name: `ASME B31.3 Flexibility Assessment - ${pipeLineTag}`,
       filename: `Flexibility_Assessment_${pipeLineTag}.${fileExt}`,
       type: fileExt,
       size: `${(fileContent.length / 1024).toFixed(1)} KB`,
       generatedAt: new Date().toLocaleTimeString(),
-      title: `Piping Flexibility & Expansion Dossier — ${pipeLineTag}`,
+      title: `Piping Flexibility & Expansion Dossier - ${pipeLineTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Thermal expansion study for ${pipeLineTag} (${serviceName}) at ${tempC}°C. ΔL: ${calculations.deltaLMm} mm, SE: ${calculations.stressSE_Mpa} MPa (Allowable SA: ${calculations.allowableSA_Mpa} MPa, ${calculations.stressRatioPct}% utilized). Anchor reaction thrust: ${calculations.thrustForceKn} kN.`,
       hash: shaSeal,
@@ -373,7 +373,7 @@ export default function PipingFlexibilityCard({
               </span>
               <button
                 onClick={handleLocate}
-                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                 title="Locate pipe line in 3D Topology"
               >
                 <Crosshair className="w-3 h-3 group-hover:rotate-45 transition-transform" />
@@ -381,7 +381,7 @@ export default function PipingFlexibilityCard({
               </button>
             </div>
             <h2 className="text-sm font-bold text-zinc-100 mt-1 tracking-tight">
-              {title} — <span className="text-orange-400 font-mono text-xs">{serviceName}</span>
+              {title} - <span className="text-orange-400 font-mono text-xs">{serviceName}</span>
             </h2>
           </div>
         </div>
@@ -440,8 +440,8 @@ export default function PipingFlexibilityCard({
           )}
           <span className="font-bold tracking-wide">
             {calculations.isCompliant
-              ? `ASME B31.3 COMPLIANT (SE / SA = ${calculations.stressRatioPct}%) — STRESS MARGIN +${calculations.stressMarginMpa} MPa`
-              : `CODE VIOLATION: SE (${calculations.stressSE_Mpa} MPa) EXCEEDS ALLOWABLE SA (${calculations.allowableSA_Mpa} MPa) — INCREASE LOOP HEIGHT`}
+              ? `ASME B31.3 COMPLIANT (SE / SA = ${calculations.stressRatioPct}%) - STRESS MARGIN +${calculations.stressMarginMpa} MPa`
+              : `CODE VIOLATION: SE (${calculations.stressSE_Mpa} MPa) EXCEEDS ALLOWABLE SA (${calculations.allowableSA_Mpa} MPa) - INCREASE LOOP HEIGHT`}
           </span>
         </div>
         <div className="flex items-center gap-3 text-[11px]">

@@ -513,24 +513,24 @@ function drawBoundingBoxes(ctx: CanvasRenderingContext2D, options: RenderOptions
     ctx.strokeRect(bx, by, bw, bh);
     ctx.setLineDash([]); // clear dash
 
-    // 3. High-tech Corner Reticle Brackets (┌ ┐ └ ┘)
+    // 3. Corner Reticle Brackets
     const cornerLen = 10;
     ctx.lineWidth = 3;
     ctx.shadowBlur = 10;
     ctx.beginPath();
-    // Top-Left ┌
+    // Top-Left
     ctx.moveTo(bx, by + cornerLen);
     ctx.lineTo(bx, by);
     ctx.lineTo(bx + cornerLen, by);
-    // Top-Right ┐
+    // Top-Right
     ctx.moveTo(bx + bw - cornerLen, by);
     ctx.lineTo(bx + bw, by);
     ctx.lineTo(bx + bw, by + cornerLen);
-    // Bottom-Left └
+    // Bottom-Left
     ctx.moveTo(bx, by + bh - cornerLen);
     ctx.lineTo(bx, by + bh);
     ctx.lineTo(bx + cornerLen, by + bh);
-    // Bottom-Right ┘
+    // Bottom-Right
     ctx.moveTo(bx + bw - cornerLen, by + bh);
     ctx.lineTo(bx + bw, by + bh);
     ctx.lineTo(bx + bw, by + bh - cornerLen);

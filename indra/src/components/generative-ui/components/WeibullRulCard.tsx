@@ -382,7 +382,7 @@ export default function WeibullRulCard({
               <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
                 <span>0 Days</span>
                 <span className="font-bold text-slate-700 dark:text-zinc-300">
-                  ▲ 90-Day Turnaround Window
+                  90-Day Turnaround Window
                 </span>
                 <span>180 Days (Target)</span>
               </div>

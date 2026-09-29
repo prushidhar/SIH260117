@@ -1,15 +1,15 @@
 /**
- * Whisper Web Worker — Off-main-thread speech recognition via Transformers.js
+ * Whisper Web Worker - Off-main-thread speech recognition via Transformers.js
  * 
  * Runs the Xenova/whisper-tiny.en model (~39 MB) entirely locally.
  * Accepts Float32Array audio chunks (16 kHz mono) and returns transcription text.
  * Supports WebGPU acceleration with WASM fallback.
  */
 
-// @ts-nocheck — Web Workers don't have standard TS module resolution for dynamic imports
+// @ts-nocheck - Web Workers don't have standard TS module resolution for dynamic imports
 import { pipeline, env } from '@huggingface/transformers';
 
-// Disable remote model fetching after initial cache — sovereign air-gap compliance
+// Disable remote model fetching after initial cache - sovereign air-gap compliance
 env.allowLocalModels = true;
 env.useBrowserCache = true;
 

@@ -1,5 +1,5 @@
 /**
- * VoiceCommandButton — Header mic button for voice-to-UI commands
+ * VoiceCommandButton - Header mic button for voice-to-UI commands
  * 
  * States: Idle → Loading (model download) → Listening (pulsing mic) → Processing (inference)
  */
@@ -68,7 +68,7 @@ export default function VoiceCommandButton() {
     if (error) return `Voice Error: ${error}`;
     if (isProcessing) return 'Processing speech with Whisper...';
     if (isModelLoading) return `Downloading Whisper model (${modelLoadProgress}%)...`;
-    if (isListening) return 'Listening for voice commands — click to stop';
+    if (isListening) return 'Listening for voice commands - click to stop';
     if (!isModelLoaded) return 'Click to load Whisper model (~39 MB one-time download)';
     return 'Click to start voice commands';
   };

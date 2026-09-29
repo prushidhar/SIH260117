@@ -342,7 +342,7 @@ export default function FatigueMinerCard({
 
             <div className="space-y-1 text-[11px] font-mono">
               <div className="font-bold flex items-center gap-2">
-                <span>{isPautMandatory ? 'MANDATORY PAUT REQUIRED PRIOR TO NEXT STARTUP' : 'PAUT INSPECTION DEFERRED — ASSET WITHIN SAFE FATIGUE REGIME'}</span>
+                <span>{isPautMandatory ? 'MANDATORY PAUT REQUIRED PRIOR TO NEXT STARTUP' : 'PAUT INSPECTION DEFERRED - ASSET WITHIN SAFE FATIGUE REGIME'}</span>
                 <span className="text-[9px] px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/10 font-bold">
                   THRESHOLD: D = 0.80
                 </span>

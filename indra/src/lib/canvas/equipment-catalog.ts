@@ -61,7 +61,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A0: {
     id: 'A0',
     name: 'ANSI / ISO A0',
-    label: 'A0 (1189 × 841 mm) — Major Refinery Master Sheet',
+    label: 'A0 (1189 × 841 mm) - Major Refinery Master Sheet',
     width: 2378,
     height: 1682,
     mmWidth: 1189,
@@ -72,7 +72,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A1: {
     id: 'A1',
     name: 'ANSI / ISO A1',
-    label: 'A1 (841 × 594 mm) — Standard Process Unit P&ID',
+    label: 'A1 (841 × 594 mm) - Standard Process Unit P&ID',
     width: 1682,
     height: 1188,
     mmWidth: 841,
@@ -83,7 +83,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A2: {
     id: 'A2',
     name: 'ANSI / ISO A2',
-    label: 'A2 (594 × 420 mm) — Package Unit Schematic',
+    label: 'A2 (594 × 420 mm) - Package Unit Schematic',
     width: 1188,
     height: 840,
     mmWidth: 594,
@@ -94,7 +94,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A3: {
     id: 'A3',
     name: 'ANSI / ISO A3',
-    label: 'A3 (420 × 297 mm) — Sub-System Skid Flowsheet',
+    label: 'A3 (420 × 297 mm) - Sub-System Skid Flowsheet',
     width: 840,
     height: 594,
     mmWidth: 420,
@@ -105,7 +105,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A4: {
     id: 'A4',
     name: 'ANSI / ISO A4',
-    label: 'A4 (297 × 210 mm) — Single Loop Instrument Diagram',
+    label: 'A4 (297 × 210 mm) - Single Loop Instrument Diagram',
     width: 594,
     height: 420,
     mmWidth: 297,

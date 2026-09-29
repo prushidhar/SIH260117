@@ -16,7 +16,7 @@ export default function DocumentHeatmapBar({
 
   // Exact prompt requirement:
   // Green > 0.85
-  // Amber 0.65–0.85
+  // Amber 0.65-0.85
   // Slate < 0.65
   const isGreen = clampedScore > 0.85;
   const isAmber = clampedScore >= 0.65 && clampedScore <= 0.85;

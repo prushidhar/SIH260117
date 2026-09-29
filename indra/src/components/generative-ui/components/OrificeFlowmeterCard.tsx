@@ -285,7 +285,7 @@ export default function OrificeFlowmeterCard({
             <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 dark:text-zinc-400">
               <span className="flex items-center gap-1.5 text-slate-700 dark:text-zinc-300 font-semibold">
                 <Sliders className="w-3 h-3 text-teal-500" />
-                Differential Transmitter Range (50.0 – 500.0 mbar):
+                Differential Transmitter Range (50.0 - 500.0 mbar):
               </span>
               <span className="font-bold text-teal-600 dark:text-teal-400 font-mono">{dpMbar.toFixed(1)} mbar</span>
             </div>

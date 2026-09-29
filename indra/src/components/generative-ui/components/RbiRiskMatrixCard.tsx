@@ -28,17 +28,17 @@ interface MatrixCellDef {
 
 const POF_LABELS: Record<number, string> = {
   5: '5: >10⁻² /yr',
-  4: '4: 10⁻³ – 10⁻²',
-  3: '3: 10⁻⁴ – 10⁻³',
-  2: '2: 10⁻⁵ – 10⁻⁴',
+  4: '4: 10⁻³ - 10⁻²',
+  3: '3: 10⁻⁴ - 10⁻³',
+  2: '2: 10⁻⁵ - 10⁻⁴',
   1: '1: ≤10⁻⁵ /yr',
 };
 
 const COF_LABELS: Record<string, string> = {
   A: 'A: <$10k',
-  B: 'B: $10k–$100k',
-  C: 'C: $100k–$1M',
-  D: 'D: $1M–$10M',
+  B: 'B: $10k-$100k',
+  C: 'C: $100k-$1M',
+  D: 'D: $1M-$10M',
   E: 'E: >$10M',
 };
 
@@ -210,7 +210,7 @@ export default function RbiRiskMatrixCard({
                 Operating Coordinate:
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-bold border bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30">
-                Cell {selectedPof}{selectedCof} — {activeRiskLevel.toUpperCase()} RISK
+                Cell {selectedPof}{selectedCof} - {activeRiskLevel.toUpperCase()} RISK
               </span>
             </div>
           </div>

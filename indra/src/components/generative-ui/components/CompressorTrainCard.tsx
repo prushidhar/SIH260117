@@ -192,12 +192,12 @@ export default function CompressorTrainCard({
     const shaSeal = 'c9a41b8e2f07d354b806fe1a43d92809e5b2';
     const deliverable = {
       id: `api617-train-${Date.now()}`,
-      name: `API 617 Compressor Train Study — ${assetTag}`,
+      name: `API 617 Compressor Train Study - ${assetTag}`,
       filename: `API_617_Compressor_Train_${assetTag}.pdf`,
       type: 'pdf',
       size: '2.6 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `API 617 Multi-Stage Compressor Train Study — ${assetTag}`,
+      title: `API 617 Multi-Stage Compressor Train Study - ${assetTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Overall Pressure Ratio: ${calculations.overallRatio}:1, Shaft Power: ${calculations.totalShaftPowerMw} MW, Total Head: ${calculations.totalPolytropicHeadKjKg} kJ/kg. Max Discharge Temp: ${calculations.maxDischargeTemp} °C (Limit: ${maxAllowableTempC} °C). Thermal Compliance: ${calculations.allStagesPassThermal ? 'PASS' : 'FAIL'}.`,
       hash: shaSeal,

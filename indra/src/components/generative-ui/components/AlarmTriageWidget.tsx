@@ -207,7 +207,7 @@ export default function AlarmTriageWidget({
                 FIRST-OUT INITIATOR IDENTIFIED (ROOT CAUSE)
               </div>
               <div className="text-sm font-bold font-mono text-slate-900 dark:text-zinc-100">
-                Tag {firstOutTag} — {firstOutDescription}
+                Tag {firstOutTag} - {firstOutDescription}
               </div>
               <div className="text-[10.5px] font-mono text-slate-600 dark:text-zinc-400 pt-0.5">
                 Timestamp: 14:22:03.940 | Trip Cause: Main lube pump mechanical seal rupture | Interlock Loop: ESD-01

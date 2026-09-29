@@ -1,5 +1,5 @@
 /**
- * useCrossWindowSync — React Hook connecting Zustand store to Multi-Window Bus
+ * useCrossWindowSync - React Hook connecting Zustand store to Multi-Window Bus
  * 
  * Automatically synchronizes equipment selections, detected OCR tags,
  * egress security alerts, and theme state across all open windows.

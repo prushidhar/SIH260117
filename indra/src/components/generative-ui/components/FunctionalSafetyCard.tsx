@@ -205,12 +205,12 @@ export default function FunctionalSafetyCard({
     const shaSeal = 'd38f2910c4a7e189b5062a4980f7d142ce09';
     const deliverable = {
       id: `iso13849-${Date.now()}`,
-      name: `ISO 13849-1 Functional Safety Certificate — ${assetTag}`,
+      name: `ISO 13849-1 Functional Safety Certificate - ${assetTag}`,
       filename: `ISO_13849_PL_Assessment_${assetTag}.pdf`,
       type: 'pdf',
       size: '2.1 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `ISO 13849-1 Machinery Safety Assessment — ${assetTag}`,
+      title: `ISO 13849-1 Machinery Safety Assessment - ${assetTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Category ${archCat} architecture verification. Symmetrized MTTFd: ${calculations.symmetrizedMttfd} yrs (${calculations.mttfdLevel}), DCavg: ${dcAvg}% (${calculations.dcLevel}), CCF Score: ${ccfScore}/100. PFHd: ${calculations.pfhdFormatted}. Achieved PL: ${calculations.achievedPl.toUpperCase()} (${calculations.silEquivalent}).`,
       hash: shaSeal,

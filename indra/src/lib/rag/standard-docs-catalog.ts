@@ -48,7 +48,7 @@ export const STANDARD_ENGINEERING_DOCS: StandardDocument[] = [
     indexedAt: '2026-09-24T08:30:00.000Z',
     contentSnippet: 'Chapter II Design, Part 2 Pressure Design of Piping Components. §304.1.2 Straight Pipe Under Internal Pressure. Minimum required wall thickness calculation formula.',
     fullMarkdown: `# ASME B31.3-2022 Process Piping Code
-## Chapter II — Design of Piping Components
+## Chapter II - Design of Piping Components
 ### § 304.1.2 Straight Pipe Under Internal Pressure
 
 The required minimum thickness $t_m$ of straight sections of pipe under internal design pressure $P$ shall be determined by either of the following equations:
@@ -122,7 +122,7 @@ The allowance $c$ shall include the sum of the maximum depth of thread or groove
     indexedAt: '2026-09-25T11:15:00.000Z',
     contentSnippet: 'API 570 Section 7: Thickness Measurement, Remaining Life Calculation, and Maximum Allowable Working Pressure (MAWP) for operating process piping systems.',
     fullMarkdown: `# API 570 Piping Inspection Code (4th Edition)
-## Section 7 — Inspection Data Evaluation & Remaining Life
+## Section 7 - Inspection Data Evaluation & Remaining Life
 ### § 7.1.1 Remaining Life Calculation
 
 The remaining life of an operating piping circuit shall be calculated using the formula:
@@ -186,7 +186,7 @@ When significant process modifications or operational excursions occur, the Shor
     indexedAt: '2026-09-26T14:20:00.000Z',
     contentSnippet: 'ISO 10816-3 criteria for industrial pumps, compressors, and electric drivers with nominal power above 15 kW and nominal operating speed between 120 RPM and 15,000 RPM.',
     fullMarkdown: `# ISO 10816-3: Mechanical Vibration Evaluation
-## Section 4 — Measurement Quantities & Vibration Severity Zones
+## Section 4 - Measurement Quantities & Vibration Severity Zones
 
 Vibration severity shall be evaluated using broadband root-mean-square (RMS) velocity in the frequency range 10 Hz to 1,000 Hz.
 
@@ -233,7 +233,7 @@ $$v_{\\text{RMS}} = \\sqrt{\\frac{1}{T} \\int_0^T [v(t)]^2 \\, dt}$$
     indexedAt: '2026-09-26T16:45:00.000Z',
     contentSnippet: 'API 617 lateral dynamics, critical speeds, minimum separation margins, aerodynamic stability analysis, and anti-surge protection criteria.',
     fullMarkdown: `# API 617: Centrifugal Compressors (8th Edition)
-## Section 2.6 — Lateral Critical Speeds & Campbell Diagrams
+## Section 2.6 - Lateral Critical Speeds & Campbell Diagrams
 
 Compressors shall be designed to avoid lateral critical resonance during nominal operating speed ranges. The minimum separation margin ($SM$) between operating speed range and critical speeds shall satisfy:
 
@@ -279,7 +279,7 @@ The automated anti-surge recycle control system shall prevent operation within 1
     indexedAt: '2026-09-27T09:10:00.000Z',
     contentSnippet: 'ISO 5167-2 mass and volumetric flow calculation through square-edged concentric orifice plates installed in closed round conduits.',
     fullMarkdown: `# ISO 5167-2: Orifice Plate Flow Measurement
-## Section 5 — Principles of Method & Flow Rate Equations
+## Section 5 - Principles of Method & Flow Rate Equations
 
 The mass flow rate $q_m$ through an orifice plate metering run is computed using the Stolz / Reader-Harris formula:
 
@@ -331,7 +331,7 @@ Where:
     indexedAt: '2026-09-27T13:40:00.000Z',
     contentSnippet: 'API 521 emergency depressuring criteria, 15-minute blowdown targets (50% operating pressure or 7 bar a), and Joule-Thomson MDMT brittle fracture mitigation.',
     fullMarkdown: `# API 521: Pressure-Relieving & Depressuring Systems
-## Section 5.4 — Emergency Depressuring Criteria
+## Section 5.4 - Emergency Depressuring Criteria
 
 Emergency depressuring systems (BDVs) are designed to reduce pressure in equipment during a fire or process runaway to prevent catastrophic boiling liquid expanding vapor explosions (BLEVE) or stress rupture.
 

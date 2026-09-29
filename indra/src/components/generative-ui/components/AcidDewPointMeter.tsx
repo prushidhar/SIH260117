@@ -195,12 +195,12 @@ export default function AcidDewPointMeter({
     const shaSeal = 'b7f91c3e4a2d8091fa05c872391b48e6a20d';
     const deliverable = {
       id: `ptc43-${Date.now()}`,
-      name: `ASME PTC 4.3 Flue Gas Acid Dew Point Study — ${assetTag}`,
+      name: `ASME PTC 4.3 Flue Gas Acid Dew Point Study - ${assetTag}`,
       filename: `ASME_PTC43_AcidDewPoint_${assetTag.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
       type: 'pdf',
       size: '1.9 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Study — ${assetTag}`,
+      title: `ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Study - ${assetTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Verhoff-Banchero acid dew point: ${calculations.tAdpC} °C, Metal Temp: ${metalTemp} °C, Margin ΔT: ${calculations.deltaT} °C. Corrosion rate: ${calculations.corrosionRateMmYear} mm/year. Status: ${calculations.status}.`,
       hash: shaSeal,
@@ -392,7 +392,7 @@ export default function AcidDewPointMeter({
               </h3>
             </div>
             <div className="text-[11px] font-mono text-zinc-400">
-              Range: 80 °C – 220 °C
+              Range: 80 °C - 220 °C
             </div>
           </div>
 

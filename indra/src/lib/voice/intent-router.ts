@@ -1,5 +1,5 @@
 /**
- * Intent Router — Maps voice transcriptions to concrete UI actions
+ * Intent Router - Maps voice transcriptions to concrete UI actions
  * 
  * Deterministic, regex-based pattern matching. No LLM needed for a fixed
  * command vocabulary in an industrial control UI.
@@ -23,7 +23,7 @@ interface IntentDefinition {
   patterns: RegExp[];
   /** Keywords that boost confidence when found */
   keywords: string[];
-  /** Base confidence score for a pattern match (0–1) */
+  /** Base confidence score for a pattern match (0-1) */
   baseConfidence: number;
   createAction: (router: AppRouterInstance, store: StoreActions, transcript: string) => () => void;
 }

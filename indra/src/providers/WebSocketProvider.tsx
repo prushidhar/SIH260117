@@ -543,7 +543,7 @@ export default function WebSocketProvider({ children }: { children: React.ReactN
             m.id === agentMessageId
               ? {
                   ...m,
-                  content: `⚠️ **Connection Error**: Unable to reach backend task scheduler at \`${API_BASE}\`.\n\n*Error: ${err.message || 'Network unreachable'}*`,
+                  content: `**Connection Error**: Unable to reach backend task scheduler at \`${API_BASE}\`.\n\n*Error: ${err.message || 'Network unreachable'}*`,
                   isError: true,
                   error: err.message,
                 }

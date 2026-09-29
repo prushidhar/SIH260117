@@ -26,7 +26,7 @@ export default function SensorDriftFddCard({
   assetTag = 'CDU-104',
   sensorTag = 'TT-101',
   redundantTag = 'TT-101B',
-  title = 'ISO 13374 / VDI 2888 — CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS',
+  title = 'ISO 13374 / VDI 2888 - CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS',
   spanMin = 0,
   spanMax = 300,
   unit = '°C',
@@ -364,7 +364,7 @@ export default function SensorDriftFddCard({
           {healthStatus === 'EXCEEDED' && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-950/90 border border-rose-600 text-rose-200 font-extrabold text-xs shadow-md animate-pulse">
               <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
-              <span>EXCEEDS TOLERANCE — RECALIBRATION REQUIRED</span>
+              <span>EXCEEDS TOLERANCE - RECALIBRATION REQUIRED</span>
             </div>
           )}
 

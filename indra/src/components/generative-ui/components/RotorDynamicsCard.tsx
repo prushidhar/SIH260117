@@ -173,7 +173,7 @@ export default function RotorDynamicsCard({
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-indigo-500" />
               <span className="font-semibold text-slate-900 dark:text-zinc-100 uppercase tracking-wider text-[11px]">
-                Lateral Campbell Interference Diagram (0 – 8,000 RPM)
+                Lateral Campbell Interference Diagram (0 - 8,000 RPM)
               </span>
             </div>
 

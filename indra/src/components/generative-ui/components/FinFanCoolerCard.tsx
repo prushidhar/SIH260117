@@ -135,7 +135,7 @@ export default function FinFanCoolerCard({
     } else if (coolingMarginPct >= 0.0 && !isApproachPinched) {
       complianceStatus = 'WARNING_COOLING_MARGIN_DEFICIT';
       complianceBadgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-      complianceLabel = 'WARNING: MARGIN DEFICIT — FANS AT FULL SPEED';
+      complianceLabel = 'WARNING: MARGIN DEFICIT - FANS AT FULL SPEED';
     } else {
       complianceStatus = 'DERATED_SUMMER_AMBIENT_EXCEEDED';
       complianceBadgeColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
@@ -227,12 +227,12 @@ export default function FinFanCoolerCard({
     const shaSeal = 'c83017a52f9b4de6b08e23910cfa6102aa78';
     const deliverable = {
       id: `api661-${Date.now()}`,
-      name: `API 661 Fin-Fan Thermal Rating Sheet — ${exchangerTag}`,
+      name: `API 661 Fin-Fan Thermal Rating Sheet - ${exchangerTag}`,
       filename: `API661_AirCooler_DataSheet_${exchangerTag}.pdf`,
       type: 'pdf',
       size: '2.6 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `API Standard 661 Air Cooler Data Sheet — ${exchangerTag}`,
+      title: `API Standard 661 Air Cooler Data Sheet - ${exchangerTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Thermal and aerodynamic rating for ${exchangerTag} (${serviceName}) at ${ambientTemp}°C ambient. Duty: ${calculations.dutyMw} MWth, Airflow: ${calculations.totalAirflowM3S} m³/s, Electric Power: ${calculations.totalElecPowerKw} kWe (${calculations.powerPerFanKw} kW/fan). LMTD: ${calculations.effectiveLmtdC}°C, Margin: ${calculations.coolingMarginPct}%.`,
       hash: shaSeal,
@@ -270,7 +270,7 @@ export default function FinFanCoolerCard({
               </span>
               <button
                 onClick={handleLocate}
-                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                 title="Locate AFC-101 in P&ID"
               >
                 <Crosshair className="w-3 h-3 group-hover:rotate-45 transition-transform" />

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export const metadata = {
-  title: 'Terms & Conditions — INDRA Sovereign AI Workbench',
+  title: 'Terms & Conditions - INDRA Sovereign AI Workbench',
   description: 'Statutory engineering terms of use, deterministic calculation disclaimers, and human-in-the-loop sign-off governance.',
 };
 
