@@ -37,7 +37,6 @@ import { useVoiceCommandContext } from '@/providers/VoiceCommandProvider';
 import { useCrossWindowSync } from '@/hooks/useCrossWindowSync';
 import { multiWindowSync } from '@/lib/sync/multi-window-sync';
 import { useAirGapTelemetry } from '@/hooks/useAirGapTelemetry';
-import UniversalAssetSearchModal from '@/components/common/UniversalAssetSearchModal';
 import { useControlRoomShortcuts } from '@/hooks/useControlRoomShortcuts';
 import { sovereignAudio } from '@/lib/audio/sound-effects';
 
@@ -80,8 +79,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useCrossWindowSync();
   const prevApprovalsCount = useRef(pendingApprovals.length);
 
-  // Control Room Keyboard Shortcuts & Universal Asset Search State
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Control Room Acoustic State & Shortcuts
   const [isAudioMuted, setIsAudioMuted] = useState(false);
 
   useEffect(() => {
@@ -93,11 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setIsAudioMuted(nextMuted);
   };
 
-  useControlRoomShortcuts({
-    onOpenSearch: () => setIsSearchOpen(true),
-    isSearchOpen,
-    onCloseSearch: () => setIsSearchOpen(false),
-  });
+  useControlRoomShortcuts();
 
   // DCS Air-Gap Telemetry, Synchronized 1Hz UTC Clock & Audit Recording Engine
   const {
@@ -273,22 +267,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             )}
           </div>
-
-          {/* Universal Asset Search Trigger [Ctrl + K] */}
-          <button
-            onClick={() => {
-              sovereignAudio.playClick(0.08);
-              setIsSearchOpen(true);
-            }}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer font-mono text-xs"
-            title="Open Universal Asset & Standards Search (Ctrl+K)"
-          >
-            <Search className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
-            <span className="hidden lg:inline text-[11px]">Search Assets</span>
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded font-semibold border border-slate-300 dark:border-zinc-700">
-              Ctrl+K
-            </kbd>
-          </button>
 
           {/* Synthesized Sovereign Audio Ergonomics (Mute / Unmute) */}
           <button
@@ -594,9 +572,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* 7. Universal Asset Search Modal (Ctrl + K) */}
-      <UniversalAssetSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Global Connection Alerts & Status Toasts */}
       <ToastContainer />
