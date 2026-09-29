@@ -37,7 +37,7 @@ export default function BulkOperationsBar({
       <button
         onClick={onBatchReindex}
         disabled={isReindexing}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
         title="Re-compute 384D vector embeddings for selected documents"
       >
         <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin' : ''}`} />

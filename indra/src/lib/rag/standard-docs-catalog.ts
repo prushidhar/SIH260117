@@ -74,7 +74,7 @@ $$t = \\frac{P \\cdot (d + 2c)}{2 \\cdot [S \\cdot E \\cdot W - P \\cdot (1 - Y)
 - **$c$**: Mechanical allowances (thread depth or groove depth) plus corrosion and erosion allowance
 
 ### Corrosion & Mechanical Allowance Criteria (§ 304.1.1):
-The allowance $c$ shall include the sum of the maximum depth of thread or groove, plus an allowance for erosion and corrosion expected during the intended design service life (standard refinery allowance: 3.0 mm for carbon steel hydrocarbon lines).`,
+The allowance $c$ shall include the sum of the maximum depth of thread or groove, plus an allowance for erosion and corrosion expected during the intended design service life (standard industrial piping allowance: 3.0 mm for carbon steel process lines).`,
     chunks: [
       {
         id: 'chunk-asme-01',

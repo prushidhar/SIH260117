@@ -403,8 +403,8 @@ export default function KnowledgeBaseView() {
       return {
         label: 'MD',
         icon: BookOpen,
-        badgeClass: 'bg-violet-950/70 text-violet-300 border-violet-800/60',
-        iconBoxClass: 'bg-violet-950/40 border-violet-800/60 text-violet-400',
+        badgeClass: 'bg-cyan-950/70 text-cyan-300 border-cyan-800/60',
+        iconBoxClass: 'bg-cyan-950/40 border-cyan-800/60 text-cyan-400',
       };
     }
     if (fn.endsWith('.xlsx') || fn.endsWith('.xls') || fn.endsWith('.csv')) {
@@ -437,8 +437,8 @@ export default function KnowledgeBaseView() {
       <div className="flex flex-wrap items-center justify-between pb-4 border-b border-zinc-800/80 mb-5 gap-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-violet-950/70 border border-violet-800/60 flex items-center justify-center">
-              <Database className="w-4 h-4 text-violet-400" />
+            <div className="w-8 h-8 rounded-xl bg-cyan-950/70 border border-cyan-800/60 flex items-center justify-center">
+              <Database className="w-4 h-4 text-cyan-400" />
             </div>
             <h1 className="text-base font-bold text-zinc-100 font-mono tracking-tight">
               Sovereign RAG Knowledge Base Explorer
@@ -448,7 +448,7 @@ export default function KnowledgeBaseView() {
               {storageEngine === 'local' ? 'IN-BROWSER WASM 384D' : 'AIR-GAPPED VECTORSTORE'}
             </span>
             {isNative && (
-              <Badge variant="violet" className="font-mono text-[10px]">
+              <Badge variant="outline" className="font-mono text-[10px]">
                 NATIVE ELECTRON IPC
               </Badge>
             )}
@@ -467,7 +467,7 @@ export default function KnowledgeBaseView() {
               onClick={() => setStorageEngine('local')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
                 storageEngine === 'local'
-                  ? 'bg-violet-600 text-white font-bold shadow-xs'
+                  ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -478,7 +478,7 @@ export default function KnowledgeBaseView() {
               onClick={() => setStorageEngine('backend')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
                 storageEngine === 'backend'
-                  ? 'bg-violet-600 text-white font-bold shadow-xs'
+                  ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -520,8 +520,8 @@ export default function KnowledgeBaseView() {
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition-all ${
             dragActive
-              ? 'border-violet-500 bg-violet-950/30'
-              : 'border-zinc-800 hover:border-violet-500/60 bg-zinc-900/40 hover:bg-zinc-900/80 shadow-md'
+              ? 'border-emerald-500 bg-emerald-950/30'
+              : 'border-zinc-800 hover:border-emerald-500/60 bg-zinc-900/40 hover:bg-zinc-900/80 shadow-md'
           }`}
         >
           <input
@@ -535,7 +535,7 @@ export default function KnowledgeBaseView() {
           <div className="flex flex-col items-center">
             {uploading ? (
               <>
-                <Loader2 className="w-7 h-7 text-violet-400 animate-spin mb-2" />
+                <Loader2 className="w-7 h-7 text-emerald-400 animate-spin mb-2" />
                 <span className="text-xs font-bold text-zinc-200">
                   Indexing files into offline vectorstore...
                 </span>
@@ -545,7 +545,7 @@ export default function KnowledgeBaseView() {
               </>
             ) : (
               <>
-                <div className="w-9 h-9 rounded-xl bg-violet-950/60 border border-violet-800/50 flex items-center justify-center mb-2 text-violet-400">
+                <div className="w-9 h-9 rounded-xl bg-emerald-950/60 border border-emerald-800/50 flex items-center justify-center mb-2 text-emerald-400">
                   <Upload className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-zinc-200">
@@ -563,7 +563,7 @@ export default function KnowledgeBaseView() {
                     onClick={handleNativeBrowse}
                     className="gap-1.5 font-mono text-xs z-10"
                   >
-                    <FolderOpen className="w-3.5 h-3.5 text-violet-400" />
+                    <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{isNative ? 'Browse Local Drive (Native IPC)' : 'Browse Local Files'}</span>
                   </Button>
                 </div>
@@ -655,14 +655,14 @@ export default function KnowledgeBaseView() {
                 {searchResults.map((res, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs space-y-1 hover:border-violet-500/60 transition-colors"
+                    className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs space-y-1 hover:border-emerald-500/60 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-violet-400 font-bold">
+                      <span className="text-emerald-400 font-bold">
                         {res.filename || res.document || 'Document'}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-violet-950/60 text-violet-300 border border-violet-800/50 font-bold">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 font-bold">
                           {res.matchType || 'SEMANTIC_VECTOR'}
                         </span>
                         <span className="text-[10px] text-emerald-400 font-bold">

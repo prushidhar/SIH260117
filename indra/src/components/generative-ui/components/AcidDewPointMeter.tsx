@@ -691,7 +691,7 @@ export default function AcidDewPointMeter({
               onClick={() => handleApplyPreset(2.0, 2.5, 155.0)}
               className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 transition-colors"
             >
-              Refinery Fuel Gas (2.0% S)
+              Industrial Process Gas (2.0% S)
             </button>
             <button
               onClick={() => handleApplyPreset(fuelSulfur, flueGasO2, metalTemp + 18.0)}

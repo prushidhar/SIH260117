@@ -90,8 +90,8 @@ export default function IngestionSparkline({
       {/* Top Header Metrics Row */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-zinc-800/80">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-950/60 border border-violet-800/50 flex items-center justify-center">
-            <Activity className="w-4 h-4 text-violet-400" />
+          <div className="w-7 h-7 rounded-lg bg-cyan-950/60 border border-cyan-800/50 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-cyan-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -120,9 +120,9 @@ export default function IngestionSparkline({
           </div>
 
           <div className="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
-            <Cpu className="w-3 h-3 text-violet-400" />
+            <Cpu className="w-3 h-3 text-cyan-400" />
             <span className="text-[10px] text-zinc-400">CHUNK SPEED:</span>
-            <span className="text-xs font-bold text-violet-300">
+            <span className="text-xs font-bold text-cyan-300">
               {currentSpeed.chunksPerSec} chk/s
             </span>
           </div>
@@ -203,9 +203,9 @@ export default function IngestionSparkline({
         </div>
 
         <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
-          <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse ml-1" />
+          <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse ml-1" />
           <div>
-            <span className="text-violet-300 font-bold block">3. WASM 384D Embed</span>
+            <span className="text-cyan-300 font-bold block">3. WASM 384D Embed</span>
             <span className="text-zinc-500 text-[9px]">all-MiniLM-L6-v2</span>
           </div>
         </div>
