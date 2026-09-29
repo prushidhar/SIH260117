@@ -1,5 +1,5 @@
 /**
- * VoiceCommandProvider — React Context provider for global voice command state
+ * VoiceCommandProvider - React Context provider for global voice command state
  * 
  * Wraps the app to share voice command state (model status, listening state, etc.)
  * across all components without prop drilling.
@@ -23,7 +23,7 @@ export function VoiceCommandProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Consumer hook — use this in any component to access voice command state
+ * Consumer hook - use this in any component to access voice command state
  * @throws Error if used outside VoiceCommandProvider
  */
 export function useVoiceCommandContext(): VoiceCommandState {

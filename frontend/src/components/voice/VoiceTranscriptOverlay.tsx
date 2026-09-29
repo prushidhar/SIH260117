@@ -1,5 +1,5 @@
 /**
- * VoiceTranscriptOverlay — Floating overlay showing voice command transcript + intent match
+ * VoiceTranscriptOverlay - Floating overlay showing voice command transcript + intent match
  * 
  * Appears at bottom-center when a voice command is being processed or was just executed.
  * Auto-dismisses after 4 seconds.
@@ -33,7 +33,7 @@ export default function VoiceTranscriptOverlay() {
         {(lastTranscript || error) && (
           <button
             onClick={dismissTranscript}
-            className="absolute top-1.5 right-1.5 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 transition-colors cursor-pointer"
+            className="absolute top-1.5 right-1.5 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 transition-colors cursor-pointer"
           >
             <X className="w-3 h-3" />
           </button>
@@ -93,7 +93,7 @@ export default function VoiceTranscriptOverlay() {
                 </div>
               ) : (
                 <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
-                  No matching command — try &ldquo;open audit&rdquo; or &ldquo;toggle sidebar&rdquo;
+                  No matching command - try &ldquo;open audit&rdquo; or &ldquo;toggle sidebar&rdquo;
                 </div>
               )}
             </>

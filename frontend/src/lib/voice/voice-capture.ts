@@ -6,7 +6,7 @@
  */
 
 export interface VoiceCaptureOptions {
-  /** RMS energy threshold to detect speech (0–1). Default: 0.01 */
+  /** RMS energy threshold to detect speech (0-1). Default: 0.01 */
   energyThreshold?: number;
   /** Minimum speech duration to trigger a segment (ms). Default: 200 */
   minSpeechDuration?: number;
@@ -56,7 +56,7 @@ export class VoiceCapture {
   }
 
   /**
-   * Get current microphone RMS audio level (0–1)
+   * Get current microphone RMS audio level (0-1)
    */
   getAudioLevel(): number {
     return this.currentAudioLevel;
@@ -142,7 +142,7 @@ export class VoiceCapture {
       sumSquares += samples[i] * samples[i];
     }
     const rms = Math.sqrt(sumSquares / samples.length);
-    this.currentAudioLevel = Math.min(rms * 5, 1); // Normalize to 0–1 range
+    this.currentAudioLevel = Math.min(rms * 5, 1); // Normalize to 0-1 range
 
     const now = Date.now();
 
@@ -158,7 +158,7 @@ export class VoiceCapture {
 
       this.audioBuffer.push(new Float32Array(samples));
     } else if (this.isSpeechActive) {
-      // Below threshold — still recording (might be a pause in speech)
+      // Below threshold - still recording (might be a pause in speech)
       this.audioBuffer.push(new Float32Array(samples));
 
       const silenceDuration = now - this.lastSpeechTime;
@@ -169,7 +169,7 @@ export class VoiceCapture {
         if (speechDuration >= this.minSpeechDuration) {
           this.emitSegment();
         } else {
-          // Too short — discard (likely a click or ambient noise)
+          // Too short - discard (likely a click or ambient noise)
           this.audioBuffer = [];
           this.isSpeechActive = false;
         }

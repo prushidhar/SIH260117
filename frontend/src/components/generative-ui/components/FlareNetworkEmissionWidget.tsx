@@ -241,7 +241,7 @@ export const FlareNetworkEmissionWidget: React.FC<FlareNetworkEmissionProps> = (
               <span className="text-slate-400 text-[10px]">Emergency escape only; max 30s exposure limit</span>
             </div>
             <div className="p-2 bg-slate-900 rounded border border-amber-900/40">
-              <span className="text-amber-400 font-bold block">1.58 – 4.73 kW/m²</span>
+              <span className="text-amber-400 font-bold block">1.58 - 4.73 kW/m²</span>
               <span className="text-slate-400 text-[10px]">Limited work permitted with shielding gear</span>
             </div>
             <div className="p-2 bg-slate-900 rounded border border-emerald-900/40">

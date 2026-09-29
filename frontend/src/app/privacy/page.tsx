@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export const metadata = {
-  title: 'Privacy Policy — INDRA Sovereign AI Workbench',
+  title: 'Privacy Policy - INDRA Sovereign AI Workbench',
   description: 'Sovereign on-premise privacy policy detailing zero-telemetry, zero-WAN egress, and client-side data custody architecture.',
 };
 
@@ -117,7 +117,7 @@ export default function PrivacyPolicyPage() {
                 <span>Local Storage &amp; IndexedDB Data Custody</span>
               </h2>
               <p>
-                All user data—including chat histories, ASME B31.3 calculation parameters, engineering inspection documents (.pdf, .docx, .xlsx), and custom system instructions—is persisted locally in the client browser using Dexie.js (IndexedDB).
+                All user data-including chat histories, ASME B31.3 calculation parameters, engineering inspection documents (.pdf, .docx, .xlsx), and custom system instructions-is persisted locally in the client browser using Dexie.js (IndexedDB).
               </p>
               <ul className="list-disc pl-5 space-y-1 text-slate-400">
                 <li><strong className="text-slate-200">No Central Database:</strong> There is no cloud-hosted relational database or multi-tenant repository.</li>

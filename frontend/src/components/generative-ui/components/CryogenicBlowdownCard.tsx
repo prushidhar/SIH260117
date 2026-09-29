@@ -174,7 +174,7 @@ export default function CryogenicBlowdownCard({
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-cyan-500" />
               <span className="font-semibold text-slate-900 dark:text-zinc-100 uppercase tracking-wider text-[11px]">
-                Transient Dual-Axis Depressuring Profile (0 – 15 min)
+                Transient Dual-Axis Depressuring Profile (0 - 15 min)
               </span>
             </div>
 

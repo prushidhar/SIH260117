@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const metadata = {
-  title: 'INDRA — Sovereign Air-Gapped Industrial AI Workbench',
+  title: 'INDRA - Sovereign Air-Gapped Industrial AI Workbench',
   description: 'On-premise engineering intelligence system for refinery asset integrity, deterministic ASME B31.3 calculation, ISA-5.1 P&ID vision extraction, and cryptographic Merkle audit verification.',
 };
 
@@ -66,7 +66,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. Hero Section — Concrete, High-Density Industrial Value Proposition */}
+      {/* 2. Hero Section - Concrete, High-Density Industrial Value Proposition */}
       <section className="border-b border-slate-800 bg-slate-900/60 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-4xl space-y-6">
@@ -233,7 +233,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Standards Compliance Section (Replacing Fake Reviews) */}
+      {/* 4. Statutory Standards Compliance Architecture */}
       <section id="standards" className="py-16 sm:py-20 border-b border-slate-800 bg-slate-900/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl mb-10">
@@ -359,7 +359,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. Footer — Clean, Strict, with Privacy & Terms (No 'Made with AI') */}
+      {/* 7. Industrial Operational Footer */}
       <footer className="border-t border-slate-800 bg-slate-950 py-10 text-xs text-slate-400 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">

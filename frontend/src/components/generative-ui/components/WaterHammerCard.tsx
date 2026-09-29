@@ -190,7 +190,7 @@ export default function WaterHammerCard({
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-sky-500" />
               <span className="font-semibold text-slate-900 dark:text-zinc-100 uppercase tracking-wider text-[11px]">
-                Acoustic Pressure Waveform Reflection (0 – 60s)
+                Acoustic Pressure Waveform Reflection (0 - 60s)
               </span>
             </div>
 

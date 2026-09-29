@@ -14,6 +14,7 @@ import {
   Filter,
   PackagePlus,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import {
   REGISTERED_EQUIPMENT_CATALOG,
@@ -149,9 +150,9 @@ export default function EquipmentSidebar({
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2 text-zinc-500 hover:text-zinc-300 text-xs font-mono"
+                  className="absolute right-2 text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>

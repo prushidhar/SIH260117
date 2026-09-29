@@ -782,7 +782,7 @@ export const useIndraStore = create<IndraState>()(
                       canRetry: true,
                       originalPrompt: promptText,
                     },
-                    content: `⚠️ **Connection to Sovereign Backend Failed**\n\nCould not reach \`${API_BASE}/api/tasks\`.\n\n*Error: ${err.message || err}*`,
+                    content: `**Connection to Sovereign Backend Failed**\n\nCould not reach \`${API_BASE}/api/tasks\`.\n\n*Error: ${err.message || err}*`,
                   }
                 : m
             ),
@@ -1126,7 +1126,7 @@ Condition monitoring and dual-channel redundancy adjudication for **TT-101** on 
     "assetTag": "CDU-104",
     "sensorTag": "TT-101",
     "redundantTag": "TT-101B",
-    "title": "ISO 13374 / VDI 2888 — CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS",
+    "title": "ISO 13374 / VDI 2888 - CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS",
     "spanMin": 0,
     "spanMax": 300,
     "unit": "°C",
@@ -2321,7 +2321,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
                   canRetry: true,
                   originalPrompt: content,
                 },
-                content: `⚠️ **Connection to Sovereign Backend Failed**\n\nCould not reach \`${API_BASE}/api/tasks\`.\n\n*Error: ${err.message || err}*`,
+                content: `**Connection to Sovereign Backend Failed**\n\nCould not reach \`${API_BASE}/api/tasks\`.\n\n*Error: ${err.message || err}*`,
               }
             : m
         ),
@@ -2372,7 +2372,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
           : s
       );
 
-      const abortNote = '\n\n*🛑 Task execution stopped by operator.*';
+      const abortNote = '\n\n*Task execution stopped by operator.*';
       const newContent = lastMsg.content
         ? `${lastMsg.content}${abortNote}`
         : '*Task execution was stopped by operator.*';

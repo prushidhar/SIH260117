@@ -87,7 +87,7 @@ export default function DynamicSandboxWidget({
       <body>
         <div class="p-3 rounded-lg border bg-card font-mono">
           <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px;">
-            ⚡ Sovereign Engineering Container
+            [SANDBOX] Sovereign Engineering Container
           </div>
           <p style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">
             Verified numerical calculations compiled inside local isolated sandbox.

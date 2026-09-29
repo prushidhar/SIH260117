@@ -438,7 +438,7 @@ export const HazopLopaWorkbench: React.FC<HazopLopaProps> = ({
             ) : (
               <>
                 <AlertOctagon className="w-4 h-4 text-rose-400" />
-                <span>CANNOT SEAL — SAFETY INTEGRITY GAP ACTIVE</span>
+                <span>CANNOT SEAL - SAFETY INTEGRITY GAP ACTIVE</span>
               </>
             )}
           </button>

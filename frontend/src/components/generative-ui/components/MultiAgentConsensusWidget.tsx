@@ -98,7 +98,7 @@ export default function MultiAgentConsensusWidget({
       id: 'GAMMA',
       name: 'Agent Gamma (SIS SIL-3 Interlock)',
       role: 'Functional Safety & Trip Automation',
-      avatarColor: 'from-violet-500 to-purple-600',
+      avatarColor: 'from-emerald-600 to-teal-700',
       initialStance: 'Requires safety trip setpoint at 480 psig with compulsory 14.5% spillback recirculation margin.',
       proposedValue: '465 psig',
       keyMetric: 'SIL-2 Safety Margin: +32%',
@@ -264,17 +264,17 @@ export default function MultiAgentConsensusWidget({
   return (
     <div className="w-full my-3 rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-md overflow-hidden font-sans select-none transition-all">
       {/* 1. Header Banner */}
-      <div className="p-4 bg-gradient-to-r from-violet-500/10 via-indigo-500/10 to-transparent border-b border-slate-200 dark:border-zinc-800">
+      <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-violet-600 text-white shadow-xs">
+            <div className="p-2 rounded-xl bg-slate-800 text-emerald-400 shadow-xs">
               <Users className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">{title}</h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-violet-100 text-violet-800 dark:bg-violet-950/80 dark:text-violet-300 border border-violet-300 dark:border-violet-800 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>TRI-MODEL CONSENSUS</span>
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function MultiAgentConsensusWidget({
               className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer border border-slate-200 dark:border-zinc-800"
               title="Vocalize consensus summary"
             >
-              <Volume2 className="w-4 h-4 text-violet-500" />
+              <Volume2 className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
             </button>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function MultiAgentConsensusWidget({
             <div className="text-xs font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 truncate">
               {targetParameter}
             </div>
-            <div className="text-sm font-mono font-bold text-violet-600 dark:text-violet-400 mt-1">
+            <div className="text-sm font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-1">
               {consensusValue}
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function MultiAgentConsensusWidget({
             </div>
             <div className="w-full h-2 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden mt-1.5">
               <div
-                className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 transition-all duration-700"
+                className="h-full bg-emerald-500 transition-all duration-700"
                 style={{ width: `${consensusProgress}%` }}
               />
             </div>
@@ -344,7 +344,7 @@ export default function MultiAgentConsensusWidget({
               <div className="text-base font-mono font-bold text-slate-800 dark:text-zinc-100 mt-0.5">
                 RRF = {riskReductionFactor}:1
               </div>
-              <div className="text-[10px] font-mono text-violet-600 dark:text-violet-400 font-semibold">
+              <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
                 SIL-2 / IEC 61508 Certified
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function MultiAgentConsensusWidget({
                   {debater.role}
                 </div>
                 <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-600 dark:text-zinc-300">
-                  <span className="font-semibold text-violet-600 dark:text-violet-400">{debater.proposedValue}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{debater.proposedValue}</span>
                   <span className="text-[9px] text-slate-400 truncate max-w-[120px]">{debater.governingStandard}</span>
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function MultiAgentConsensusWidget({
                 onClick={() => setActiveRound(rnd as 1 | 2 | 3)}
                 className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
                   activeRound === rnd
-                    ? 'bg-violet-600 text-white shadow-2xs'
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
                     : 'bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-800'
                 }`}
               >
@@ -432,7 +432,7 @@ export default function MultiAgentConsensusWidget({
                 >
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-violet-100 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 font-mono font-bold text-[10px] flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-mono font-bold text-[10px] flex items-center justify-center">
                         {msg.speaker}
                       </span>
                       <span className="font-bold text-slate-800 dark:text-zinc-200">
@@ -445,7 +445,7 @@ export default function MultiAgentConsensusWidget({
                       )}
                     </div>
                     <span
-                      className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-md ${
                         msg.sentiment === 'AGREE'
                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                           : msg.sentiment === 'COMPROMISE'
@@ -493,7 +493,7 @@ export default function MultiAgentConsensusWidget({
             className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
               isDispatched
                 ? 'bg-emerald-600 text-white'
-                : 'bg-violet-600 hover:bg-violet-700 text-white'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
             }`}
           >
             {isDispatched ? (

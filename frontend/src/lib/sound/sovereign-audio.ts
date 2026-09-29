@@ -42,7 +42,7 @@ export function toggleSound(): boolean {
 }
 
 /**
- * Industrial DCS Alarm Chime — Two-tone warning chime (880Hz -> 659Hz)
+ * Industrial DCS Alarm Chime - Two-tone warning chime (880Hz -> 659Hz)
  */
 export function playAlarmChime(): void {
   if (!isSoundEnabled()) return;
@@ -81,7 +81,7 @@ export function playAlarmChime(): void {
 }
 
 /**
- * Emergency Trip Klaxon — Pulsating industrial alert horn
+ * Emergency Trip Klaxon - Pulsating industrial alert horn
  */
 export function playTripKlaxon(): void {
   if (!isSoundEnabled()) return;
@@ -111,7 +111,7 @@ export function playTripKlaxon(): void {
 }
 
 /**
- * Cryptographic Seal & Deliverable Ready Chime — Harmonic ascending sweep
+ * Cryptographic Seal & Deliverable Ready Chime - Harmonic ascending sweep
  */
 export function playSealChime(): void {
   if (!isSoundEnabled()) return;
@@ -143,7 +143,7 @@ export function playSealChime(): void {
 }
 
 /**
- * Operator Confirmation Chirp — Subdued high-frequency acknowledgment blip
+ * Operator Confirmation Chirp - Subdued high-frequency acknowledgment blip
  */
 export function playSuccessChirp(): void {
   if (!isSoundEnabled()) return;
@@ -172,7 +172,7 @@ export function playSuccessChirp(): void {
 }
 
 /**
- * Tactile Switch Click — Short click transient
+ * Tactile Switch Click - Short click transient
  */
 export function playClickBeep(): void {
   if (!isSoundEnabled()) return;

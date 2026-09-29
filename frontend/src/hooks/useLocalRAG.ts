@@ -1,5 +1,5 @@
 /**
- * useLocalRAG — React Hook orchestrating In-Browser Vector Ingestion & Querying
+ * useLocalRAG - React Hook orchestrating In-Browser Vector Ingestion & Querying
  * 
  * Manages: Embedding Web Worker lifecycle, document chunking,
  * client-side vector embedding, and zero-latency cosine similarity search.
@@ -239,7 +239,7 @@ export function useLocalRAG() {
       });
 
       addToast({
-        title: '⚡ Local WASM RAG Ingested',
+        title: 'Local WASM RAG Ingested',
         message: `Indexed "${file.name}" into ${chunks.length} vector chunks in ${elapsedMs}ms without remote backend calls.`,
         type: 'success',
       });

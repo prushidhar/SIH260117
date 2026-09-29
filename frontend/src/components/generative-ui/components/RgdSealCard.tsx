@@ -188,28 +188,28 @@ export default function RgdSealCard({
       statusLevel = 'optimal';
       crackCount = 0;
       maxCrackRatio = 0.0;
-      ratingDescription = 'Rating 0000 — Pristine matrix. Complete absence of cavitation micro-voids.';
+      ratingDescription = 'Rating 0000 - Pristine matrix. Complete absence of cavitation micro-voids.';
     } else if (safetyMarginMultiplier >= 1.05) {
       norsokRating = '1000';
       isNorsokPass = true;
       statusLevel = 'compliant';
       crackCount = 2;
       maxCrackRatio = 0.06; // < 0.1 d
-      ratingDescription = 'Rating 1000 — Compliant micro-voids (<= 4 cracks, length < 0.1 x cross-section). Code Compliant.';
+      ratingDescription = 'Rating 1000 - Compliant micro-voids (<= 4 cracks, length < 0.1 x cross-section). Code Compliant.';
     } else if (safetyMarginMultiplier >= 0.82) {
       norsokRating = '2100';
       isNorsokPass = false;
       statusLevel = 'marginal';
       crackCount = 5;
       maxCrackRatio = 0.18; // 0.1 - 0.2 d
-      ratingDescription = 'Rating 2100 — REJECT: Intermediate cavitation cracks (0.1 to 0.2 x diameter). Exceeds NORSOK threshold.';
+      ratingDescription = 'Rating 2100 - REJECT: Intermediate cavitation cracks (0.1 to 0.2 x diameter). Exceeds NORSOK threshold.';
     } else {
       norsokRating = '3210';
       isNorsokPass = false;
       statusLevel = 'critical';
       crackCount = 8;
       maxCrackRatio = 0.38; // 0.2 - 0.5 d
-      ratingDescription = 'Rating 3210 — REJECT: Severe explosive decompression delamination and macroscopic blisters.';
+      ratingDescription = 'Rating 3210 - REJECT: Severe explosive decompression delamination and macroscopic blisters.';
     }
 
     // Blistering Susceptibility Index (0% to 100%)

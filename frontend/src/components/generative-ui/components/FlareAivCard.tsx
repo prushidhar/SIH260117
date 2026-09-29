@@ -161,15 +161,15 @@ export default function FlareAivCard({
     if (lwDb < 155.0) {
       aivRiskCategory = 'LOW';
       riskBadgeColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-      riskLabel = 'LOW RISK (< 155 dB) — SAFE CONTINUOUS RELIEF';
+      riskLabel = 'LOW RISK (< 155 dB) - SAFE CONTINUOUS RELIEF';
     } else if (lwDb < 160.0) {
       aivRiskCategory = 'MODERATE';
       riskBadgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-      riskLabel = 'MODERATE RISK (155-160 dB) — WELDED WRAP-AROUND PADS REQUIRED';
+      riskLabel = 'MODERATE RISK (155-160 dB) - WELDED WRAP-AROUND PADS REQUIRED';
     } else {
       aivRiskCategory = 'CRITICAL';
       riskBadgeColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
-      riskLabel = 'CRITICAL RISK (≥ 160 dB) — HIGH-CYCLE ACOUSTIC FATIGUE DANGER';
+      riskLabel = 'CRITICAL RISK (≥ 160 dB) - HIGH-CYCLE ACOUSTIC FATIGUE DANGER';
     }
 
     // 2. Radiated Acoustic Power (W_ac in Watts and kW)
@@ -314,12 +314,12 @@ export default function FlareAivCard({
     const shaSeal = 'a1f59c82b7d4e301986420eac7182903fb94';
     const deliverable = {
       id: `flare-aiv-${Date.now()}`,
-      name: `API 520 / EEMUA 158 AIV Assessment — ${assetTag}`,
+      name: `API 520 / EEMUA 158 AIV Assessment - ${assetTag}`,
       filename: `API520_AIV_Assessment_${assetTag}.pdf`,
       type: 'pdf',
       size: '2.4 MB',
       generatedAt: new Date().toLocaleTimeString(),
-      title: `Flare Acoustical Induced Vibration Dossier — ${assetTag}`,
+      title: `Flare Acoustical Induced Vibration Dossier - ${assetTag}`,
       timestamp: new Date().toLocaleTimeString(),
       description: `Tailpipe acoustical vibration study for ${assetTag}. Lw: ${calculations.lwDb} dB (${calculations.aivRiskCategory} RISK), Acoustic Power: ${calculations.acousticPowerKw} kW, Mach Number: ${calculations.machNumber} (API Limit: 0.70), Pipe D/t: ${calculations.dOverT} (${pipeNps} ${pipeSch}). Sweepolet & wrap-around pad recommendations included.`,
       hash: shaSeal,
@@ -357,7 +357,7 @@ export default function FlareAivCard({
               </span>
               <button
                 onClick={handleLocate}
-                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                 title="Locate PSV-101 in P&ID"
               >
                 <Crosshair className="w-3 h-3 group-hover:rotate-45 transition-transform" />

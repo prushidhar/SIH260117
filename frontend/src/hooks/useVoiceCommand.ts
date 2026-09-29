@@ -1,5 +1,5 @@
 /**
- * useVoiceCommand — React hook orchestrating the full voice-to-UI pipeline
+ * useVoiceCommand - React hook orchestrating the full voice-to-UI pipeline
  * 
  * Manages: Web Worker lifecycle → Voice capture → VAD → Whisper transcription → Intent routing
  */
@@ -17,7 +17,7 @@ export interface VoiceCommandState {
   isListening: boolean;
   /** Whether the Whisper model is loaded and ready */
   isModelLoaded: boolean;
-  /** Model download/load progress (0–100) */
+  /** Model download/load progress (0-100) */
   modelLoadProgress: number;
   /** Whether the model is currently loading */
   isModelLoading: boolean;
@@ -27,7 +27,7 @@ export interface VoiceCommandState {
   lastTranscript: string;
   /** Most recent matched intent */
   lastIntent: IntentMatch | null;
-  /** Current mic RMS audio level (0–1) for visualizer */
+  /** Current mic RMS audio level (0-1) for visualizer */
   audioLevel: number;
   /** Start/stop microphone listening */
   toggleListening: () => void;
@@ -127,7 +127,7 @@ export function useVoiceCommand(): VoiceCommandState {
 
       // Show toast notification
       store.addToast({
-        title: `🎙️ Voice Command: ${match.label}`,
+        title: `Voice Command: ${match.label}`,
         message: `"${text}" (${Math.round(match.confidence * 100)}% confidence, ${duration}ms)`,
         type: 'success',
       });
@@ -135,8 +135,8 @@ export function useVoiceCommand(): VoiceCommandState {
       setLastIntent(null);
 
       store.addToast({
-        title: '🎙️ Voice: No Match',
-        message: `"${text}" — didn't match any command. Try "open audit" or "toggle sidebar".`,
+        title: 'Voice: No Match',
+        message: `"${text}" - didn't match any command. Try "open audit" or "toggle sidebar".`,
         type: 'info',
       });
     }
@@ -180,7 +180,7 @@ export function useVoiceCommand(): VoiceCommandState {
       return;
     }
 
-    // Start listening — load model first if needed
+    // Start listening - load model first if needed
     if (!isModelLoaded) {
       loadModel();
       // We'll wait for model to load, then user clicks again

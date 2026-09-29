@@ -49,7 +49,7 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
   initialCrudeApi = 33.4,
   initialFeedBpd = 100000,
   initialFurnaceTempC = 365,
-  plantName = 'Refinery Train 1 — CDU / VDU Digital Twin',
+  plantName = 'Refinery Train 1 - CDU / VDU Digital Twin',
   onStreamSelect
 }) => {
   const [selectedCrude, setSelectedCrude] = useState<CrudePreset>(CRUDE_PRESETS[0]);

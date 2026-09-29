@@ -256,7 +256,7 @@ export default function IndustrialGauge({
           <div className="text-[11px] text-slate-500 dark:text-zinc-400 flex flex-col gap-1 font-mono">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 dark:text-zinc-500">Design Range:</span>
-              <span className="font-semibold text-slate-700 dark:text-zinc-300">{min} – {max} {unit}</span>
+              <span className="font-semibold text-slate-700 dark:text-zinc-300">{min} - {max} {unit}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-slate-400 dark:text-zinc-500">Warning Trip:</span>

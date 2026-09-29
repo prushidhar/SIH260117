@@ -27,7 +27,7 @@ interface ExecutivePresentationWidgetProps {
 
 export default function ExecutivePresentationWidget({
   tag = 'CDU-Pipe-104',
-  title = 'Executive Board Review — CDU-Pipe-104',
+  title = 'Executive Board Review - CDU-Pipe-104',
   domain = 'pipe_thickness',
   filename = 'CDU-Pipe-104_Board_Review.pptx',
   downloadUrl = '',
@@ -122,7 +122,7 @@ export default function ExecutivePresentationWidget({
             <div>• t_min = 6.31 mm (0.2486 in)</div>
           </div>
           <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold border-t border-slate-200 dark:border-zinc-700 pt-1">
-            ✔ Mathematical AST Sandbox Verification: 100% Deterministic match.
+            [PASS] Mathematical AST Sandbox Verification: 100% Deterministic match.
           </div>
         </div>
       ),
@@ -170,17 +170,17 @@ export default function ExecutivePresentationWidget({
             <div className="p-2 rounded bg-slate-800/80 border border-slate-700">
               <span className="text-slate-400 block">Prepared By</span>
               <span className="font-bold text-white block mt-0.5">INDRA AI</span>
-              <span className="text-emerald-400 text-[8px] mt-1 block">✔ AUTONOMOUS</span>
+              <span className="text-emerald-400 text-[8px] mt-1 block">[PASS] AUTONOMOUS</span>
             </div>
             <div className="p-2 rounded bg-slate-800/80 border border-slate-700">
               <span className="text-slate-400 block">Verified By</span>
               <span className="font-bold text-white block mt-0.5">Lead Engineer</span>
-              <span className="text-emerald-400 text-[8px] mt-1 block">✔ PE-8419</span>
+              <span className="text-emerald-400 text-[8px] mt-1 block">[PASS] PE-8419</span>
             </div>
             <div className="p-2 rounded bg-slate-800/80 border border-emerald-600">
               <span className="text-slate-400 block">Plant Approval</span>
               <span className="font-bold text-white block mt-0.5">Superintendent</span>
-              <span className="text-emerald-400 text-[8px] font-bold mt-1 block">✔ TIER-2 SEALED</span>
+              <span className="text-emerald-400 text-[8px] font-bold mt-1 block">[PASS] TIER-2 SEALED</span>
             </div>
           </div>
           <div className="text-[9px] text-slate-400 text-center border-t border-slate-800 pt-1">

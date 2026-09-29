@@ -217,7 +217,7 @@ export default function ParameterControlForm({
                 />
                 <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 dark:text-zinc-500">
                   <span>{param.description}</span>
-                  <span>{param.min} – {param.max} {param.unit}</span>
+                  <span>{param.min} - {param.max} {param.unit}</span>
                 </div>
               </div>
             );

@@ -51,7 +51,7 @@ export default function ActiveModels() {
               {/* VRAM allocation progress track */}
               <div className="w-full h-1 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden mt-1.5">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+                  className="h-full bg-indigo-500 transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.max(5, model.vramUsage || 0))}%` }}
                 />
               </div>

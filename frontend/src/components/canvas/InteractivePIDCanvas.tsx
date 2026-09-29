@@ -1,5 +1,5 @@
 /**
- * InteractivePIDCanvas — Hardware-accelerated Interactive Vector P&ID Viewport
+ * InteractivePIDCanvas - Hardware-accelerated Interactive Vector P&ID Viewport
  * 
  * Features:
  * - Fluid pan & zoom with mouse drag, wheel, and pinch gestures

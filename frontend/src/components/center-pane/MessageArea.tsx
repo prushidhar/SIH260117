@@ -260,7 +260,7 @@ export default function MessageArea() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Empty state — show industrial co-pilot home screen with workflow templates
+  // Empty state - show industrial co-pilot home screen with workflow templates
   if (messages.length === 0) {
     const displayedWorkflows = isGridExpanded 
       ? industrialWorkflows 
@@ -349,7 +349,7 @@ export default function MessageArea() {
     );
   }
 
-  // Active conversation — normalize order then render top-to-bottom
+  // Active conversation - normalize order then render top-to-bottom
   const orderedMessages = normalizeMessageOrder(messages);
 
   return (

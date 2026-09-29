@@ -582,15 +582,15 @@ export default function KnowledgeBaseView() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ASME B31.3 wall thickness, API 570 remaining life, ISO 10816 vibration zones, API 617 surge..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-violet-500 transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-500 transition-colors"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 text-xs font-mono"
+                  className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -598,7 +598,7 @@ export default function KnowledgeBaseView() {
             <button
               type="submit"
               disabled={searching}
-              className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-sm shadow-violet-500/20 cursor-pointer disabled:opacity-50 font-mono"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-500/20 cursor-pointer disabled:opacity-50 font-mono"
             >
               {searching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Vector Search</span>
@@ -693,7 +693,7 @@ export default function KnowledgeBaseView() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500" /> &gt;0.85 HIGH
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-500" /> 0.65–0.85 MOD
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> 0.65-0.85 MOD
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-slate-500" /> &lt;0.65 BASE
