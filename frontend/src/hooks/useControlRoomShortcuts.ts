@@ -1,48 +1,18 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import useIndraStore from '@/store/indra-store';
 import { sovereignAudio } from '@/lib/audio/sound-effects';
 
-interface ControlRoomShortcutsProps {
-  onOpenSearch: () => void;
-  isSearchOpen: boolean;
-  onCloseSearch: () => void;
-}
-
-export function useControlRoomShortcuts({
-  onOpenSearch,
-  isSearchOpen,
-  onCloseSearch,
-}: ControlRoomShortcutsProps) {
+export function useControlRoomShortcuts() {
   const router = useRouter();
-  const pathname = usePathname();
   const { isAgentWorking, abortTask, addToast } = useIndraStore();
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // 1. Universal Asset Search: Ctrl + K or Cmd + K
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isSearchOpen) {
-          onCloseSearch();
-        } else {
-          onOpenSearch();
-          sovereignAudio.playClick(0.08);
-        }
-        return;
-      }
-
-      // 2. Emergency Abort / Trip: Escape
+      // 1. Emergency Abort / Trip: Escape
       if (e.key === 'Escape') {
-        if (isSearchOpen) {
-          e.preventDefault();
-          onCloseSearch();
-          return;
-        }
-
         if (isAgentWorking) {
           e.preventDefault();
           abortTask();
@@ -63,8 +33,8 @@ export function useControlRoomShortcuts({
         activeEl instanceof HTMLTextAreaElement ||
         activeEl?.getAttribute('contenteditable') === 'true';
 
-      // 3. Quick Pane Switching (Keys '1', '2', '3', '4') when NOT typing
-      if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey && !isSearchOpen) {
+      // 2. Quick Pane Switching (Keys '1', '2', '3', '4') when NOT typing
+      if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.key === '1') {
           e.preventDefault();
           sovereignAudio.playShortcut(0.08);
@@ -84,16 +54,7 @@ export function useControlRoomShortcuts({
         }
       }
     },
-    [
-      onOpenSearch,
-      isSearchOpen,
-      onCloseSearch,
-      isAgentWorking,
-      abortTask,
-      addToast,
-      router,
-      pathname,
-    ]
+    [isAgentWorking, abortTask, addToast, router]
   );
 
   useEffect(() => {

@@ -8440,5 +8440,30 @@
     },
     "previous_hash": "1af5e38a07a5b61f2c04b9ac0b36457d27bf619e271826bb07f1602fbabb0ba5",
     "hash": "672bc02e7d4cf9eedbbd84dac2b7b3ef4dadd814baaa95e15246def3fdd1e80d"
+  },
+  {
+    "timestamp": 1790666468.443355,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "2fb3b0eb05bf7e17f4e05929e3371b9a5c3bd76b1bacc933802bc6d605382a05",
+      "file_count": 4
+    },
+    "previous_hash": "672bc02e7d4cf9eedbbd84dac2b7b3ef4dadd814baaa95e15246def3fdd1e80d",
+    "hash": "1d60927fb8c6ab3eabbbf9e809edfead2facca6d57b449ee3875554b67490752"
+  },
+  {
+    "timestamp": 1790666469.6644185,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "7664cd5b5ff07b4b8256435f21ae90143b7dd5675fc7a4db55f9f79042bec9a7"
+    },
+    "previous_hash": "1d60927fb8c6ab3eabbbf9e809edfead2facca6d57b449ee3875554b67490752",
+    "hash": "6054c885d4705ed1c27222104b69b9eeae6efe5a0e90aadb4e78a1d896082008"
   }
 ]
