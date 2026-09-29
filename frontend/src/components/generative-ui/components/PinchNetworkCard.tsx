@@ -353,14 +353,14 @@ export default function PinchNetworkCard({
                 <span className="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-zinc-400">
                   Second-Law Exergetic Efficiency
                 </span>
-                <div className="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <div className="w-6 h-6 rounded-md bg-cyan-100 dark:bg-cyan-950/60 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
                   <Zap className="w-3.5 h-3.5" />
                 </div>
               </div>
 
               <div className="mt-2 text-xl font-mono font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight flex items-baseline gap-2">
                 <span>{exergeticEfficiency}%</span>
-                <span className="text-[11px] font-normal text-purple-600 dark:text-purple-400 font-mono">
+                <span className="text-[11px] font-normal text-cyan-600 dark:text-cyan-400 font-mono">
                   ({exergyDestructionMW} MW Exergy Loss)
                 </span>
               </div>

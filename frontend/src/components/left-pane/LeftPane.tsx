@@ -33,7 +33,7 @@ export default function LeftPane() {
           <span className="text-[11px]">Settings</span>
         </button>
 
-        <div className="flex items-center gap-1.5 text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+        <div className="flex items-center gap-1.5 text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/50">
           <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           <span>READY</span>
         </div>

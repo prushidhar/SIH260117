@@ -953,13 +953,13 @@ export default function ArcFlashHazardCard({
 
           {/* 4. Hearing Protection */}
           <div className="p-3.5 rounded-xl border bg-zinc-900/70 border-zinc-800 flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400 shrink-0">
+            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
               <Headphones className="w-4 h-4" />
             </div>
             <div className="text-xs">
               <div className="font-mono font-bold text-zinc-200 flex items-center justify-between">
                 <span>Hearing Protection</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                   NRR ≥ 26 dB
                 </span>
               </div>

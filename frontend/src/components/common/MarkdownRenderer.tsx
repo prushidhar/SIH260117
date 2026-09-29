@@ -46,7 +46,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
           )}
         </button>
       </div>
-      <pre className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed text-slate-200 selection:bg-violet-900/60">
+      <pre className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed text-slate-200 selection:bg-emerald-900/60">
         <code>{code}</code>
       </pre>
     </div>
@@ -67,7 +67,7 @@ const customComponents = {
     if (!isBlock) {
       return (
         <code
-          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-violet-700 dark:text-violet-300 font-mono text-[12px] border border-slate-200/80 dark:border-zinc-700/80 font-medium"
+          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 font-mono text-[12px] border border-slate-200/80 dark:border-zinc-700/80 font-medium"
           {...props}
         >
           {children}
@@ -137,7 +137,7 @@ const customComponents = {
     return <h2 className="text-sm font-extrabold text-slate-900 dark:text-zinc-100 mt-3.5 mb-2 tracking-tight">{children}</h2>;
   },
   h3({ children }: any) {
-    return <h3 className="text-xs font-bold text-violet-700 dark:text-violet-400 mt-3 mb-1 uppercase tracking-wider font-mono">{children}</h3>;
+    return <h3 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-3 mb-1 uppercase tracking-wider font-mono">{children}</h3>;
   },
   h4({ children }: any) {
     return <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mt-2 mb-1 font-mono">{children}</h4>;
@@ -155,7 +155,7 @@ const customComponents = {
   // Blockquotes
   blockquote({ children }: any) {
     return (
-      <blockquote className="border-l-3 border-violet-500 pl-3.5 py-1.5 my-2.5 text-slate-600 dark:text-zinc-400 italic text-sm bg-violet-50/50 dark:bg-violet-950/20 rounded-r-lg">
+      <blockquote className="border-l-3 border-emerald-500 pl-3.5 py-1.5 my-2.5 text-slate-600 dark:text-zinc-400 italic text-sm bg-emerald-50/50 dark:bg-emerald-950/20 rounded-r-lg">
         {children}
       </blockquote>
     );
@@ -167,7 +167,7 @@ const customComponents = {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 underline underline-offset-2 font-medium cursor-pointer transition-colors"
+        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-2 font-medium cursor-pointer transition-colors"
       >
         {children}
       </a>

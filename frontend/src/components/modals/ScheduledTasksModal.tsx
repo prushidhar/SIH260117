@@ -84,7 +84,7 @@ export default function ScheduledTasksModal() {
         <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/70">
           <div className="flex items-center justify-between pr-8">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
+              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
@@ -116,7 +116,7 @@ export default function ScheduledTasksModal() {
         {isCreating && (
           <form onSubmit={handleCreate} className="p-5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950/60 space-y-3 font-mono text-xs">
             <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Configure New Autonomous Watchdog</span>
             </div>
 
@@ -136,7 +136,7 @@ export default function ScheduledTasksModal() {
                 <select
                   value={taskSchedule}
                   onChange={(e) => setTaskSchedule(e.target.value)}
-                  className="flex h-9 w-full rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-mono text-slate-800 dark:text-zinc-100 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+                  className="flex h-9 w-full rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-mono text-slate-800 dark:text-zinc-100 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
                 >
                   <option value="Every 15 mins">Every 15 mins</option>
                   <option value="Every 30 mins">Every 30 mins</option>
@@ -192,7 +192,7 @@ export default function ScheduledTasksModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-3.5 scrollbar-thin dark:scrollbar-thumb-zinc-700">
           {tasks.length === 0 ? (
             <div className="text-center py-12 px-4 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 space-y-3 shadow-2xs">
-              <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                 <Clock className="w-6 h-6" />
               </div>
               <div className="text-xs font-mono font-bold text-slate-800 dark:text-zinc-200">
@@ -209,7 +209,7 @@ export default function ScheduledTasksModal() {
               return (
                 <div
                   key={task.id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 hover:border-violet-300 dark:hover:border-violet-700 transition-all space-y-2.5 shadow-2xs"
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all space-y-2.5 shadow-2xs"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">

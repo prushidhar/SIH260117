@@ -367,7 +367,7 @@ export default function AlarmRationalizationWidget({
               <div className="flex items-center justify-between pt-1">
                 <button
                   onClick={() => selectTag(tag)}
-                  className="flex items-center gap-1 text-[11px] font-mono text-violet-600 dark:text-violet-400 hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   <Crosshair className="w-3 h-3" />
                   <span>Highlight on P&ID ({tag})</span>

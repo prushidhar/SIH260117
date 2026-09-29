@@ -494,7 +494,7 @@ export default function Api676ScrewPumpCard({
 
         <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
           <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Viscous Shear Loss</div>
-          <div className="text-lg font-black text-violet-400 font-mono mt-0.5">{calculations.viscousPowerKw} kW</div>
+          <div className="text-lg font-black text-cyan-400 font-mono mt-0.5">{calculations.viscousPowerKw} kW</div>
           <div className="text-[10px] font-mono text-zinc-500 mt-0.5">Overall η: {calculations.overallEfficiencyPct}%</div>
         </div>
 
@@ -583,7 +583,7 @@ export default function Api676ScrewPumpCard({
               title={`Viscous Shear Drag: ${calculations.viscousPowerKw} kW`}
             />
             <div
-              className="h-full bg-violet-500 transition-all duration-300"
+              className="h-full bg-cyan-500 transition-all duration-300"
               style={{ width: `${(calculations.mechanicalLossKw / calculations.totalPowerKw) * 100}%` }}
               title={`Mechanical Losses: ${calculations.mechanicalLossKw} kW`}
             />
@@ -598,8 +598,8 @@ export default function Api676ScrewPumpCard({
               <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
               Viscous Drag: {calculations.viscousPowerKw} kW ({((calculations.viscousPowerKw / calculations.totalPowerKw) * 100).toFixed(1)}%)
             </span>
-            <span className="flex items-center gap-1 text-violet-400">
-              <span className="w-2 h-2 rounded-full bg-violet-500 inline-block" />
+            <span className="flex items-center gap-1 text-cyan-400">
+              <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block" />
               Mechanical/Gears: {calculations.mechanicalLossKw} kW ({((calculations.mechanicalLossKw / calculations.totalPowerKw) * 100).toFixed(1)}%)
             </span>
           </div>
@@ -1006,10 +1006,10 @@ export default function Api676ScrewPumpCard({
           <div className="space-y-1.5 p-3 rounded-lg bg-zinc-950/70 border border-zinc-800/80">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-zinc-400 flex items-center gap-1">
-                <Waves className="w-3 h-3 text-violet-400" />
+                <Waves className="w-3 h-3 text-cyan-400" />
                 Suction Pressure (P_suct)
               </span>
-              <span className="font-bold text-violet-400">{suctionPressureBarg.toFixed(1)} bar g</span>
+              <span className="font-bold text-cyan-400">{suctionPressureBarg.toFixed(1)} bar g</span>
             </div>
             <input
               type="range"
@@ -1018,7 +1018,7 @@ export default function Api676ScrewPumpCard({
               step="0.1"
               value={suctionPressureBarg}
               onChange={(e) => setSuctionPressureBarg(parseFloat(e.target.value))}
-              className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+              className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
             />
             <div className="flex justify-between text-[10px] font-mono text-zinc-500">
               <span>0.5 bar g</span>

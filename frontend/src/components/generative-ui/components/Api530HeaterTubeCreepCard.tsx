@@ -427,7 +427,7 @@ export default function Api530HeaterTubeCreepCard({
             <span className="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-wide uppercase bg-zinc-900 text-zinc-300 border border-zinc-800">
               {standardCode}
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
               {tubeMaterial}
             </span>
           </div>
@@ -505,7 +505,7 @@ export default function Api530HeaterTubeCreepCard({
 
         <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
           <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">LMP Rupture Mean</div>
-          <div className="text-lg font-black text-violet-400 font-mono mt-0.5">{calculations.lmpRuptureMean}</div>
+          <div className="text-lg font-black text-cyan-400 font-mono mt-0.5">{calculations.lmpRuptureMean}</div>
           <div className="text-[10px] font-mono text-zinc-500 mt-0.5">Oper LMP = {calculations.currentOperatingLmp}</div>
         </div>
 
@@ -636,11 +636,11 @@ export default function Api530HeaterTubeCreepCard({
                   <stop offset="100%" stopColor="#64748b" />
                 </radialGradient>
 
-                {/* Crude Oil Bore Liquid Gradient */}
-                <radialGradient id="crudeLiquidGradient" cx="50%" cy="50%" r="50%">
+                {/* Process Fluid Bore Liquid Gradient */}
+                <radialGradient id="processLiquidGradient" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="#0f172a" />
-                  <stop offset="85%" stopColor="#1e1b4b" />
-                  <stop offset="100%" stopColor="#312e81" />
+                  <stop offset="85%" stopColor="#042f2e" />
+                  <stop offset="100%" stopColor="#115e59" />
                 </radialGradient>
 
                 {/* Corrosion Layer Hatching Pattern */}
@@ -695,16 +695,16 @@ export default function Api530HeaterTubeCreepCard({
               />
 
               {/* Inner Process Bore (Fluid) */}
-              <circle cx="170" cy="125" r="62" fill="url(#crudeLiquidGradient)" stroke="#6366f1" strokeWidth="1.5" />
+              <circle cx="170" cy="125" r="62" fill="url(#processLiquidGradient)" stroke="#06b6d4" strokeWidth="1.5" />
 
               {/* Tube Bore Process Annotations */}
               <text x="170" y="118" textAnchor="middle" fill="#93c5fd" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                CRUDE OIL FLUID
+                PROCESS FLUID
               </text>
               <text x="170" y="132" textAnchor="middle" fill="#cbd5e1" fontSize="8" fontFamily="monospace">
                 P = {designPressurePsig} psig ({calculations.pressureMpa} MPa)
               </text>
-              <text x="170" y="144" textAnchor="middle" fill="#818cf8" fontSize="8" fontFamily="monospace">
+              <text x="170" y="144" textAnchor="middle" fill="#38bdf8" fontSize="8" fontFamily="monospace">
                 ID = {calculations.insideDiameterMm} mm
               </text>
 
@@ -756,10 +756,10 @@ export default function Api530HeaterTubeCreepCard({
         <div className="p-4 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold text-zinc-200 flex items-center gap-1.5">
-              <TrendingDown className="w-3.5 h-3.5 text-violet-400" />
+              <TrendingDown className="w-3.5 h-3.5 text-cyan-400" />
               Larson-Miller Parameter Master Curve (9Cr-1Mo)
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-violet-400 border border-violet-500/20">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-cyan-400 border border-cyan-500/20">
               LMP = T_R · (20 + log t_r) / 1000
             </span>
           </div>
@@ -798,7 +798,7 @@ export default function Api530HeaterTubeCreepCard({
 
               {/* Axis Titles */}
               <text x="260" y="235" textAnchor="middle" fill="#a1a1aa" fontSize="9" fontFamily="monospace" fontWeight="bold">
-                Larson-Miller Parameter (LMP × 10⁻³) [°R]
+                Larson-Miller Parameter (LMP x 10^-3) [deg R]
               </text>
               <text
                 x="-115"
@@ -902,7 +902,7 @@ export default function Api530HeaterTubeCreepCard({
           </div>
 
           <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
-            <span className="text-violet-400">Rupture LMP: {calculations.lmpRuptureMean}</span>
+            <span className="text-cyan-400">Rupture LMP: {calculations.lmpRuptureMean}</span>
             <span>Target: {targetLifeHours.toLocaleString()} h</span>
             <span className={calculations.ruptureLifeHours >= targetLifeHours ? 'text-emerald-400' : 'text-rose-400'}>
               Margin: {calculations.remainingCreepLifeHours.toLocaleString()} h
@@ -1002,10 +1002,10 @@ export default function Api530HeaterTubeCreepCard({
           <div className="space-y-1.5 p-3 rounded-lg bg-zinc-950/70 border border-zinc-800/80">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-zinc-400 flex items-center gap-1">
-                <Clock className="w-3 h-3 text-violet-400" />
+                <Clock className="w-3 h-3 text-cyan-400" />
                 Operating Life Target
               </span>
-              <span className="font-bold text-violet-400">{targetLifeHours.toLocaleString()} h ({(targetLifeHours / 8760).toFixed(1)} yrs)</span>
+              <span className="font-bold text-cyan-400">{targetLifeHours.toLocaleString()} h ({(targetLifeHours / 8760).toFixed(1)} yrs)</span>
             </div>
             <input
               type="range"
@@ -1014,7 +1014,7 @@ export default function Api530HeaterTubeCreepCard({
               step="5000"
               value={targetLifeHours}
               onChange={(e) => setTargetLifeHours(parseInt(e.target.value, 10))}
-              className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+              className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
             />
             <div className="flex justify-between text-[10px] font-mono text-zinc-500">
               <span>20,000 h</span>

@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getGlobalQueryClient, queryKeys } from '@/lib/queries';
-import { sendNativeNotification } from '@/lib/native-bridge';
 import { 
   saveSessionToDB, 
   loadSessionFromDB, 
@@ -296,7 +295,7 @@ export const useIndraStore = create<IndraState>()(
       activeModel: 'Auto-Negotiating...',
       modelReason: undefined,
       isSidebarOpen: true,
-      isRightPaneOpen: false,
+      isRightPaneOpen: true,
 
       isBackendConnected: false,
       isNetworkSocketConnected: false,
@@ -1445,14 +1444,14 @@ Thermosiphon driving head, two-phase riser hydrodynamics, and Departure from Nuc
         } else if (isApi530CreepQuery) {
           finalMarkdown = `### API Standard 530 7th Ed. / ISO 13704 Heater Tube Creep & Rupture Analysis
 
-Creep rupture life prediction, Larson-Miller Parameter (LMP), and cumulative creep damage evaluation for **F-101-RAD-01** (Atmospheric Crude Heater Radiant Coil) per API Standard 530 7th Edition.
+Creep rupture life prediction, Larson-Miller Parameter (LMP), and cumulative creep damage evaluation for **F-101-RAD-01** (Atmospheric Process Heater Radiant Coil) per API Standard 530 7th Edition.
 
 \`\`\`gen-ui
 {
   "component": "Api530HeaterTubeCreepCard",
   "props": {
     "heaterTag": "F-101-RAD-01",
-    "serviceDescription": "Atmospheric Crude Heater Radiant Coil",
+    "serviceDescription": "Atmospheric Process Heater Radiant Coil",
     "title": "API STANDARD 530 7TH ED. HEATER TUBE CREEP & RUPTURE INTEGRITY",
     "tubeMetalTempC": 580.0,
     "designPressurePsig": 450.0,
@@ -1582,13 +1581,13 @@ Real-time alarm flood suppression, cascade de-duplication, and first-out initiat
         } else if (isHammerQuery) {
           finalMarkdown = `### Joukowsky Transient Acoustic Surge Analysis (ASME B31.4 § 404.3.4)
 
-The sovereign neural agent has modeled the transient fluid column momentum and acoustic reflection wave for **PL-204 (24-inch NPS Crude Pipeline, 12.5 km)** following emergency shutdown valve trip.
+The sovereign neural agent has modeled the transient fluid column momentum and acoustic reflection wave for **PL-204 (24-inch NPS Industrial Transmission Pipeline, 12.5 km)** following emergency shutdown valve trip.
 
 \`\`\`gen-ui
 {
   "component": "WaterHammerCard",
   "props": {
-    "assetTag": "PL-204 (24-inch NPS Crude Pipeline, 12.5 km)",
+    "assetTag": "PL-204 (24-inch NPS Industrial Transmission Pipeline, 12.5 km)",
     "title": "JOUKOWSKY WATER HAMMER & TRANSIENT ACOUSTIC SURGE",
     "standard": "ASME B31.4 § 404.3.4",
     "steadyPressureBar": 38.5,
@@ -1638,7 +1637,7 @@ Differential pressure verification across concentric square-edged orifice run **
         } else if (isRbiQuery) {
           finalMarkdown = `### API 580 / API 581 Quantitative Risk-Based Inspection (RBI)
 
-Quantitative POF × COF multi-mechanism damage factor calculation and statutory NDT strategy for **V-301 (Hydrocracker High-Pressure Separator)**.
+Quantitative POF x COF multi-mechanism damage factor calculation and statutory NDT strategy for **V-301 (Hydrocracker High-Pressure Separator)**.
 
 \`\`\`gen-ui
 {
@@ -1721,7 +1720,7 @@ The sovereign neural agent has retrieved live telemetry for **Slurry Feed Pump P
     "unit": "psig",
     "thresholds": { "normal": 70, "warning": 85, "critical": 95 },
     "status": "warning",
-    "subtitle": "Crude Distillation Unit 1 • Header A"
+    "subtitle": "Continuous Process Unit 1 • Header A"
   }
 }
 \`\`\`
@@ -1806,7 +1805,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
   "component": "EquipmentHealthCard",
   "props": {
     "tag": "HX-4201",
-    "name": "Crude Pre-Heat Exchanger Bank A",
+    "name": "Process Pre-Heat Exchanger Bank A",
     "type": "Shell & Tube Exchanger (TEMA Class R)",
     "healthScore": 94,
     "mtbfHours": 22000,
@@ -1817,7 +1816,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 \`\`\`
 
 #### 4. Statutory Decision
-- **Compliance Status:** **APPROVED FOR UNRESTRICTED CRUDE RUNS** (Safety Margin: \`+0.3268 in\`)
+- **Compliance Status:** **APPROVED FOR UNRESTRICTED INDUSTRIAL PLANT OPERATIONS** (Safety Margin: \`+0.3268 in\`)
 - **Deliverables Generated:** Complete Trinity compiled (Word Report, Excel Sheet, Board Deck) in Sovereign Inspector.
 
 #### 5. Executive Board Review Deck (16:9 Interactive Preview)
@@ -1859,13 +1858,6 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
       },
 
   addNetworkEvent: (event: NetworkEvent) => {
-    const isLocal = !event.destination || event.destination.includes('127.0.0.1') || event.destination.includes('localhost') || event.destination.includes('0.0.0.0');
-    if (event.status === 'blocked' && !isLocal) {
-      sendNativeNotification({
-        title: 'INDRA: Intrusion Blocked',
-        body: `Localhost boundary dropped outbound packet to ${event.destination} (${event.protocol || 'TCP'}).`,
-      });
-    }
     set((state) => ({
       networkEvents: [event, ...state.networkEvents].slice(0, 100),
     }));

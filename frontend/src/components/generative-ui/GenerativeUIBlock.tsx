@@ -65,8 +65,8 @@ export default function GenerativeUIBlock({ spec }: Props) {
       {/* Micro-Frontend Titlebar */}
       <div className="flex items-center justify-between px-2 text-[10px] font-mono text-slate-500 dark:text-zinc-400 select-none">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
-          <span className="font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wider flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5" />
             <span>Generative UI Micro-Frontend</span>
           </span>

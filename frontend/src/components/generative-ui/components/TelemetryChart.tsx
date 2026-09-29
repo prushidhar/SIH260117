@@ -296,7 +296,7 @@ export default function TelemetryChart({
           <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
             <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5">
               <span className="font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                <BarChart2 className="w-3 h-3 text-violet-400" />
+                <BarChart2 className="w-3 h-3 text-cyan-400" />
                 15-BIN FFT HARMONIC SPECTRUM (0 - 550 Hz)
               </span>
               <span className="text-[9px] text-zinc-400">Resolution: 0.5X Orders</span>

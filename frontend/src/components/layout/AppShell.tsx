@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LeftPane from '@/components/left-pane/LeftPane';
+import RightPane from '@/components/right-pane/RightPane';
 import ToastContainer from '@/components/common/ToastContainer';
 import { useIndraStore } from '@/store/indra-store';
 import { useApprovalsQuery, useModelsQuery } from '@/lib/queries';
@@ -356,6 +357,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <PanelLeft className="w-4 h-4" />
           </button>
 
+          <button 
+            onClick={toggleRightPane}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isRightPaneOpen 
+                ? 'bg-slate-200/80 dark:bg-zinc-800 text-slate-800 dark:text-zinc-100' 
+                : 'hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-500 dark:text-zinc-400'
+            }`}
+            title="Toggle Right Inspector Pane (Deliverables, P&ID & Sovereign Monitor)"
+          >
+            <PanelRight className="w-4 h-4" />
+          </button>
+
           <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-0.5" />
 
           {/* Live Amber HITL Pending Approvals Badge */}
@@ -450,6 +463,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Pane 2: Routed Content (Workbench, KB, or Audit) */}
         {children}
+
+        {/* Pane 3: Right Inspector Pane (Deliverables, P&ID CAD & Sovereign Monitor) */}
+        {isRightPaneOpen && (pathname === '/workbench' || pathname === '/') && <RightPane />}
       </main>
 
       {/* 4. Settings / Sovereign Diagnostics Modal */}

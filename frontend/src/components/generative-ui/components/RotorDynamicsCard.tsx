@@ -264,7 +264,7 @@ export default function RotorDynamicsCard({
                 <span className="w-2.5 h-0.5 bg-sky-400 inline-block" /> 1X Ray
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-0.5 bg-purple-400 inline-block border-b border-dashed" /> 2X Ray
+                <span className="w-2.5 h-0.5 bg-cyan-400 inline-block border-b border-dashed" /> 2X Ray
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-0.5 bg-amber-400 inline-block" /> 17X VPF ({vanePassHz} Hz)

@@ -141,10 +141,10 @@ export default function ParameterControlForm({
           {tag && (
             <button
               onClick={handleLocateTag}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 font-mono text-xs font-bold transition-all cursor-pointer group"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold transition-all cursor-pointer group"
               title="Center camera on P&ID diagram"
             >
-              <Crosshair className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 group-hover:rotate-45 transition-transform" />
+              <Crosshair className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:rotate-45 transition-transform" />
               <span>{tag}</span>
             </button>
           )}
@@ -166,7 +166,7 @@ export default function ParameterControlForm({
               onClick={() => setActiveMode(mode)}
               className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
                 activeMode === mode
-                  ? 'bg-white dark:bg-zinc-700 text-violet-700 dark:text-violet-300 shadow-xs'
+                  ? 'bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
               }`}
             >
@@ -201,7 +201,7 @@ export default function ParameterControlForm({
               <div key={param.id} className="space-y-1.5 p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{param.label}</span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-violet-600 dark:text-violet-400">
+                  <div className="flex items-center gap-1 font-mono font-bold text-emerald-600 dark:text-emerald-400">
                     <span>{numVal}</span>
                     <span className="text-[10px] text-slate-400">{param.unit}</span>
                   </div>
@@ -213,7 +213,7 @@ export default function ParameterControlForm({
                   step={param.step || 1}
                   value={numVal}
                   onChange={(e) => handleSliderChange(param.id, parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                  className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
                 <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 dark:text-zinc-500">
                   <span>{param.description}</span>
@@ -304,7 +304,7 @@ export default function ParameterControlForm({
             className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               submitSuccess
                 ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-500/20'
-                : 'bg-violet-600 hover:bg-violet-700 text-white shadow-xs shadow-violet-500/20'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shadow-emerald-500/20'
             }`}
           >
             {submitSuccess ? (

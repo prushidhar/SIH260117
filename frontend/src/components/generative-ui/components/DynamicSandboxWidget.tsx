@@ -108,7 +108,7 @@ export default function DynamicSandboxWidget({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800 gap-2">
         <div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>{title}</span>
           </h4>
           <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
@@ -137,7 +137,7 @@ export default function DynamicSandboxWidget({
               onClick={() => setActiveTab('view')}
               className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition-all cursor-pointer ${
                 activeTab === 'view'
-                  ? 'bg-white dark:bg-zinc-700 text-violet-700 dark:text-violet-300 shadow-xs'
+                  ? 'bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
               }`}
             >
@@ -148,7 +148,7 @@ export default function DynamicSandboxWidget({
               onClick={() => setActiveTab('code')}
               className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition-all cursor-pointer ${
                 activeTab === 'code'
-                  ? 'bg-white dark:bg-zinc-700 text-violet-700 dark:text-violet-300 shadow-xs'
+                  ? 'bg-white dark:bg-zinc-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
               }`}
             >

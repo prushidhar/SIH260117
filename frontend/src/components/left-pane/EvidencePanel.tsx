@@ -29,7 +29,7 @@ export default function EvidencePanel() {
           {ragSources.map((source: RAGSource, index: number) => (
             <div
               key={source.id || index}
-              className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-violet-300 dark:hover:border-violet-700 transition-all text-xs shadow-2xs"
+              className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-xs shadow-2xs"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
@@ -39,7 +39,7 @@ export default function EvidencePanel() {
                   </span>
                 </div>
                 {source.relevance !== undefined && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 font-mono font-bold flex-shrink-0">
+                  <span className="text-[9px] px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 font-mono font-bold flex-shrink-0">
                     {source.relevance}% Match
                   </span>
                 )}

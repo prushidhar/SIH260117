@@ -141,7 +141,7 @@ export default function BlockChainTopologyMap({
                         {isGenesis ? 'BLOCK #0 (GENESIS)' : `BLOCK #${block.index}`}
                       </span>
                       {isLast && (
-                        <span className="px-1.5 py-0.2 rounded bg-violet-950/70 text-violet-300 border border-violet-800/60 text-[8px] font-bold">
+                        <span className="px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800/60 text-[8px] font-bold">
                           HEAD
                         </span>
                       )}

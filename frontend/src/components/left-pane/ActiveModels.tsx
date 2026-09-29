@@ -10,7 +10,7 @@ export default function ActiveModels() {
     <div className="px-3 py-3 border-b border-slate-200/70 dark:border-zinc-800/70">
       <div className="flex items-center justify-between px-1 mb-2.5">
         <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 font-mono">
-          <Cpu className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+          <Cpu className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           <span>Resident Models</span>
         </div>
         <button
