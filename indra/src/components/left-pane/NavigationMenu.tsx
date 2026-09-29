@@ -55,7 +55,7 @@ export default function NavigationMenu() {
       <div>
         <div className="px-2 mb-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 font-mono flex items-center justify-between">
           <span>Operational Views</span>
-          <Link href="/" className="hover:text-slate-200 transition-colors flex items-center gap-1 font-mono text-[9px] lowercase font-normal">
+          <Link href="/landing" className="hover:text-slate-200 transition-colors flex items-center gap-1 font-mono text-[9px] lowercase font-normal">
             <Home className="w-3 h-3" />
             <span>landing</span>
           </Link>
@@ -63,7 +63,7 @@ export default function NavigationMenu() {
         <div className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+            const isActive = item.href === '/workbench' ? (pathname === '/workbench' || pathname === '/') : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.id}

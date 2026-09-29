@@ -388,7 +388,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/workbench"
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                pathname === '/workbench'
+                pathname === '/workbench' || pathname === '/'
                   ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900'
               }`}
