@@ -29,7 +29,7 @@ export default function Deliverables() {
       case 'word':
       case 'doc':
       default:
-        return <FileText className="w-4 h-4 text-violet-600 dark:text-violet-400" />;
+        return <FileText className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
     }
   };
 
@@ -65,11 +65,11 @@ export default function Deliverables() {
   return (
     <div className="p-4 text-slate-800 dark:text-zinc-100">
       <div className="flex items-center gap-2 mb-3">
-        <Package className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+        <Package className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         <h2 className="text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-zinc-400 font-mono">
           Generated Deliverables
         </h2>
-        <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-mono font-bold border border-slate-200 dark:border-zinc-700">
+        <span className="ml-auto text-[9px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-mono font-bold border border-slate-200 dark:border-zinc-700">
           {deliverables.length}
         </span>
       </div>
@@ -77,10 +77,10 @@ export default function Deliverables() {
       {deliverables.length > 1 && (
         <button
           onClick={handleDownloadBundle}
-          className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-violet-50 dark:bg-violet-950/50 hover:bg-violet-100 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+          className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
           title="Download all generated deliverables as a cryptographically sealed ZIP bundle"
         >
-          <Archive className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+          <Archive className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>Download Compliance Bundle (.zip)</span>
         </button>
       )}
@@ -111,12 +111,12 @@ export default function Deliverables() {
                       {item.filename || item.name}
                     </span>
                   </div>
-                  <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                  <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
                     isExcel 
                       ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
                       : isPpt
                       ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
-                      : 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800'
+                      : 'bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800'
                   }`}>
                     {getBadgeLabel(fileTypeForDisplay)}
                   </span>

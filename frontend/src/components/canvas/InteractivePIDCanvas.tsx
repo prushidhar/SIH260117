@@ -425,7 +425,7 @@ export default function InteractivePIDCanvas({
           onClick={() => setShowFlow(!showFlow)}
           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
             showFlow
-              ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 font-bold'
+              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
               : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
           }`}
           title="Toggle Animated Process Flow"
@@ -436,7 +436,7 @@ export default function InteractivePIDCanvas({
           onClick={() => setShowBoxes(!showBoxes)}
           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
             showBoxes
-              ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 font-bold'
+              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
               : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
           }`}
           title="Toggle Equipment Bounding Boxes"
@@ -447,7 +447,7 @@ export default function InteractivePIDCanvas({
           onClick={() => setShowMinimap(!showMinimap)}
           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
             showMinimap
-              ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 font-bold'
+              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
               : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
           }`}
           title="Toggle Radar Minimap"
