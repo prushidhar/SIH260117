@@ -432,18 +432,18 @@ export default function KnowledgeBaseView() {
   };
 
   return (
-    <div className="flex-1 min-h-0 h-full flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden p-6 font-sans">
+    <div className="flex-1 min-h-0 h-full flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 overflow-hidden p-6 font-sans transition-colors duration-200">
       {/* 1. Header Row */}
-      <div className="flex flex-wrap items-center justify-between pb-4 border-b border-zinc-800/80 mb-5 gap-3">
+      <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-200 dark:border-zinc-800/80 mb-5 gap-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-cyan-950/70 border border-cyan-800/60 flex items-center justify-center">
-              <Database className="w-4 h-4 text-cyan-400" />
+            <div className="w-8 h-8 rounded-xl bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800/60 flex items-center justify-center">
+              <Database className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             </div>
-            <h1 className="text-base font-bold text-zinc-100 font-mono tracking-tight">
+            <h1 className="text-base font-bold text-slate-900 dark:text-zinc-100 font-mono tracking-tight">
               Sovereign RAG Knowledge Base Explorer
             </h1>
-            <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded-md border border-emerald-800/60 font-mono font-bold flex items-center gap-1">
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/60 font-mono font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {storageEngine === 'local' ? 'IN-BROWSER WASM 384D' : 'AIR-GAPPED VECTORSTORE'}
             </span>
@@ -453,7 +453,7 @@ export default function KnowledgeBaseView() {
               </Badge>
             )}
           </div>
-          <p className="text-xs text-zinc-400 mt-1 font-mono">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-mono">
             {storageEngine === 'local'
               ? `Client-side WASM inference (all-MiniLM-L6-v2 ${device.toUpperCase()}) with zero WAN egress • IndexedDB persistent vector memory`
               : 'Index plant SOPs, ASME B31.3 standards, P&ID CAD schematics, and equipment data on-premise.'}

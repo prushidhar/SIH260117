@@ -169,6 +169,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [initLocalDB, setTheme, syncHistoryWithBackend]);
 
+  const isDetached = pathname.startsWith('/detach');
+  if (isDetached) {
+    return <>{children}</>;
+  }
+
+  const isStandalone = pathname === '/landing' || pathname === '/privacy' || pathname === '/terms';
+  if (isStandalone) {
+    return (
+      <div className="w-full h-full overflow-y-auto bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-zinc-100 selection:bg-emerald-500 selection:text-white">
+        {children}
+        <ToastContainer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-800 dark:text-zinc-100 select-none">
       {/* 1. Top DCS Sovereign Header Bar */}

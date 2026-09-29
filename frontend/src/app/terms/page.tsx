@@ -1,51 +1,63 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
   Scale, 
   ArrowLeft, 
-  AlertTriangle, 
-  FileCheck, 
-  CheckCircle2, 
   ShieldAlert, 
-  Terminal 
+  Terminal,
+  Sun,
+  Moon
 } from 'lucide-react';
-
-export const metadata = {
-  title: 'Terms & Conditions - INDRA Sovereign AI Workbench',
-  description: 'Statutory engineering terms of use, deterministic calculation disclaimers, and human-in-the-loop sign-off governance.',
-};
+import useIndraStore from '@/store/indra-store';
 
 export default function TermsAndConditionsPage() {
+  const { theme, toggleTheme } = useIndraStore();
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white transition-colors duration-200">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 flex-shrink-0">
+              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0 shadow-xs">
                 <Image src="/logo.png" alt="INDRA" fill className="object-contain p-1" />
               </div>
               <div>
-                <div className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
                   INDRA
                 </div>
-                <div className="text-[10px] font-mono text-slate-400">STATUTORY USAGE TERMS</div>
+                <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400">STATUTORY USAGE TERMS</div>
               </div>
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-600" />
+              )}
+            </button>
+
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-mono transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-mono transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Home</span>
             </Link>
             <Link
               href="/workbench"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-semibold transition-colors shadow-xs"
             >
               <span>Launch Workbench</span>
             </Link>
@@ -54,26 +66,26 @@ export default function TermsAndConditionsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 flex-1">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full">
         <div className="space-y-8">
           {/* Header Banner */}
-          <div className="border-b border-slate-800 pb-8">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-950/60 border border-amber-800/80 text-amber-400 text-xs font-mono mb-4">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-8">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-700 dark:text-amber-400 text-xs font-mono mb-4">
               <Scale className="w-3.5 h-3.5" />
               <span>STATUTORY ENGINEERING GOVERNANCE</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Terms &amp; Conditions of Industrial Use
             </h1>
-            <p className="text-sm text-slate-400 mt-2 font-mono">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-mono">
               Effective Date: September 2026 &bull; Scope: Multi-Sector Industrial Facilities, Power Generation, Chemical Manufacturing, Utilities &amp; Heavy Process Infrastructure
             </p>
           </div>
 
           {/* Statutory Advisory Notice Callout */}
-          <div className="p-4 rounded-lg bg-amber-950/30 border border-amber-800/60 text-amber-200 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-bold text-amber-300 text-sm font-mono">
-              <ShieldAlert className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs space-y-2 shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 text-sm font-mono">
+              <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
               <span>CRITICAL STATUTORY ENGINEERING NOTICE (ASME B31.3 / API 570)</span>
             </div>
             <p className="leading-relaxed">
@@ -82,19 +94,19 @@ export default function TermsAndConditionsPage() {
           </div>
 
           {/* Detailed Terms Sections */}
-          <div className="space-y-8 text-sm text-slate-300 leading-relaxed font-sans">
+          <div className="space-y-8 text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 font-mono">
-                <span className="text-amber-400">01.</span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                <span className="text-amber-600 dark:text-amber-400">01.</span>
                 <span>Deterministic Calculation Scope &amp; Boundaries</span>
               </h2>
               <p>
                 Calculations performed by INDRA execute via deterministic Python numerical solvers implementing standardized mathematical equations:
               </p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                <li><strong className="text-slate-200">ASME B31.3 Section 304.1.2:</strong> Straight pipe minimum required wall thickness based on internal design pressure, allowable stress, joint quality factor, and temperature coefficient.</li>
-                <li><strong className="text-slate-200">API 570 Section 7.1.1:</strong> Remaining life and statutory inspection intervals based on measured thickness, nominal thickness, and linear corrosion rate.</li>
-                <li><strong className="text-slate-200">ISO 10816-3:</strong> Vibration velocity RMS harmonic evaluation for rotating machinery.</li>
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+                <li><strong className="text-slate-800 dark:text-slate-200">ASME B31.3 Section 304.1.2:</strong> Straight pipe minimum required wall thickness based on internal design pressure, allowable stress, joint quality factor, and temperature coefficient.</li>
+                <li><strong className="text-slate-800 dark:text-slate-200">API 570 Section 7.1.1:</strong> Remaining life and statutory inspection intervals based on measured thickness, nominal thickness, and linear corrosion rate.</li>
+                <li><strong className="text-slate-800 dark:text-slate-200">ISO 10816-3:</strong> Vibration velocity RMS harmonic evaluation for rotating machinery.</li>
               </ul>
               <p>
                 The operator is solely responsible for ensuring that all physical telemetry, material grades (e.g. ASTM A106 Gr. B vs. 316L SS), design pressures, and operating temperatures inputted into the system accurately reflect real-world plant conditions.
@@ -102,8 +114,8 @@ export default function TermsAndConditionsPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 font-mono">
-                <span className="text-amber-400">02.</span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                <span className="text-amber-600 dark:text-amber-400">02.</span>
                 <span>Human-in-the-Loop (HITL) Gate Responsibilities</span>
               </h2>
               <p>
@@ -115,14 +127,14 @@ export default function TermsAndConditionsPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 font-mono">
-                <span className="text-amber-400">03.</span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                <span className="text-amber-600 dark:text-amber-400">03.</span>
                 <span>On-Premise Software Licensing &amp; Sovereignty</span>
               </h2>
               <p>
                 INDRA is provided for deployment within authorized on-premise industrial environments. The enterprise licensee retains complete ownership of:
               </p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
                 <li>All proprietary P&amp;ID schematics, CAD files, and engineering drawings uploaded to the system.</li>
                 <li>All ultrasonic thickness survey reports, NDT non-destructive testing logs, and telemetry feeds.</li>
                 <li>All generated deliverables (.docx statutory notes, .xlsx calculation sheets, .pptx board review decks).</li>
@@ -130,8 +142,8 @@ export default function TermsAndConditionsPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 font-mono">
-                <span className="text-amber-400">04.</span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                <span className="text-amber-600 dark:text-amber-400">04.</span>
                 <span>Limitation of Liability in Operational Plants</span>
               </h2>
               <p>
@@ -140,8 +152,8 @@ export default function TermsAndConditionsPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 font-mono">
-                <span className="text-amber-400">05.</span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                <span className="text-amber-600 dark:text-amber-400">05.</span>
                 <span>Cryptographic Audit Trail Integrity</span>
               </h2>
               <p>
@@ -151,10 +163,10 @@ export default function TermsAndConditionsPage() {
           </div>
 
           {/* Action Footer */}
-          <div className="pt-8 border-t border-slate-800 flex items-center justify-between">
+          <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <Link
               href="/privacy"
-              className="text-xs font-mono text-slate-400 hover:text-white transition-colors"
+              className="text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
             >
               &larr; Review Privacy Policy
             </Link>
@@ -170,13 +182,13 @@ export default function TermsAndConditionsPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-950 py-6 text-xs text-slate-500 font-mono">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 text-xs text-slate-500 font-mono">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <span>INDRA Sovereign AI &bull; Air-Gapped Workstation Distribution</span>
           <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-slate-300">Home</Link>
-            <Link href="/privacy" className="hover:text-slate-300">Privacy</Link>
-            <Link href="/workbench" className="hover:text-slate-300">Workbench</Link>
+            <Link href="/" className="hover:text-slate-900 dark:hover:text-slate-300">Home</Link>
+            <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-slate-300">Privacy</Link>
+            <Link href="/workbench" className="hover:text-slate-900 dark:hover:text-slate-300">Workbench</Link>
           </div>
         </div>
       </footer>

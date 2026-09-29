@@ -177,25 +177,25 @@ export default function AuditLedgerView() {
   };
 
   return (
-    <div className="flex-1 min-h-0 h-full flex flex-col bg-zinc-950 text-zinc-200 overflow-hidden p-5 font-mono select-none">
+    <div className="flex-1 min-h-0 h-full flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200 overflow-hidden p-5 font-mono select-none transition-colors duration-200">
       {/* Top SCADA Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-zinc-800/80 gap-3 mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 dark:border-zinc-800/80 gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h1 className="text-base font-bold text-zinc-100 tracking-wider">
+            <h1 className="text-base font-bold text-slate-900 dark:text-zinc-100 tracking-wider">
               MERKLE AUDIT LEDGER & 3-TIER HITL TIMELINE
             </h1>
-            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-800/60 font-bold">
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/60 font-bold">
               SHA-256 IMMUTABLE
             </span>
-            <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-800/60 font-semibold hidden sm:inline">
+            <span className="text-[10px] text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-200 dark:border-cyan-800/60 font-semibold hidden sm:inline">
               AIR-GAP LOCAL (127.0.0.1)
             </span>
           </div>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             OSHA 1910.119 / API 570 / ASME B31.3 deterministic ledger with client-side cryptographic seal verification.
           </p>
         </div>
