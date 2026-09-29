@@ -66,7 +66,7 @@ export default function TermsAndConditionsPage() {
               Terms &amp; Conditions of Industrial Use
             </h1>
             <p className="text-sm text-slate-400 mt-2 font-mono">
-              Effective Date: September 2026 &bull; Scope: Petrochemical, Refinery &amp; Heavy Process Deployments
+              Effective Date: September 2026 &bull; Scope: Multi-Sector Industrial Facilities, Power Generation, Chemical Manufacturing, Utilities &amp; Heavy Process Infrastructure
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function TermsAndConditionsPage() {
                 <span>Limitation of Liability in Operational Plants</span>
               </h2>
               <p>
-                In no event shall the authors, maintainers, or contributors of INDRA be held liable for mechanical failures, pressure vessel ruptures, loss of containment, unplanned refinery outages, or consequential damages resulting from improper operating parameters, undetected metallurgical fatigue, unverified AI outputs, or failure to follow statutory plant operating procedures (SOPs).
+                In no event shall the authors, maintainers, or contributors of INDRA be held liable for mechanical failures, pressure vessel ruptures, loss of containment, unplanned plant outages, or consequential damages resulting from improper operating parameters, undetected metallurgical fatigue, unverified AI outputs, or failure to follow statutory plant operating procedures (SOPs).
               </p>
             </section>
 

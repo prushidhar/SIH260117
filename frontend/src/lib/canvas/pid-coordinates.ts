@@ -38,7 +38,7 @@ export interface PipeLineSegment {
 }
 
 /**
- * Standard refinery crude pre-heat & distillation feed P&ID schematic layout
+ * Standard industrial process pre-heat & separation P&ID schematic layout
  * Normalized to 1000 x 800 schematic space.
  */
 export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [

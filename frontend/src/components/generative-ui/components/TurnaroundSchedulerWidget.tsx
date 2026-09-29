@@ -120,7 +120,7 @@ export const TurnaroundSchedulerWidget: React.FC<TurnaroundSchedulerProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-white tracking-wide">
-                Refinery Turnaround & CPM Shutdown Optimization
+                Industrial Turnaround &amp; CPM Shutdown Optimization
               </h3>
               <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/60">
                 TAR ID: {initialShutdownId}

@@ -193,7 +193,7 @@ const KNOWLEDGE_NODES: KnowledgeNode[] = [
     x: 370,
     y: 450,
     relevance: 94,
-    snippet: 'Standard petroleum refinery fouling resistance: crude oil below 150°C specifies Rf = 0.00035 m²·K/W. Clean overall coefficient U_clean vs service coefficient U_service indicates bundle fouling.',
+    snippet: 'Standard industrial process heat exchanger fouling resistance: hydrocarbon and process fluids below 150°C specify Rf = 0.00035 m²·K/W. Clean overall coefficient U_clean vs service coefficient U_service indicates bundle fouling.',
     vectorSummary: 'dim:768 • norm:0.997 • top_features: [fouling_factor, crud_oil_deposit, overall_heat_transfer, bundle_cleanliness]',
     connections: ['tema-duty', 'crane-dp'],
   },
@@ -231,7 +231,7 @@ const CLUSTER_METADATA: Record<string, { label: string; color: string; border: s
   ASME_PIPING: { label: 'ASME B31.3 Piping', color: '#10b981', border: 'border-emerald-500', bg: 'bg-emerald-500/10' },
   API_570_NDT: { label: 'API 570 NDT Inspection', color: '#f59e0b', border: 'border-amber-500', bg: 'bg-amber-500/10' },
   API_PUMPS: { label: 'API 610 Centrifugal Pumps', color: '#06b6d4', border: 'border-cyan-500', bg: 'bg-cyan-500/10' },
-  ISO_VIBRATION: { label: 'ISO 10816 Vibration', color: '#8b5cf6', border: 'border-violet-500', bg: 'bg-violet-500/10' },
+  ISO_VIBRATION: { label: 'ISO 10816 Vibration', color: '#0d9488', border: 'border-teal-500', bg: 'bg-teal-500/10' },
   TEMA_THERMAL: { label: 'TEMA Class R Exchangers', color: '#f43f5e', border: 'border-rose-500', bg: 'bg-rose-500/10' },
   HYDRAULICS: { label: 'API 14E / Crane TP-410', color: '#3b82f6', border: 'border-blue-500', bg: 'bg-blue-500/10' },
 };
@@ -269,7 +269,7 @@ export default function NeuralVectorGraph() {
       {/* Top Filter & Search Bar */}
       <div className="p-3.5 border-b border-slate-200/80 dark:border-zinc-800/80 bg-slate-50/70 dark:bg-zinc-900/50 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800">
+          <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
             <Network className="w-4 h-4" />
           </div>
           <div>
@@ -288,7 +288,7 @@ export default function NeuralVectorGraph() {
             onClick={() => setFilterCluster('ALL')}
             className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
               filterCluster === 'ALL'
-                ? 'bg-violet-600 text-white font-bold shadow-xs'
+                ? 'bg-emerald-600 text-white font-bold shadow-xs'
                 : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100'
             }`}
           >
@@ -449,7 +449,7 @@ export default function NeuralVectorGraph() {
               <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 font-mono">
                 {selectedNode.title}
               </h4>
-              <div className="text-xs font-semibold text-violet-700 dark:text-violet-400 font-mono mt-0.5 flex items-center gap-1.5">
+              <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 font-mono mt-0.5 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" />
                 <span>{selectedNode.standard} • {selectedNode.section}</span>
               </div>
@@ -467,7 +467,7 @@ export default function NeuralVectorGraph() {
 
             {/* Vector Embedding Footprint */}
             <div className="p-3 rounded-xl bg-slate-900 text-slate-200 font-mono text-[10px] border border-slate-800 space-y-1">
-              <div className="flex items-center justify-between text-violet-400 font-bold">
+              <div className="flex items-center justify-between text-emerald-400 font-bold">
                 <span className="flex items-center gap-1">
                   <Cpu className="w-3 h-3" />
                   <span>Dense Vector Embedding</span>
@@ -482,7 +482,7 @@ export default function NeuralVectorGraph() {
                 {[45, 80, 20, 65, 90, 40, 75, 30, 85, 55, 70, 95, 25, 60, 80, 50, 65, 35, 90, 40].map((h, i) => (
                   <div
                     key={i}
-                    className="flex-1 bg-violet-500/70 hover:bg-violet-400 transition-colors rounded-t-xs"
+                    className="flex-1 bg-emerald-500/70 hover:bg-emerald-400 transition-colors rounded-t-xs"
                     style={{ height: `${h}%` }}
                     title={`dim_${i * 38}: ${(h / 100 - 0.5).toFixed(3)}`}
                   />
@@ -516,10 +516,10 @@ export default function NeuralVectorGraph() {
           {/* Action Button: Query in Workbench */}
           <button
             onClick={() => handleQueryNode(selectedNode)}
-            className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer"
+            className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer"
             title="Send this standard and formula to the AI agent workbench for evaluation"
           >
-            <Sparkles className="w-3.5 h-3.5 text-violet-200" />
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
             <span>Query Standard in Workbench</span>
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </button>

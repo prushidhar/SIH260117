@@ -8465,5 +8465,55 @@
     },
     "previous_hash": "1d60927fb8c6ab3eabbbf9e809edfead2facca6d57b449ee3875554b67490752",
     "hash": "6054c885d4705ed1c27222104b69b9eeae6efe5a0e90aadb4e78a1d896082008"
+  },
+  {
+    "timestamp": 1790671801.289625,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "7d7ec3d878c8f4a455d02a4891bc7ea9f3a25358576730b1bcd66bc4c14bcc8d",
+      "file_count": 4
+    },
+    "previous_hash": "6054c885d4705ed1c27222104b69b9eeae6efe5a0e90aadb4e78a1d896082008",
+    "hash": "30959aafcd189900694a70e90de4aa8c4aa3e01b1f190cc3e93216895615b9d4"
+  },
+  {
+    "timestamp": 1790671803.5571165,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "04ce82ba8169ef36e2611605e5d0dcfb6e7b530ef8a094c66ad58911d0db780b"
+    },
+    "previous_hash": "30959aafcd189900694a70e90de4aa8c4aa3e01b1f190cc3e93216895615b9d4",
+    "hash": "f202a1d8a6d484cdfc239cba8422d2abc1b9b6a4ac822d1be454ee1fd729f4eb"
+  },
+  {
+    "timestamp": 1790672702.5892138,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "64a35e4e9e6504f68c7fd86baccfdbc22dd8f639fb984a28fb302211ba3fbc3b",
+      "file_count": 4
+    },
+    "previous_hash": "f202a1d8a6d484cdfc239cba8422d2abc1b9b6a4ac822d1be454ee1fd729f4eb",
+    "hash": "7e3a93afd05e2ef74b4a2ae56d8fa6d5120596b45a2f2b4069486efc00b071e5"
+  },
+  {
+    "timestamp": 1790672704.766093,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "c9dbddf1c528bc652ccad3d5014edfb2fba44667c9e46150c3b5a1b82c8d7ca4"
+    },
+    "previous_hash": "7e3a93afd05e2ef74b4a2ae56d8fa6d5120596b45a2f2b4069486efc00b071e5",
+    "hash": "474511f4fd7d27a66d8eea75a7e6453746bfc11926b028f0ea8d44c4b648aa92"
   }
 ]

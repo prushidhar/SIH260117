@@ -56,8 +56,8 @@ export default function MultiFormatDocumentViewer({
       {/* Top Drawer Header Bar */}
       <div className="h-14 px-5 border-b border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
         <div className="flex items-center gap-2.5 truncate pr-4">
-          <div className="w-8 h-8 rounded-xl bg-violet-950/70 border border-violet-800/60 flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-4 h-4 text-violet-400" />
+          <div className="w-8 h-8 rounded-xl bg-cyan-950/70 border border-cyan-800/60 flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="truncate">
             <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export default function MultiFormatDocumentViewer({
           onClick={() => setActiveTab('markdown')}
           className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-mono font-semibold transition-all border-b-2 cursor-pointer ${
             activeTab === 'markdown'
-              ? 'border-violet-500 text-violet-300 font-bold'
+              ? 'border-emerald-500 text-emerald-300 font-bold'
               : 'border-transparent text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -101,7 +101,7 @@ export default function MultiFormatDocumentViewer({
           onClick={() => setActiveTab('chunks')}
           className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-mono font-semibold transition-all border-b-2 cursor-pointer ${
             activeTab === 'chunks'
-              ? 'border-violet-500 text-violet-300 font-bold'
+              ? 'border-emerald-500 text-emerald-300 font-bold'
               : 'border-transparent text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -116,7 +116,7 @@ export default function MultiFormatDocumentViewer({
           onClick={() => setActiveTab('equations')}
           className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-mono font-semibold transition-all border-b-2 cursor-pointer ${
             activeTab === 'equations'
-              ? 'border-violet-500 text-violet-300 font-bold'
+              ? 'border-emerald-500 text-emerald-300 font-bold'
               : 'border-transparent text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -167,7 +167,7 @@ export default function MultiFormatDocumentViewer({
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 text-[11px] font-mono text-zinc-400">
               <span>{document.chunks.length} RECURSIVE CHUNKS (512-TOKEN WINDOW)</span>
-              <span className="text-violet-400 font-bold">384-DIM DENSE VECTORS</span>
+              <span className="text-emerald-400 font-bold">384-DIM DENSE VECTORS</span>
             </div>
 
             <div className="space-y-3">
@@ -178,7 +178,7 @@ export default function MultiFormatDocumentViewer({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-violet-400 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-emerald-400 font-bold text-[10px]">
                         CHUNK #{chunk.index + 1}
                       </span>
                       <span className="font-bold text-zinc-200">{chunk.title}</span>
@@ -208,7 +208,7 @@ export default function MultiFormatDocumentViewer({
 
                   {/* Dense Vector Embedding Preview */}
                   <div className="p-2 rounded bg-zinc-950/80 border border-zinc-800/80 text-[9px] text-zinc-500 overflow-x-auto">
-                    <span className="text-violet-400 font-bold mr-1">EMBEDDING[0..7]:</span>
+                    <span className="text-emerald-400 font-bold mr-1">EMBEDDING[0..7]:</span>
                     <span>
                       [{chunk.embeddingPreview.map((v) => (v >= 0 ? `+${v.toFixed(4)}` : v.toFixed(4))).join(', ')}, ...]
                     </span>

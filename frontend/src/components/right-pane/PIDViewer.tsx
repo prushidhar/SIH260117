@@ -125,7 +125,7 @@ export default function PIDViewer() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Scan className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          <Scan className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <h2 className="text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-zinc-400 font-mono">
             Dynamic P&ID Canvas
           </h2>
@@ -133,7 +133,7 @@ export default function PIDViewer() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => multiWindowSync.openWindow('pid')}
-            className="text-slate-400 hover:text-violet-600 dark:text-zinc-500 dark:hover:text-violet-400 p-1 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-emerald-600 dark:text-zinc-500 dark:hover:text-emerald-400 p-1 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer"
             title="Tear Off to Monitor 2 (Multi-Monitor Mode)"
           >
             <Monitor className="w-3.5 h-3.5" />
@@ -195,8 +195,8 @@ export default function PIDViewer() {
                 onClick={() => handleTagClick(tag)}
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-mono transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-violet-600 text-white font-bold ring-1 ring-violet-400 shadow-2xs'
-                    : 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/50 hover:bg-violet-100 dark:hover:bg-violet-900/50'
+                    ? 'bg-emerald-600 text-white font-bold ring-1 ring-emerald-400 shadow-2xs'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
                 }`}
               >
                 <span>{tag}</span>
@@ -213,10 +213,10 @@ export default function PIDViewer() {
         )}
 
         {selectedTag && !loadingTag && (
-          <div className="mt-2 p-3 rounded-xl bg-slate-50/90 dark:bg-zinc-900/90 border border-violet-200 dark:border-violet-800/50 text-xs animate-in fade-in duration-150 shadow-2xs">
+          <div className="mt-2 p-3 rounded-xl bg-slate-50/90 dark:bg-zinc-900/90 border border-emerald-200 dark:border-emerald-800/50 text-xs animate-in fade-in duration-150 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="font-mono font-bold text-violet-700 dark:text-violet-400">{selectedTag.tag}</span>
-              <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-mono font-bold border border-emerald-200 dark:border-emerald-800">
+              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{selectedTag.tag}</span>
+              <span className="text-[8px] px-1.5 py-0.2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-mono font-bold border border-emerald-200 dark:border-emerald-800">
                 {selectedTag.status || 'VERIFIED'}
               </span>
             </div>

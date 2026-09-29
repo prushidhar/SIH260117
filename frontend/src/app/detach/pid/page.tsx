@@ -118,9 +118,9 @@ export default function DetachedPIDPage() {
 
         {/* Right Status */}
         <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="text-zinc-500 text-[10px]">REFINERY UNIT:</span>
+          <span className="text-zinc-500 text-[10px]">PLANT UNIT:</span>
           <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] font-bold">
-            CRUDE PRE-HEAT (ASME B31.3)
+            PROCESS TRAIN 1 (ASME B31.3)
           </span>
         </div>
       </header>

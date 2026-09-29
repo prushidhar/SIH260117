@@ -61,7 +61,7 @@ export const ANSI_PAPER_FORMATS: Record<'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'NONE
   A0: {
     id: 'A0',
     name: 'ANSI / ISO A0',
-    label: 'A0 (1189 × 841 mm) - Major Refinery Master Sheet',
+    label: 'A0 (1189 x 841 mm) - Major Plant Master Sheet',
     width: 2378,
     height: 1682,
     mmWidth: 1189,

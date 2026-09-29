@@ -880,9 +880,9 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 3: Tool Execution (Python Sandbox)
         await new Promise((r) => setTimeout(r, 700));
-        const pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
+        const pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED INDUSTRIAL SERVICE")`;
 
-        const pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED REFINERY SERVICE`;
+        const pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED INDUSTRIAL SERVICE`;
 
         set((s) => ({
           messages: s.messages.map((m) =>

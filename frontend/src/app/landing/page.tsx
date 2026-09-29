@@ -16,7 +16,7 @@ import {
 
 export const metadata = {
   title: 'INDRA - Sovereign Air-Gapped Industrial AI Workbench',
-  description: 'On-premise engineering intelligence system for refinery asset integrity, deterministic ASME B31.3 calculation, ISA-5.1 P&ID vision extraction, and cryptographic Merkle audit verification.',
+  description: 'On-premise engineering intelligence system for multi-sector industrial asset integrity, power generation, chemical processing, advanced manufacturing, and critical infrastructure.',
 };
 
 export default function LandingPage() {
@@ -242,48 +242,68 @@ export default function LandingPage() {
               Supported Industry Standards &amp; Codes
             </h2>
             <p className="text-sm text-slate-400 mt-2">
-              Deliverables and calculations are explicitly mapped to recognized industrial standards used across petrochemical refineries and heavy process plants.
+              Deliverables and calculations are explicitly mapped to recognized statutory engineering standards (ASME, API, ISO, IEC, NFPA) applied across power stations, chemical and pharmaceutical plants, advanced manufacturing, utility networks, and heavy process infrastructure.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono font-bold text-sm text-white">ASME B31.3 Section 304</span>
+                <span className="font-mono font-bold text-sm text-white">ASME B31.3 / B31.1</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Piping Design</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Formulas for minimum required pipe wall thickness, allowable stresses for ASTM A106 Grade B and 316L stainless steel, design temperature de-rating, and weld joint quality factors.
+                Deterministic solvers for process and power piping wall thickness, Barlow equation, allowable stresses (A106 Gr B, 316L SS), design temp de-rating, and thermal expansion loops.
               </p>
             </div>
 
             <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono font-bold text-sm text-white">API 570 Section 7</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Piping Inspection</span>
+                <span className="font-mono font-bold text-sm text-white">ASME Sec I / Sec VIII</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Boilers &amp; Vessels</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Remaining life calculation based on ultrasonic thickness survey measurements, historical corrosion rates (Cr), and statutory retirement thickness thresholds (t_retire).
+                Thermosiphon boiler circulation ratios, steam drum quality, DNB departure limits, and pressure vessel MAWP shell, head, and conical reducer transitions per UG-27/UG-32.
               </p>
             </div>
 
             <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono font-bold text-sm text-white">ISA-5.1-2009</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Instrumentation</span>
+                <span className="font-mono font-bold text-sm text-white">API 570 / API 653</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Asset Integrity</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Standardized identification letters and functional diagrams for transmitters (PT, TT, LT), control valves (FCV, PCV), and safety relief devices (PSV) on engineering P&amp;IDs.
+                Remaining useful life (RUL) modeling based on ultrasonic survey thickness data, short-term vs long-term corrosion rates, and statutory inspection intervals.
               </p>
             </div>
 
             <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono font-bold text-sm text-white">ISO 10816-3</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Vibration Severity</span>
+                <span className="font-mono font-bold text-sm text-white">ISA-5.1 &amp; IEC 62443</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Instrumentation &amp; OT</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Evaluation of machine vibration on non-rotating parts for industrial machines. Severity zoning (Zone A Good, Zone B Satisfactory, Zone C Unsatisfactory, Zone D Unacceptable).
+                Standardized tag identification and loop diagrams for sensors, control valves, and interlocks on P&amp;IDs, aligned with air-gapped ICS security perimeter zoning.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono font-bold text-sm text-white">ISO 10816-3 &amp; ISO 1940</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Rotating Dynamics</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Evaluation of machine vibration velocity RMS harmonics across Zones A to D for pumps, motors, and turbines, plus dual-plane dynamic rotor balance quality limits.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono font-bold text-sm text-white">IEC 61511 &amp; NFPA 68/70E</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Functional Safety</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                SIL verification Markov PFDavg calculations for safety instrumented systems, arc flash incident energy boundary analysis, and silo deflagration vent sizing.
               </p>
             </div>
           </div>
