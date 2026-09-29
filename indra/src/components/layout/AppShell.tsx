@@ -21,9 +21,6 @@ import {
   Clock,
   Download,
   AlertTriangle,
-  LayoutDashboard,
-  Network,
-  BookOpen,
   Cpu,
   Server,
   Search,
@@ -383,82 +380,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-0.5" />
 
-          {/* Ergonomic Quick Navigation Pills */}
-          <nav className="flex items-center gap-1 font-mono text-[11px]">
-            <Link
-              href="/workbench"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                pathname === '/workbench' || pathname === '/'
-                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Workbench (Tri-Pane)</span>
-            </Link>
-
-            <Link
-              href="/canvas"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                pathname === '/canvas'
-                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <Network className="w-3.5 h-3.5" />
-              <span>Spatial P&amp;ID Canvas (/canvas)</span>
-            </Link>
-
-            <Link
-              href="/knowledge"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                pathname.startsWith('/knowledge') || pathname.startsWith('/kb')
-                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>RAG Knowledge Base (/knowledge)</span>
-            </Link>
-
-            <Link
-              href="/audit"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                pathname.startsWith('/audit')
-                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Merkle Audit Ledger (/audit)</span>
-            </Link>
-
-            {/* Live Amber HITL Pending Approvals Badge */}
-            <button
-              onClick={() => setApprovalsModalOpen(true)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer border ${
-                pendingApprovals.length > 0
-                  ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-bold shadow-xs'
-                  : 'bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-medium'
-              }`}
-              title="Human-In-The-Loop Cryptographic Tool Sign-Off"
-            >
-              <AlertTriangle className={`w-3.5 h-3.5 ${pendingApprovals.length > 0 ? 'text-amber-600 dark:text-amber-400 animate-pulse' : 'text-slate-400 dark:text-zinc-500'}`} />
-              <span>HITL:</span>
-              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                pendingApprovals.length > 0
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
-              }`}>
-                {pendingApprovals.length}
+          {/* Live Amber HITL Pending Approvals Badge */}
+          <button
+            onClick={() => setApprovalsModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer border font-mono text-[11px] ${
+              pendingApprovals.length > 0
+                ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-bold shadow-xs'
+                : 'bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-medium'
+            }`}
+            title="Human-In-The-Loop Cryptographic Tool Sign-Off"
+          >
+            <AlertTriangle className={`w-3.5 h-3.5 ${pendingApprovals.length > 0 ? 'text-amber-600 dark:text-amber-400 animate-pulse' : 'text-slate-400 dark:text-zinc-500'}`} />
+            <span>HITL:</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+              pendingApprovals.length > 0
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+            }`}>
+              {pendingApprovals.length}
+            </span>
+            {pendingApprovals.length > 0 && (
+              <span className="text-[9px] uppercase tracking-wider font-extrabold text-amber-600 dark:text-amber-400">
+                PENDING
               </span>
-              {pendingApprovals.length > 0 && (
-                <span className="text-[9px] uppercase tracking-wider font-extrabold text-amber-600 dark:text-amber-400">
-                  PENDING
-                </span>
-              )}
-            </button>
-          </nav>
+            )}
+          </button>
         </div>
 
         {/* Right: Air-Gap Telemetry Badges & Pitch Deck Action */}
