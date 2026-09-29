@@ -12,10 +12,10 @@ export function GaugeNode({ id, data }: { id: string; data: any }) {
   const { removeNode } = useSpatialStore();
 
   return (
-    <div className="w-[420px] rounded-2xl bg-white dark:bg-zinc-900 border-2 border-violet-500/50 shadow-2xl shadow-violet-500/10 overflow-hidden font-sans relative">
-      <Handle type="target" position={Position.Left} className="w-3.5 h-3.5 bg-violet-600 border-2 border-white dark:border-zinc-900 -ml-1.5" />
-      <Handle type="source" position={Position.Right} className="w-3.5 h-3.5 bg-violet-600 border-2 border-white dark:border-zinc-900 -mr-1.5" />
-      <Handle type="target" position={Position.Top} className="w-3.5 h-3.5 bg-violet-600 border-2 border-white dark:border-zinc-900 -mt-1.5" />
+    <div className="w-[420px] rounded-2xl bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/10 overflow-hidden font-sans relative">
+      <Handle type="target" position={Position.Left} className="w-3.5 h-3.5 bg-emerald-600 border-2 border-white dark:border-zinc-900 -ml-1.5" />
+      <Handle type="source" position={Position.Right} className="w-3.5 h-3.5 bg-emerald-600 border-2 border-white dark:border-zinc-900 -mr-1.5" />
+      <Handle type="target" position={Position.Top} className="w-3.5 h-3.5 bg-emerald-600 border-2 border-white dark:border-zinc-900 -mt-1.5" />
 
       <button
         onClick={() => removeNode(id)}
@@ -42,10 +42,10 @@ export function TelemetryNode({ id, data }: { id: string; data: any }) {
   const { removeNode } = useSpatialStore();
 
   return (
-    <div className="w-[520px] rounded-2xl bg-white dark:bg-zinc-900 border-2 border-purple-500/50 shadow-2xl shadow-purple-500/10 overflow-hidden font-sans relative">
-      <Handle type="target" position={Position.Left} className="w-3.5 h-3.5 bg-purple-600 border-2 border-white dark:border-zinc-900 -ml-1.5" />
-      <Handle type="source" position={Position.Right} className="w-3.5 h-3.5 bg-purple-600 border-2 border-white dark:border-zinc-900 -mr-1.5" />
-      <Handle type="target" position={Position.Top} className="w-3.5 h-3.5 bg-purple-600 border-2 border-white dark:border-zinc-900 -mt-1.5" />
+    <div className="w-[520px] rounded-2xl bg-white dark:bg-zinc-900 border-2 border-cyan-500/50 shadow-2xl shadow-cyan-500/10 overflow-hidden font-sans relative">
+      <Handle type="target" position={Position.Left} className="w-3.5 h-3.5 bg-cyan-600 border-2 border-white dark:border-zinc-900 -ml-1.5" />
+      <Handle type="source" position={Position.Right} className="w-3.5 h-3.5 bg-cyan-600 border-2 border-white dark:border-zinc-900 -mr-1.5" />
+      <Handle type="target" position={Position.Top} className="w-3.5 h-3.5 bg-cyan-600 border-2 border-white dark:border-zinc-900 -mt-1.5" />
 
       <button
         onClick={() => removeNode(id)}

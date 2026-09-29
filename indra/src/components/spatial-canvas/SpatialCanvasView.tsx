@@ -141,10 +141,10 @@ function SpatialCanvasInner() {
 
   const nodeOptions: { type: SpatialNodeType; label: string; icon: any; color: string }[] = [
     { type: 'equipmentNode', label: 'ISA Equipment Stencil', icon: Layers, color: 'text-emerald-500' },
-    { type: 'chatNode', label: 'Agent Reasoning Core', icon: Bot, color: 'text-violet-500' },
+    { type: 'chatNode', label: 'Agent Reasoning Core', icon: Bot, color: 'text-emerald-500' },
     { type: 'tableNode', label: 'ASME B31.3 Calculation Table', icon: Table, color: 'text-cyan-500' },
-    { type: 'gaugeNode', label: 'Live SCADA Pressure Gauge', icon: Gauge, color: 'text-violet-500' },
-    { type: 'telemetryNode', label: 'ISO 10816 Vibration Chart', icon: Activity, color: 'text-purple-500' },
+    { type: 'gaugeNode', label: 'Live SCADA Pressure Gauge', icon: Gauge, color: 'text-cyan-500' },
+    { type: 'telemetryNode', label: 'ISO 10816 Vibration Chart', icon: Activity, color: 'text-teal-500' },
     { type: 'controlNode', label: 'DCS Parameter Faceplate', icon: Sliders, color: 'text-amber-500' },
     { type: 'documentNode', label: 'Knowledge Base Document', icon: FileText, color: 'text-yellow-500' },
     { type: 'auditNode', label: 'Merkle Audit Proof Block', icon: ShieldCheck, color: 'text-emerald-500' },
@@ -304,13 +304,13 @@ function SpatialCanvasInner() {
                     const cat = (n.data?.category as string) || '';
                     if (cat === 'pumps') return '#10b981'; // emerald
                     if (cat === 'exchangers') return '#06b6d4'; // cyan
-                    if (cat === 'columns') return '#8b5cf6'; // violet
+                    if (cat === 'columns') return '#0284c7'; // sky
                     if (cat === 'valves') return '#f59e0b'; // amber
                     if (cat === 'compressors') return '#f43f5e'; // rose
                     if (cat === 'tanks') return '#3b82f6'; // blue
                     return '#10b981';
                   }
-                  if (n.type === 'chatNode') return '#8b5cf6';
+                  if (n.type === 'chatNode') return '#10b981';
                   if (n.type === 'tableNode') return '#06b6d4';
                   if (n.type === 'controlNode') return '#f59e0b';
                   if (n.type === 'auditNode') return '#10b981';
@@ -598,7 +598,7 @@ function SpatialCanvasInner() {
                 className="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
                 title="Auto-Arrange Layout"
               >
-                <LayoutGrid className="w-3.5 h-3.5 text-violet-400" />
+                <LayoutGrid className="w-3.5 h-3.5 text-emerald-400" />
               </button>
 
               <button

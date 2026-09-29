@@ -14,14 +14,14 @@ export default function RightPane() {
       {/* Pane Header */}
       <div className="h-11 px-3.5 border-b border-slate-200/70 dark:border-zinc-800/70 flex items-center justify-between bg-slate-50/70 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-200/80 dark:border-violet-800/50">
+          <div className="p-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/50">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <span className="font-mono text-xs font-bold tracking-wider text-slate-800 dark:text-zinc-200 uppercase">
             Sovereign Inspector
           </span>
           {deliverables.length > 0 && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 font-mono font-bold border border-violet-200 dark:border-violet-800">
+            <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-mono font-bold border border-emerald-200 dark:border-emerald-800">
               {deliverables.length}
             </span>
           )}

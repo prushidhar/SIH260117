@@ -120,7 +120,7 @@ export default function DataTableNode({ id, data }: { id: string; data: any }) {
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
             {filteredRows.map((row, i) => (
               <tr key={i} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition-colors">
-                <td className="px-3 py-1.5 font-bold text-violet-600 dark:text-violet-400">{row.tag}</td>
+                <td className="px-3 py-1.5 font-bold text-cyan-600 dark:text-cyan-400">{row.tag}</td>
                 <td className="px-3 py-1.5 text-slate-800 dark:text-zinc-200 font-sans">{row.param}</td>
                 <td className="px-2 py-1.5 text-slate-500 italic">{row.symbol}</td>
                 <td className="px-3 py-1.5 text-right font-bold text-slate-900 dark:text-zinc-100">{row.value}</td>

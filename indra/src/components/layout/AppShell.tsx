@@ -337,7 +337,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           {isNative && (
-            <Badge variant="violet" className="py-1 px-2.5">
+            <Badge variant="outline" className="py-1 px-2.5 font-bold">
               ELECTRON DESKTOP
             </Badge>
           )}
@@ -495,7 +495,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="p-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl">
                 <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Storage Engine</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 block truncate mt-0.5">Dexie (IndexedDB)</span>
-                <Badge variant="violet" className="mt-1">Local-First Disk</Badge>
+                <Badge variant="outline" className="mt-1">Local-First Disk</Badge>
               </div>
             </div>
 
