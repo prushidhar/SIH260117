@@ -8442,78 +8442,93 @@
     "hash": "672bc02e7d4cf9eedbbd84dac2b7b3ef4dadd814baaa95e15246def3fdd1e80d"
   },
   {
-    "timestamp": 1790666468.443355,
-    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "timestamp": 1790682924.5247493,
+    "event_type": "dag_started",
     "payload": {
-      "task_id": "test-task",
-      "equipment_tag": "CDU-Pipe-104",
-      "bundle_sha256": "2fb3b0eb05bf7e17f4e05929e3371b9a5c3bd76b1bacc933802bc6d605382a05",
-      "file_count": 4
+      "task_id": "task-c400ff1b",
+      "prompt": "what can you do"
     },
     "previous_hash": "672bc02e7d4cf9eedbbd84dac2b7b3ef4dadd814baaa95e15246def3fdd1e80d",
-    "hash": "1d60927fb8c6ab3eabbbf9e809edfead2facca6d57b449ee3875554b67490752"
+    "hash": "574cff17029afc3e0a9b11c470f6d23e78b133f3adeb5a2d0c68c944743d6298"
   },
   {
-    "timestamp": 1790666469.6644185,
-    "event_type": "engineering_consensus_sealed",
+    "timestamp": 1790682934.1709864,
+    "event_type": "tool_execution",
     "payload": {
-      "task_id": "task-cogen-tar-evaluation",
-      "asset_tag": "HEX-301",
-      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
-      "consensus_score_pct": 100.0,
-      "cert_hash": "7664cd5b5ff07b4b8256435f21ae90143b7dd5675fc7a4db55f9f79042bec9a7"
+      "tool": "kb_search",
+      "args": {
+        "query": "what can you do"
+      },
+      "result": {
+        "results": [
+          {
+            "id": "std-nfpa-30_chunk_0",
+            "title": "NFPA 30 Flammable and Combustible Liquids Code \u2014 Storage Tank Farms",
+            "snippet": "NFPA 30 Flammable and Combustible Liquids Code (2021 Edition): Design and Safety Protection for Petroleum Tank Farms: - Liquid Classification: Class I (Flash point < 37.8\u00b0C / 100\u00b0F), Class II, Class III. - Secondary Containment (Dike Impoundment): The volumetric capacity of the diked area shall not ...",
+            "relevance_score": 3.857,
+            "code_reference": "NFPA 30 Flammable and Combustible Liquids Code \u2014 Storage Tank Farms"
+          },
+          {
+            "id": "std-api-684-rotordynamics_chunk_0",
+            "title": "API 684 / API 617 Rotordynamics & Critical Speed Campbell Diagrams",
+            "snippet": "API Standard 684 (2nd Edition) & API 617 (8th Edition) Axial and Centrifugal Compressors and Expander-Compressors: Rotordynamic Lateral and Torsional Critical Speeds: - Separation Margins: 1. If first lateral critical speed Nc1 is below operating speed: Nc1 shall be at least 16% below minimum operat...",
+            "relevance_score": 3.791,
+            "code_reference": "API 684 / API 617 Rotordynamics & Critical Speed Campbell Diagrams"
+          }
+        ]
+      },
+      "execution_time_ms": 6.03
     },
-    "previous_hash": "1d60927fb8c6ab3eabbbf9e809edfead2facca6d57b449ee3875554b67490752",
-    "hash": "6054c885d4705ed1c27222104b69b9eeae6efe5a0e90aadb4e78a1d896082008"
+    "previous_hash": "574cff17029afc3e0a9b11c470f6d23e78b133f3adeb5a2d0c68c944743d6298",
+    "hash": "66f4e159d71e56a354799a6b7930d58e22a9412a0651df9cc21daea1f5949b6e"
   },
   {
-    "timestamp": 1790671801.289625,
+    "timestamp": 1790682954.84966,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-c400ff1b",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 2
+    },
+    "previous_hash": "66f4e159d71e56a354799a6b7930d58e22a9412a0651df9cc21daea1f5949b6e",
+    "hash": "93aabe261297d384d354319b4890fc9d475def2f7b29aea05714e487285ce880"
+  },
+  {
+    "timestamp": 1790682954.8889928,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-c400ff1b",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 2
+    },
+    "previous_hash": "93aabe261297d384d354319b4890fc9d475def2f7b29aea05714e487285ce880",
+    "hash": "89010095ca87c5016e53b895e0536807c80033c21d66d4fb2297c97176f2677e"
+  },
+  {
+    "timestamp": 1790685967.1749303,
     "event_type": "COMPLIANCE_BUNDLE_SEALED",
     "payload": {
       "task_id": "test-task",
       "equipment_tag": "CDU-Pipe-104",
-      "bundle_sha256": "7d7ec3d878c8f4a455d02a4891bc7ea9f3a25358576730b1bcd66bc4c14bcc8d",
+      "bundle_sha256": "6b26c6bd8020af55a149edc4181a12ed953ec5da63882b342b65990d5b992321",
       "file_count": 4
     },
-    "previous_hash": "6054c885d4705ed1c27222104b69b9eeae6efe5a0e90aadb4e78a1d896082008",
-    "hash": "30959aafcd189900694a70e90de4aa8c4aa3e01b1f190cc3e93216895615b9d4"
+    "previous_hash": "89010095ca87c5016e53b895e0536807c80033c21d66d4fb2297c97176f2677e",
+    "hash": "6941b0db2b1c7256c28295db90c27b1f0fda6a7b21a29f8044f32dee8d6230a7"
   },
   {
-    "timestamp": 1790671803.5571165,
+    "timestamp": 1790685968.0721455,
     "event_type": "engineering_consensus_sealed",
     "payload": {
       "task_id": "task-cogen-tar-evaluation",
       "asset_tag": "HEX-301",
       "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
       "consensus_score_pct": 100.0,
-      "cert_hash": "04ce82ba8169ef36e2611605e5d0dcfb6e7b530ef8a094c66ad58911d0db780b"
+      "cert_hash": "00707da5579b957bbe59ab8ad90d7f4a65db818e5dad9e4c87023c5e320875b1"
     },
-    "previous_hash": "30959aafcd189900694a70e90de4aa8c4aa3e01b1f190cc3e93216895615b9d4",
-    "hash": "f202a1d8a6d484cdfc239cba8422d2abc1b9b6a4ac822d1be454ee1fd729f4eb"
-  },
-  {
-    "timestamp": 1790672702.5892138,
-    "event_type": "COMPLIANCE_BUNDLE_SEALED",
-    "payload": {
-      "task_id": "test-task",
-      "equipment_tag": "CDU-Pipe-104",
-      "bundle_sha256": "64a35e4e9e6504f68c7fd86baccfdbc22dd8f639fb984a28fb302211ba3fbc3b",
-      "file_count": 4
-    },
-    "previous_hash": "f202a1d8a6d484cdfc239cba8422d2abc1b9b6a4ac822d1be454ee1fd729f4eb",
-    "hash": "7e3a93afd05e2ef74b4a2ae56d8fa6d5120596b45a2f2b4069486efc00b071e5"
-  },
-  {
-    "timestamp": 1790672704.766093,
-    "event_type": "engineering_consensus_sealed",
-    "payload": {
-      "task_id": "task-cogen-tar-evaluation",
-      "asset_tag": "HEX-301",
-      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
-      "consensus_score_pct": 100.0,
-      "cert_hash": "c9dbddf1c528bc652ccad3d5014edfb2fba44667c9e46150c3b5a1b82c8d7ca4"
-    },
-    "previous_hash": "7e3a93afd05e2ef74b4a2ae56d8fa6d5120596b45a2f2b4069486efc00b071e5",
-    "hash": "474511f4fd7d27a66d8eea75a7e6453746bfc11926b028f0ea8d44c4b648aa92"
+    "previous_hash": "6941b0db2b1c7256c28295db90c27b1f0fda6a7b21a29f8044f32dee8d6230a7",
+    "hash": "2d700b5bf5a3082b8fa3bf058106b13e89d4749566280e93c47ffa9a87acfcb2"
   }
 ]

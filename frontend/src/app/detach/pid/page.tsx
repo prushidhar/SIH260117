@@ -86,15 +86,15 @@ export default function DetachedPIDPage() {
       <header className="h-12 bg-zinc-950/90 border-b border-zinc-800 flex items-center justify-between px-4 z-20 shadow-md">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-violet-950/60 border border-violet-800/50 flex items-center justify-center">
-              <Monitor className="w-4 h-4 text-violet-400" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-800/50 flex items-center justify-center">
+              <Monitor className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-xs tracking-wider text-zinc-100">
                   MONITOR 2: P&ID SCHEMATIC WORKBENCH
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-md bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   IPC SYNC ACTIVE
                 </span>
@@ -105,7 +105,7 @@ export default function DetachedPIDPage() {
 
         {/* Selected Equipment Pill */}
         {activeTagString && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
             <span className="text-zinc-500 text-[10px]">FOCUSED UNIT:</span>
             <strong className="text-emerald-400 font-bold">{activeTagString}</strong>
             {selectedTag?.name && (
@@ -147,7 +147,7 @@ export default function DetachedPIDPage() {
                 <Scan className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="font-bold text-emerald-400">{selectedTag.tag}</span>
               </div>
-              <span className="text-[8px] px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-300 border border-emerald-800/60 font-bold">
+              <span className="text-[8px] px-2 py-0.5 rounded-md bg-emerald-950/50 text-emerald-300 border border-emerald-800/60 font-bold">
                 {selectedTag.status || 'ACTIVE'}
               </span>
             </div>

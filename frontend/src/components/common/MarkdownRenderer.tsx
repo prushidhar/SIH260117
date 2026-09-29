@@ -60,7 +60,7 @@ const customComponents = {
   },
   // Inline code & Block code
   code({ node, className, children, ...props }: any) {
-    const match = /language-(\w+)/.exec(className || '');
+    const match = /language-([\w-]+)/.exec(className || '');
     const codeString = String(children).replace(/\n$/, '');
     const isBlock = Boolean(match) || String(children).includes('\n');
 
@@ -77,7 +77,7 @@ const customComponents = {
 
     const rawLanguage = match ? match[1] : '';
     const langLower = (rawLanguage || className || '').toLowerCase();
-    const isGenUI = langLower.includes('gen-ui') || langLower.includes('genui') || langLower.includes('ui') || langLower.includes('generative-ui');
+    const isGenUI = langLower.includes('gen') || langLower.includes('ui') || (codeString.includes('"component"') && codeString.includes('"props"'));
 
     if (isGenUI || (langLower.includes('json') && codeString.includes('"component"'))) {
       const spec = parseGenerativeUISpec(codeString);

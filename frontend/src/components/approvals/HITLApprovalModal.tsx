@@ -111,7 +111,7 @@ export default function HITLApprovalModal() {
         {/* Global Signature Bar */}
         <div className="px-6 py-3 bg-slate-50/50 dark:bg-zinc-950/50 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
           <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-400 font-medium">
-            <FileSignature className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <FileSignature className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Digital Signer Name:</span>
           </div>
           <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export default function HITLApprovalModal() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
+                      <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
                         <Cpu className="w-4 h-4" />
                       </div>
                       <div>

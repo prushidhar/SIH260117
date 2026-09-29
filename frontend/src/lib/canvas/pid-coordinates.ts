@@ -44,7 +44,7 @@ export interface PipeLineSegment {
 export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   {
     tag: 'TK-101',
-    name: 'Crude Feed Storage Tank',
+    name: 'Primary Process Feed Storage Tank (TK-101)',
     type: 'VESSEL',
     x: 60,
     y: 360,
@@ -63,7 +63,7 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   },
   {
     tag: 'P-101',
-    name: 'Primary Crude Feed Centrifugal Pump',
+    name: 'High-Pressure Feed Centrifugal Pump (P-101A)',
     type: 'PUMP',
     x: 230,
     y: 440,
@@ -82,7 +82,7 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   },
   {
     tag: 'P-102',
-    name: 'Booster Crude Feed Standby Pump',
+    name: 'High-Pressure Feed Standby Pump (P-101B)',
     type: 'PUMP',
     x: 230,
     y: 570,
@@ -117,7 +117,7 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   },
   {
     tag: 'FV-101',
-    name: 'Crude Flow Control Valve (FCV)',
+    name: 'Process Flow Control Valve (FCV-101)',
     type: 'VALVE',
     x: 420,
     y: 415,
@@ -136,7 +136,7 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   },
   {
     tag: 'E-101',
-    name: 'Shell & Tube Crude Pre-Heat Exchanger',
+    name: 'Shell & Tube Process Feed Heat Exchanger (E-101)',
     type: 'EXCHANGER',
     x: 540,
     y: 370,
@@ -157,7 +157,7 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
   },
   {
     tag: 'HX-4201',
-    name: 'Crude Pre-Heat Exchanger Bank A',
+    name: 'Process Feed Heat Exchanger Bank A (HX-4201)',
     type: 'EXCHANGER',
     x: 540,
     y: 530,
@@ -266,25 +266,25 @@ export const DEFAULT_EQUIPMENT_CATALOG: EquipmentBoundingBox[] = [
  */
 export const DEFAULT_PIPING_NETWORK: PipeLineSegment[] = [
   // Tank to Pump P-101 Suction
-  { id: 'L-101', from: { x: 170, y: 480 }, to: { x: 230, y: 480 }, fluid: 'Crude Oil', fluidColor: '#6366f1', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-101', from: { x: 170, y: 480 }, to: { x: 230, y: 480 }, fluid: 'Process Feed', fluidColor: '#06b6d4', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
   // Tank to Pump P-102 Suction (branch)
-  { id: 'L-102', from: { x: 200, y: 480 }, to: { x: 200, y: 610 }, fluid: 'Crude Oil', fluidColor: '#6366f1', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
-  { id: 'L-103', from: { x: 200, y: 610 }, to: { x: 230, y: 610 }, fluid: 'Crude Oil', fluidColor: '#6366f1', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-102', from: { x: 200, y: 480 }, to: { x: 200, y: 610 }, fluid: 'Process Feed', fluidColor: '#06b6d4', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-103', from: { x: 200, y: 610 }, to: { x: 230, y: 610 }, fluid: 'Process Feed', fluidColor: '#06b6d4', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
   // Pump P-101 Discharge to Header
-  { id: 'L-104', from: { x: 270, y: 440 }, to: { x: 420, y: 440 }, fluid: 'Pressurized Crude', fluidColor: '#8b5cf6', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-104', from: { x: 270, y: 440 }, to: { x: 420, y: 440 }, fluid: 'Pressurized Process Stream', fluidColor: '#0284c7', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
   // Pump P-102 Discharge to Header
-  { id: 'L-105', from: { x: 270, y: 570 }, to: { x: 310, y: 570 }, fluid: 'Pressurized Crude', fluidColor: '#8b5cf6', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
-  { id: 'L-106', from: { x: 310, y: 570 }, to: { x: 310, y: 440 }, fluid: 'Pressurized Crude', fluidColor: '#8b5cf6', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-105', from: { x: 270, y: 570 }, to: { x: 310, y: 570 }, fluid: 'Pressurized Process Stream', fluidColor: '#0284c7', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-106', from: { x: 310, y: 570 }, to: { x: 310, y: 440 }, fluid: 'Pressurized Process Stream', fluidColor: '#0284c7', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
   // FCV FV-101 to Heat Exchanger E-101
-  { id: 'L-107', from: { x: 480, y: 440 }, to: { x: 540, y: 440 }, fluid: 'Controlled Crude', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-107', from: { x: 480, y: 440 }, to: { x: 540, y: 440 }, fluid: 'Controlled Process Stream', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
   // Exchanger E-101 to Battery Limit (Through TI-101)
-  { id: 'L-108', from: { x: 690, y: 440 }, to: { x: 920, y: 440 }, fluid: 'Pre-Heated Crude (195°C)', fluidColor: '#f59e0b', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-108', from: { x: 690, y: 440 }, to: { x: 920, y: 440 }, fluid: 'Pre-Heated Process Stream (195°C)', fluidColor: '#f59e0b', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
   // Branch to Bank A (HX-4201)
-  { id: 'L-109', from: { x: 510, y: 440 }, to: { x: 510, y: 600 }, fluid: 'Crude Slipstream', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
-  { id: 'L-110', from: { x: 510, y: 600 }, to: { x: 540, y: 600 }, fluid: 'Crude Slipstream', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-109', from: { x: 510, y: 440 }, to: { x: 510, y: 600 }, fluid: 'Process Slipstream', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-110', from: { x: 510, y: 600 }, to: { x: 540, y: 600 }, fluid: 'Process Slipstream', fluidColor: '#06b6d4', lineSize: '6" Sch 40', spec: 'A106-B', direction: 1 },
   // HX-4201 to Valve FV-3102 and Process Out
-  { id: 'L-111', from: { x: 690, y: 600 }, to: { x: 730, y: 600 }, fluid: 'Superheated Crude (285°C)', fluidColor: '#ef4444', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
-  { id: 'L-112', from: { x: 790, y: 600 }, to: { x: 920, y: 600 }, fluid: 'Desalter Feed (285°C)', fluidColor: '#ef4444', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-111', from: { x: 690, y: 600 }, to: { x: 730, y: 600 }, fluid: 'High-Temp Process Stream (285°C)', fluidColor: '#ef4444', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
+  { id: 'L-112', from: { x: 790, y: 600 }, to: { x: 920, y: 600 }, fluid: 'High-Temp Downstream Feed (285°C)', fluidColor: '#ef4444', lineSize: '8" Sch 40', spec: 'A106-B', direction: 1 },
   // Relief line from Shell E-101 to RV-204
   { id: 'L-113', from: { x: 640, y: 370 }, to: { x: 640, y: 310 }, fluid: 'Relief Vapor', fluidColor: '#10b981', lineSize: '2" Sch 80', spec: 'A106-B', direction: 1 },
   // Flare Header Out from RV-204

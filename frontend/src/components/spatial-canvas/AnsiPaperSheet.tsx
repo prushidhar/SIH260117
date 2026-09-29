@@ -17,7 +17,7 @@ export function AnsiPaperSheetComponent({
   formatId,
   title = 'PIPING & INSTRUMENTATION DIAGRAM (P&ID)',
   drawingNo = 'INDRA-01-PID-3100-D04',
-  project = 'CRUDE PRE-HEAT & FRACTIONATION TRAIN',
+  project = 'MULTI-SECTOR PROCESS & THERMAL ENERGY TRAIN',
   revision = 'D4 (IFC)',
 }: AnsiPaperSheetProps) {
   const { x, y, zoom } = useViewport();

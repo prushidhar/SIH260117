@@ -13,8 +13,8 @@ import {
 import type { GenerativeUISpec } from '@/components/generative-ui/types';
 
 // --- API Configuration ---
-export const API_BASE = 'http://localhost:8000';
-export const WS_BASE = 'ws://localhost:8000';
+export const API_BASE = 'http://127.0.0.1:8000';
+export const WS_BASE = 'ws://127.0.0.1:8000';
 
 // --- Interfaces ---
 export interface ConversationSession {
@@ -1000,8 +1000,24 @@ export const useIndraStore = create<IndraState>()(
         const isFatigueQuery = /fatigue|miner|palmgren|goodman|damage\s*fraction/i.test(promptText);
         const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
 
+        const isGreeting = /^\s*(hi|hello|hey|what can (you|u) do|what is your name|who are you|help|capabilities|what do you do)\s*$/i.test(promptText.trim()) || promptText.trim().length <= 3;
+
         let finalMarkdown = '';
-        if (isCompressorAntiSurgeQuery) {
+        if (isGreeting) {
+          finalMarkdown = `### INDRA Sovereign AI Workbench — Capabilities Overview
+
+I am an air-gapped, on-premise industrial AI assistant built for refineries, power generation, heavy chemical processing, and discrete manufacturing.
+
+#### Core Capabilities:
+1. **Mechanical & Piping Compliance**: ASME B31.3 wall thickness calculations, API 570 inspection analysis.
+2. **Rotating Equipment Diagnostics**: ISO 10816-3 vibration analysis, API 610/676 pump performance curves.
+3. **Process & Thermal Engineering**: API 530 heater tube creep, TEG glycol dehydration (GPSA Sec 20), pressure relief valve sizing (API 520).
+4. **Functional Safety & HAZOP**: IEC 61511 SIL verification, LOPA risk assessment matrix.
+5. **Statutory Plant Deliverables**: Automatic generation of signed Word approval notes, Excel workbooks, and board review presentation decks.
+6. **2D P&ID Visual Canvas**: Interactive equipment tag inspection and CAD schematic navigation.
+
+*Try asking:* \`"Calculate ASME B31.3 wall thickness for P-101"\` or \`"Run HAZOP for Node 01"\`.`;
+        } else if (isCompressorAntiSurgeQuery) {
           finalMarkdown = `### API 617 Centrifugal Compressor Anti-Surge & ASV Response
 
 Sovereign aerodynamic evaluation of operating point versus Surge Limit Line (SLL) and Surge Control Line (SCL) for **K-102**.

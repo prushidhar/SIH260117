@@ -476,7 +476,7 @@ function drawBoundingBoxes(ctx: CanvasRenderingContext2D, options: RenderOptions
     }
 
     // Color palette based on status / activation
-    let accentColor = '#8b5cf6'; // Violet default
+    let accentColor = '#10b981'; // Emerald default
     if (isActive) accentColor = '#10b981'; // Emerald for active focused
     if (eq.status === 'CRITICAL') accentColor = '#ef4444'; // Rose for critical ASME
     if (isHovered && !isActive) accentColor = '#06b6d4'; // Cyan for hover

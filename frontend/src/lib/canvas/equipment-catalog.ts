@@ -184,7 +184,7 @@ export const PIPING_LINE_SPECS: LineSpec[] = [
     service: 'Medium Pressure Superheated Steam',
     serviceCode: 'S',
     materialClass: 'Cr-Mo Steel 300# (A335-P11)',
-    color: '#8b5cf6', // violet
+    color: '#06b6d4', // cyan
     description: 'Utility stripping steam injection line',
   },
   {

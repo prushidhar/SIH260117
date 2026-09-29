@@ -21,7 +21,7 @@ import type { EquipmentHealthCardProps } from '../types';
 
 export default function EquipmentHealthCard({
   tag = 'P-101',
-  name = 'Crude Distillation Slurry Feed Pump A',
+  name = 'Heavy Industrial Process Pump P-101A',
   type = 'Centrifugal Slurry Pump (API 610 BB2)',
   healthScore = 92,
   mtbfHours = 14200,

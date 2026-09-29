@@ -23,36 +23,36 @@ import { sovereignAudio } from '../../../lib/sound/sovereign-audio';
 import { useIndraStore } from '../../../store/indra-store';
 
 export interface PlantDigitalTwinProps {
-  initialCrudeApi?: number;
+  initialDensity?: number;
   initialFeedBpd?: number;
   initialFurnaceTempC?: number;
   plantName?: string;
   onStreamSelect?: (streamId: string) => void;
 }
 
-interface CrudePreset {
+interface OperatingMode {
   name: string;
-  api: number;
-  sulfurPct: number;
-  origin: string;
+  density: number;
+  operatingPressure: number;
+  sector: string;
   description: string;
 }
 
-const CRUDE_PRESETS: CrudePreset[] = [
-  { name: 'Arab Light', api: 33.4, sulfurPct: 1.82, origin: 'Saudi Arabia', description: 'Standard benchmark crude with balanced light & middle distillates.' },
-  { name: 'Maya Heavy', api: 21.8, sulfurPct: 3.45, origin: 'Mexico', description: 'High-viscosity, high-metal sour crude demanding maximum furnace duty.' },
-  { name: 'Mumbai High', api: 39.5, sulfurPct: 0.15, origin: 'India (Offshore ONGC)', description: 'Low sulfur, sweet paraffinic crude with high lube & middle cut yield.' },
-  { name: 'Brent Blend', api: 38.3, sulfurPct: 0.40, origin: 'North Sea', description: 'Light sweet global benchmark; high LPG and naphtha cut fractions.' },
+const OPERATING_MODES: OperatingMode[] = [
+  { name: 'Continuous Chemical & Hydrocarbon Synthesis', density: 0.78, operatingPressure: 45.0, sector: 'Heavy Chemical & Refining', description: 'Continuous catalytic conversion and separation unit targeting maximum light fraction recovery.' },
+  { name: 'Thermal Power & Supercritical Steam Cycle', density: 1.00, operatingPressure: 240.0, sector: 'Power Generation', description: 'Supercritical boiler and steam turbine cycle for grid-synchronised base-load power generation.' },
+  { name: 'Advanced Polymers & Continuous Manufacturing', density: 0.92, operatingPressure: 28.0, sector: 'Advanced Manufacturing', description: 'Continuous polymerisation reactor loop with inline quality control and melt-phase conditioning.' },
+  { name: 'Industrial Water Treatment & Environmental', density: 1.01, operatingPressure: 8.5, sector: 'Utilities & Environment', description: 'Multi-stage membrane filtration and effluent neutralisation for zero-liquid-discharge compliance.' },
 ];
 
 export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
-  initialCrudeApi = 33.4,
+  initialDensity = 0.78,
   initialFeedBpd = 100000,
   initialFurnaceTempC = 365,
   plantName = 'Continuous Separation & Process Train Digital Twin',
   onStreamSelect
 }) => {
-  const [selectedCrude, setSelectedCrude] = useState<CrudePreset>(CRUDE_PRESETS[0]);
+  const [selectedMode, setSelectedMode] = useState<OperatingMode>(OPERATING_MODES[0]);
   const [feedBpd, setFeedBpd] = useState<number>(initialFeedBpd);
   const [furnaceTempC, setFurnaceTempC] = useState<number>(initialFurnaceTempC);
   const [selectedStreamId, setSelectedStreamId] = useState<string>('stream-kero');
@@ -63,22 +63,21 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
 
   // Real-time mass and energy balance calculations
   const balance = useMemo(() => {
-    const api = selectedCrude.api;
+    const density = selectedMode.density;
     const bpd = feedBpd;
     const tFurnace = furnaceTempC;
 
-    const sg = 141.5 / (131.5 + api);
-    const density = sg * 999.0;
-    const tonnesPerDay = (bpd * 0.1589873 * density) / 1000.0;
+    const sg = density;
+    const fluidDensity = sg * 999.0;
+    const tonnesPerDay = (bpd * 0.1589873 * fluidDensity) / 1000.0;
 
-    const apiFactor = Math.max(0.05, Math.min(0.95, (api - 20.0) / 25.0));
+    // Use density as proxy: light fractions increase as density decreases
+    const lpgPct = parseFloat(((1 - density) * 0.35 * 100).toFixed(2));
+    const lightNaphthaPct = parseFloat((density < 0.80 ? 0.28 : 0.22) * 100 > 28 ? '28.00' : ((density < 0.80 ? 0.28 : 0.22) * 100).toFixed(2));
+    const heavyNaphthaPct = parseFloat(((0.15 + (1 - density) * 0.08) * 100).toFixed(2));
     const tempFactor = Math.max(0.5, Math.min(1.5, (tFurnace - 340.0) / 40.0));
-
-    const lpgPct = parseFloat((2.5 + 2.0 * apiFactor).toFixed(2));
-    const lightNaphthaPct = parseFloat((6.0 + 5.5 * apiFactor).toFixed(2));
-    const heavyNaphthaPct = parseFloat((11.0 + 6.0 * apiFactor).toFixed(2));
-    const keroPct = parseFloat((12.0 + 4.0 * apiFactor * tempFactor * 0.9).toFixed(2));
-    const dieselPct = parseFloat((24.0 + 3.0 * (1.0 - Math.abs(apiFactor - 0.5)) * tempFactor).toFixed(2));
+    const keroPct = parseFloat(((0.12 + 0.04 * (1 - density) * tempFactor * 0.9) * 100).toFixed(2));
+    const dieselPct = parseFloat(((0.24 + 0.03 * density * tempFactor) * 100).toFixed(2));
     const residuePct = parseFloat((100.0 - (lpgPct + lightNaphthaPct + heavyNaphthaPct + keroPct + dieselPct)).toFixed(2));
 
     const cuts = [
@@ -95,14 +94,14 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
     const deltaT = tFurnace - 220.0;
     const furnaceDutyMw = parseFloat(((mDotKgS * 2.22 * deltaT + (vaporFraction * mDotKgS * 280.0)) / 1000.0).toFixed(2));
 
-    const rhoL = density * 0.82;
+    const rhoL = fluidDensity * 0.82;
     const rhoV = 3.8;
     const vMax = 0.08 * Math.sqrt((rhoL - rhoV) / rhoV);
     const vActual = vMax * (0.65 + 0.15 * (tFurnace / 370.0));
     const floodMarginPct = parseFloat((((vMax - vActual) / vMax) * 100.0).toFixed(1));
 
-    const henRecoveryPct = parseFloat((68.5 + 4.2 * (api / 35.0)).toFixed(1));
-    const carbonIntensity = parseFloat((14.8 + (100.0 - api) * 0.18 + (tFurnace - 350.0) * 0.08).toFixed(2));
+    const henRecoveryPct = parseFloat((68.5 + 4.2 * ((1 - density) / 0.35)).toFixed(1));
+    const carbonIntensity = parseFloat((14.8 + density * 0.18 + (tFurnace - 350.0) * 0.08).toFixed(2));
 
     return {
       tonnesPerDay: Math.round(tonnesPerDay),
@@ -114,14 +113,14 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
       henRecoveryPct,
       carbonIntensity
     };
-  }, [selectedCrude, feedBpd, furnaceTempC]);
+  }, [selectedMode, feedBpd, furnaceTempC]);
 
   const activeStream = useMemo(() => {
     return balance.cuts.find((c) => c.id === selectedStreamId) || balance.cuts[3];
   }, [balance, selectedStreamId]);
 
-  const handleCrudeSelect = (preset: CrudePreset) => {
-    setSelectedCrude(preset);
+  const handleModeSelect = (preset: OperatingMode) => {
+    setSelectedMode(preset);
     setIsSimulating(true);
     sovereignAudio.playClick();
     setTimeout(() => {
@@ -172,24 +171,24 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
         </div>
       </div>
 
-      {/* Crude Blend Selector Bar */}
+      {/* Operating Mode Selector Bar */}
       <div className="mt-4 p-3 bg-slate-950/80 border border-slate-800 rounded-lg">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-            SELECT ACTIVE FEED CRUDE BLEND (WHAT-IF PREDICTIVE MATRIX)
+            SELECT ACTIVE OPERATING MODE (WHAT-IF PREDICTIVE MATRIX)
           </span>
           <span className="text-[11px] font-mono text-cyan-400">
             Current SG: {balance.sg} • Density: {Math.round(balance.sg * 999)} kg/m³
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {CRUDE_PRESETS.map((p) => {
-            const isSelected = selectedCrude.name === p.name;
+          {OPERATING_MODES.map((p) => {
+            const isSelected = selectedMode.name === p.name;
             return (
               <button
                 key={p.name}
-                onClick={() => handleCrudeSelect(p)}
+                onClick={() => handleModeSelect(p)}
                 className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-cyan-950/60 border-cyan-500 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-500'
@@ -197,14 +196,13 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">{p.name}</span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${isSelected ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-400'}`}>
-                    {p.api}° API
-                  </span>
+                  <span className="text-xs font-bold text-white truncate max-w-[90%]">{p.name}</span>
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
-                  <span>{p.origin}</span>
-                  <span className="text-amber-400 font-mono text-[10px]">{p.sulfurPct}% S</span>
+                  <span className="truncate max-w-[80%]">{p.sector}</span>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${isSelected ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-400'}`}>
+                    {p.operatingPressure} bar
+                  </span>
                 </div>
               </button>
             );
@@ -241,9 +239,9 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
                 </linearGradient>
               </defs>
 
-              {/* Feed Crude Line */}
+              {/* Feed Process Line */}
               <line x1="20" y1="120" x2="100" y2="120" stroke="#06b6d4" strokeWidth="4" strokeDasharray="6 3" />
-              <text x="25" y="112" fill="#38bdf8" fontSize="9" fontFamily="monospace" fontWeight="bold">CRUDE FEED</text>
+              <text x="25" y="112" fill="#38bdf8" fontSize="9" fontFamily="monospace" fontWeight="bold">PROCESS FEED</text>
 
               {/* Preheat Train Exchanger */}
               <rect x="100" y="100" width="40" height="40" rx="4" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" />
@@ -450,7 +448,7 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-mono text-slate-300 mb-0.5">
-                <span>Crude Charge Rate (BPD):</span>
+                <span>Process Feed Rate (BPD):</span>
                 <span className="text-cyan-400 font-bold">{feedBpd.toLocaleString()} BPD</span>
               </div>
               <input
@@ -483,7 +481,7 @@ export const PlantDigitalTwinWidget: React.FC<PlantDigitalTwinProps> = ({
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4" />
-                <span>COMMIT CRUDE SCHEDULE TO DCS & LOCATE IN P&ID</span>
+                <span>COMMIT DISPATCH SCHEDULE TO DCS &amp; LOCATE IN P&amp;ID</span>
               </>
             )}
           </button>

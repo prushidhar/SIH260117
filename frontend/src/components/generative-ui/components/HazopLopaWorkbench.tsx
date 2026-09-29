@@ -35,10 +35,10 @@ interface NodeOption {
 }
 
 const PROCESS_NODES: NodeOption[] = [
-  { id: 'NODE-01_CDU_FEED', name: 'Node 01: Crude Feed to Charge Furnace F-101', service: 'Crude Oil', designPressure: '450 psig', designTemp: '280 °C' },
+  { id: 'NODE-01_CDU_FEED', name: 'Node 01: High-Pressure Feed to Process Furnace F-101', service: 'Crude Oil', designPressure: '450 psig', designTemp: '280 °C' },
   { id: 'NODE-02_COL_FLASH', name: 'Node 02: Atmospheric Column T-101 Flash Zone', service: 'Two-Phase Hydrocarbon', designPressure: '75 psig', designTemp: '375 °C' },
   { id: 'NODE-03_RECYCLE_GAS', name: 'Node 03: Compressor K-101 Recycle Suction', service: 'Hydrogen-Rich Gas', designPressure: '3500 psig', designTemp: '65 °C' },
-  { id: 'NODE-04_RESIDUE_LINE', name: 'Node 04: Bottoms Atmospheric Residue to VDU', service: 'Heavy Reduced Crude', designPressure: '150 psig', designTemp: '360 °C' },
+  { id: 'NODE-04_RESIDUE_LINE', name: 'Node 04: Bottoms Atmospheric Residue to VDU', service: 'High-Viscosity Bottoms Slurry', designPressure: '150 psig', designTemp: '360 °C' },
 ];
 
 interface IPLDef {

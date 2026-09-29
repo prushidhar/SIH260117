@@ -333,26 +333,7 @@ export default function ChatInput({ mode = 'bottom' }: { mode?: 'center' | 'bott
           </div>
         </div>
 
-        {/* Control Room Keyboard Shortcuts Footnote */}
-        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 dark:text-zinc-500 px-1 pt-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Ctrl+↵]</span>
-            <span>Transmit</span>
-            <span className="text-slate-300 dark:text-zinc-700">•</span>
-            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Shift+↵]</span>
-            <span>Newline</span>
-            <span className="text-slate-300 dark:text-zinc-700">•</span>
-            <span className="text-rose-600 dark:text-rose-400 font-semibold">[Esc]</span>
-            <span>Emergency Trip</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-[9px]">
-            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[1-4]</span>
-            <span>Switch Panes</span>
-            <span className="text-slate-300 dark:text-zinc-700">•</span>
-            <span className="text-slate-600 dark:text-zinc-400 font-semibold">[Ctrl+K]</span>
-            <span>Asset Search</span>
-          </div>
-        </div>
+        {/* Control Room Keyboard Shortcuts Footnote Removed per user request */}
       </div>
     </div>
   );
