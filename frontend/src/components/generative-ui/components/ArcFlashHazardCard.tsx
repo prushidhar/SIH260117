@@ -427,7 +427,7 @@ export default function ArcFlashHazardCard({
               <div className="text-2xl font-black font-mono tracking-tight text-zinc-100 mt-1 flex items-baseline gap-2">
                 <span>{calculations.incidentEnergy}</span>
                 <span className="text-sm font-semibold text-zinc-400">cal/cm²</span>
-                <span className={`text-[11px] font-bold font-mono px-2 py-0.5 rounded-full border ${calculations.categoryBg} ${calculations.categoryColor} ${calculations.categoryBorder}`}>
+                <span className={`text-[11px] font-bold font-mono px-2 py-0.5 rounded-md border ${calculations.categoryBg} ${calculations.categoryColor} ${calculations.categoryBorder}`}>
                   {calculations.ppeLabel}
                 </span>
               </div>

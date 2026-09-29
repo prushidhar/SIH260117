@@ -79,7 +79,7 @@ export default function MultiAgentConsensusWidget({
       name: 'Agent Alpha (Process Lead)',
       role: 'Thermodynamics & Plant Throughput',
       avatarColor: 'from-cyan-500 to-blue-600',
-      initialStance: 'Advocates maximum throughput at 510 psig to sustain 220,000 kg/h crude feed.',
+      initialStance: 'Advocates maximum throughput at 510 psig to sustain 220,000 kg/h process feed.',
       proposedValue: '510 psig',
       keyMetric: 'Throughput: 100%',
       governingStandard: 'API 14E / Crane TP-410',

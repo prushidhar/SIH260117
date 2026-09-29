@@ -228,8 +228,8 @@ export default function RotorDynamicsCard({
               </text>
 
               {/* Excitation Line: 2X Misalignment */}
-              <line x1="0" y1={mapY(0)} x2={line2XEnd.x} y2={line2XEnd.y} stroke="#a855f7" strokeWidth="1.8" strokeDasharray="5 2" />
-              <text x={line2XEnd.x - 45} y={line2XEnd.y - 6} fill="#c084fc" fontSize="8" fontFamily="monospace" fontWeight="bold">
+              <line x1="0" y1={mapY(0)} x2={line2XEnd.x} y2={line2XEnd.y} stroke="#06b6d4" strokeWidth="1.8" strokeDasharray="5 2" />
+              <text x={line2XEnd.x - 45} y={line2XEnd.y - 6} fill="#38bdf8" fontSize="8" fontFamily="monospace" fontWeight="bold">
                 2X Misalignment
               </text>
 

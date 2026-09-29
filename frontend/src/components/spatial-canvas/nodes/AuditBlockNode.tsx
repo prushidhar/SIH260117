@@ -22,7 +22,7 @@ export default function AuditBlockNode({ id, data }: { id: string; data: any }) 
           <div>
             <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
               <span>{data?.title || 'Merkle Proof Block #4'}</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-mono font-bold">
+              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-mono font-bold">
                 VERIFIED
               </span>
             </div>

@@ -115,7 +115,7 @@ export default function TamperVerifierModal({
                 <h3 className="text-sm font-bold text-zinc-100 tracking-wider">
                   NIST FIPS 180-4 SHA-256 CRYPTOGRAPHIC VERIFIER
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold">
+                <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold">
                   CLIENT-SIDE WebCrypto
                 </span>
               </div>

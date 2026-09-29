@@ -143,7 +143,7 @@ const DEFAULT_NODES: Node<SpatialNodeData>[] = [
       standard: 'ASME Sec VIII Div 2 / API 510',
       subType: '54 Valve Trays Multi-Draw Column',
       symbol: 'column-trayed',
-      color: '#8b5cf6',
+      color: '#06b6d4',
       status: 'RUNNING',
       specs: [
         { label: 'Diameter', value: '4.8 m' },
@@ -163,7 +163,7 @@ const DEFAULT_NODES: Node<SpatialNodeData>[] = [
       standard: 'ASME Sec VIII Div 1 / API 521',
       subType: 'Vertical Vapor-Liquid Knock-Out Drum',
       symbol: 'vessel-vertical',
-      color: '#8b5cf6',
+      color: '#06b6d4',
       status: 'RUNNING',
       specs: [
         { label: 'Holdup', value: '5.0 min (NLL)' },

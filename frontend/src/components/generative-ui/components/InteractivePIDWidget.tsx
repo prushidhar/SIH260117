@@ -64,7 +64,7 @@ const PID_ITEMS: Record<string, PIDComponent> = {
 };
 
 export default function InteractivePIDWidget({
-  title = 'Crude Distillation Unit CDU-104 High-Pressure Feed P&ID',
+  title = 'process stream Distillation Unit CDU-104 High-Pressure Feed P&ID',
   tag = 'CDU-104',
 }: {
   title?: string;
@@ -105,7 +105,7 @@ export default function InteractivePIDWidget({
           <div>
             <div className="font-semibold text-slate-800 dark:text-zinc-100 text-sm flex items-center gap-1.5">
               <span>{title}</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 font-mono">
                 ISA-5.1 Verified
               </span>
             </div>
@@ -270,7 +270,7 @@ export default function InteractivePIDWidget({
               {activeComp.reading}
             </div>
           </div>
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px]">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px]">
             <CheckCircle2 className="w-3 h-3" />
             <span>ISA Verified</span>
           </div>

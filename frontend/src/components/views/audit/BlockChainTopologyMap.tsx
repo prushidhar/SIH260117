@@ -89,7 +89,7 @@ export default function BlockChainTopologyMap({
               <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
                 CRYPTOGRAPHIC BLOCK-CHAIN TOPOLOGY MAP
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold">
                 IMMUTABLE SHA-256 LINKAGE
               </span>
             </div>

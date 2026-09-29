@@ -64,7 +64,7 @@ export default function MultiFormatDocumentViewer({
               <span className="font-mono font-bold text-xs text-zinc-100 truncate">
                 {document.standard}
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold">
                 AUDIT VERIFIED
               </span>
             </div>

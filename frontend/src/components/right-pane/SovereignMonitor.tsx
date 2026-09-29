@@ -18,7 +18,7 @@ export default function SovereignMonitor() {
             0-WAN Sovereign Monitor
           </h2>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-[9px] font-mono font-medium">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-[9px] font-mono font-medium">
           <span className={`w-1.5 h-1.5 rounded-full ${
             networkStatus === 'connected'
               ? 'bg-emerald-500 animate-pulse'
@@ -73,7 +73,7 @@ export default function SovereignMonitor() {
       <div className="mt-3 p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/25 border border-rose-200/80 dark:border-rose-900/40">
         <div className="flex items-baseline justify-between">
           <div className="text-rose-600 dark:text-rose-400 text-xl font-mono font-bold">{blockedCount}</div>
-          <span className="text-[9px] font-mono font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider bg-rose-100 dark:bg-rose-900/50 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+          <span className="text-[9px] font-mono font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider bg-rose-100 dark:bg-rose-900/50 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
             CONTAINED
           </span>
         </div>

@@ -756,7 +756,7 @@ export interface AsmeSec1BoilerCirculationCardProps {
 // 40. API Standard 530 (7th Edition) / ISO 13704 Heater-Tube Creep & Rupture Life
 export interface Api530HeaterTubeCreepCardProps {
   heaterTag?: string; // Default: 'F-101-RAD-01'
-  serviceDescription?: string; // Default: 'Atmospheric Crude Heater Radiant Coil'
+  serviceDescription?: string; // Default: 'Atmospheric process stream Heater Radiant Coil'
   title?: string;
   tubeMetalTempC?: number; // Default: 580.0 °C (450.0 to 750.0)
   designPressurePsig?: number; // Default: 450.0 psig (150.0 to 900.0)

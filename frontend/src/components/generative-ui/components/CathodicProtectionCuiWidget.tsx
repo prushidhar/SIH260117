@@ -104,7 +104,7 @@ export default function CathodicProtectionCuiWidget({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
-              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
                 NACE SP0169 / API 581
               </span>
             </div>
@@ -117,7 +117,7 @@ export default function CathodicProtectionCuiWidget({
         {/* Protection Pill */}
         <div className="flex items-center gap-2">
           <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold border ${
               isCpProtected && !cpOverprotection
                 ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
                 : cpOverprotection

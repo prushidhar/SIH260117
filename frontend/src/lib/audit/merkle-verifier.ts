@@ -258,7 +258,7 @@ export const DEFAULT_AUDIT_BLOCKS: AuditLedgerEvent[] = [
     payload: {
       action: 'VFD Speed ramped from 2,400 to 2,980 RPM',
       interlockOverride: 'ESD-101-BYPASS',
-      rationale: 'Avoid acoustic cavitation during crude tower surge.',
+      rationale: 'Avoid acoustic cavitation during process stream tower surge.',
       holdTimerSeconds: 300,
     },
     autoHoldExpiresAt: new Date(Date.now() + 4 * 60 * 1000 + 42 * 1000).toISOString(),

@@ -35,7 +35,7 @@ import type { Api530HeaterTubeCreepCardProps } from '../types';
  */
 export default function Api530HeaterTubeCreepCard({
   heaterTag = 'F-101-RAD-01',
-  serviceDescription = 'Atmospheric Crude Heater Radiant Coil',
+  serviceDescription = 'Atmospheric process stream Heater Radiant Coil',
   title = 'API STANDARD 530 7TH ED. HEATER TUBE CREEP & RUPTURE INTEGRITY',
   tubeMetalTempC: initialTmt = 580.0,
   designPressurePsig: initialPressure = 450.0,
@@ -814,7 +814,7 @@ export default function Api530HeaterTubeCreepCard({
               </text>
 
               {/* Master Curve (Mean Rupture Strength) */}
-              <path d={lmpPlotPoints.meanPath} fill="none" stroke="#a855f7" strokeWidth="2.5" />
+              <path d={lmpPlotPoints.meanPath} fill="none" stroke="#06b6d4" strokeWidth="2.5" />
 
               {/* Lower Scatter Bound (-20% Stress / Minimum Rupture) */}
               <path d={lmpPlotPoints.minPath} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3" />
@@ -822,7 +822,7 @@ export default function Api530HeaterTubeCreepCard({
               {/* Curve Legend */}
               <g transform="translate(320, 35)">
                 <rect x="0" y="0" width="150" height="38" rx="4" fill="#09090b" fillOpacity="0.8" stroke="#3f3f46" strokeWidth="1" />
-                <line x1="8" y1="12" x2="28" y2="12" stroke="#a855f7" strokeWidth="2" />
+                <line x1="8" y1="12" x2="28" y2="12" stroke="#06b6d4" strokeWidth="2" />
                 <text x="34" y="15" fill="#d8b4fe" fontSize="8" fontFamily="monospace">API 530 Mean Rupture</text>
                 <line x1="8" y1="26" x2="28" y2="26" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" />
                 <text x="34" y="29" fill="#fde68a" fontSize="8" fontFamily="monospace">Minimum (-20% Band)</text>

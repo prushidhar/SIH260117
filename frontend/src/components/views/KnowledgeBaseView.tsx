@@ -443,7 +443,7 @@ export default function KnowledgeBaseView() {
             <h1 className="text-base font-bold text-zinc-100 font-mono tracking-tight">
               Sovereign RAG Knowledge Base Explorer
             </h1>
-            <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-800/60 font-mono font-bold flex items-center gap-1">
+            <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded-md border border-emerald-800/60 font-mono font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {storageEngine === 'local' ? 'IN-BROWSER WASM 384D' : 'AIR-GAPPED VECTORSTORE'}
             </span>
@@ -635,12 +635,12 @@ export default function KnowledgeBaseView() {
               </span>
               <div className="flex items-center gap-2">
                 {lastSearchLatency !== null && storageEngine === 'local' && (
-                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/60 flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-800/60 flex items-center gap-1">
                     <Zap className="w-2.5 h-2.5 text-amber-300" />
                     <span>{lastSearchLatency}ms (Zero WAN)</span>
                   </span>
                 )}
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-800/50 font-semibold">
+                <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-800/50 font-semibold">
                   {storageEngine === 'local' ? 'WASM Cosine Vector Retrieval' : 'Offline Semantic Retrieval'}
                 </span>
               </div>

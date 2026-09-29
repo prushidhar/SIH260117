@@ -156,7 +156,7 @@ export default function RootCauseAnalysisWidget({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
-              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
                 {incidentId}
               </span>
             </div>
@@ -168,7 +168,7 @@ export default function RootCauseAnalysisWidget({
 
         {/* RCA Status & Export */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-rose-950/80 border-rose-700 text-rose-300">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold border bg-rose-950/80 border-rose-700 text-rose-300">
             <AlertTriangle className="w-3.5 h-3.5" />
             <span>ROOT CAUSE CONFIRMED</span>
           </div>
@@ -247,7 +247,7 @@ export default function RootCauseAnalysisWidget({
             <div className="w-0.5 h-4 bg-zinc-700 mx-auto" />
 
             {/* OR Gate Symbol */}
-            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-[10px] font-bold text-amber-400">
+            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-[10px] font-bold text-amber-400">
               <span>OR LOGIC GATE</span>
             </div>
 

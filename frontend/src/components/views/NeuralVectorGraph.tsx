@@ -129,7 +129,7 @@ const KNOWLEDGE_NODES: KnowledgeNode[] = [
     connections: ['api-610-npsh', 'iso-vibe-harmonics'],
   },
 
-  // 4. ISO 10816-3 Vibration Cluster (Violet)
+  // 4. ISO 10816-3 Vibration Cluster (Cyan)
   {
     id: 'iso-vibe-rms',
     cluster: 'ISO_VIBRATION',
@@ -187,7 +187,7 @@ const KNOWLEDGE_NODES: KnowledgeNode[] = [
   {
     id: 'tema-fouling',
     cluster: 'TEMA_THERMAL',
-    title: 'Crude Oil Fouling Resistance Factor (Rf)',
+    title: 'Process Feed Fouling Resistance Factor (Rf)',
     standard: 'TEMA 10th Ed. (Class R)',
     section: 'Table T-5.2',
     x: 370,
@@ -347,7 +347,7 @@ export default function NeuralVectorGraph() {
                     y1={node.y}
                     x2={target.x}
                     y2={target.y}
-                    stroke={isSelected ? '#a855f7' : '#334155'}
+                    stroke={isSelected ? '#06b6d4' : '#334155'}
                     strokeWidth={isSelected ? 2 : 1}
                     strokeDasharray={isSelected ? 'none' : '3 3'}
                     opacity={isSelected ? 0.9 : 0.4}

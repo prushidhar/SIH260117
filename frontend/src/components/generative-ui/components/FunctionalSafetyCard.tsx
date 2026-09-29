@@ -318,7 +318,7 @@ export default function FunctionalSafetyCard({
               </text>
               
               {/* Input Block I1 */}
-              <rect x="0" y="0" width="130" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#8b5cf6" strokeWidth="1.5" />
+              <rect x="0" y="0" width="130" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#06b6d4" strokeWidth="1.5" />
               <text x="65" y="20" fill="#ede9fe" fontSize="10" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 INPUT I1 (PT-401A)
               </text>
@@ -327,11 +327,11 @@ export default function FunctionalSafetyCard({
               </text>
 
               {/* Connecting Vector */}
-              <line x1="130" y1="24" x2="190" y2="24" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="4 2" />
-              <polygon points="186,21 194,24 186,27" fill="#8b5cf6" />
+              <line x1="130" y1="24" x2="190" y2="24" stroke="#06b6d4" strokeWidth="2" strokeDasharray="4 2" />
+              <polygon points="186,21 194,24 186,27" fill="#06b6d4" />
 
               {/* Logic Block L1 */}
-              <rect x="195" y="0" width="140" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#8b5cf6" strokeWidth="1.5" />
+              <rect x="195" y="0" width="140" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#06b6d4" strokeWidth="1.5" />
               <text x="265" y="20" fill="#ede9fe" fontSize="10" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 LOGIC L1 (CPU A)
               </text>
@@ -340,11 +340,11 @@ export default function FunctionalSafetyCard({
               </text>
 
               {/* Connecting Vector */}
-              <line x1="335" y1="24" x2="395" y2="24" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="4 2" />
-              <polygon points="391,21 399,24 391,27" fill="#8b5cf6" />
+              <line x1="335" y1="24" x2="395" y2="24" stroke="#06b6d4" strokeWidth="2" strokeDasharray="4 2" />
+              <polygon points="391,21 399,24 391,27" fill="#06b6d4" />
 
               {/* Output Block M1 */}
-              <rect x="400" y="0" width="130" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#8b5cf6" strokeWidth="1.5" />
+              <rect x="400" y="0" width="130" height="48" rx="6" fill="url(#chan1Gradient)" stroke="#06b6d4" strokeWidth="1.5" />
               <text x="465" y="20" fill="#ede9fe" fontSize="10" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 OUTPUT M1 (SOV-A)
               </text>
@@ -429,7 +429,7 @@ export default function FunctionalSafetyCard({
             {/* FINAL SAFETY ACTUATOR (Right Side) */}
             <g transform="translate(630, 60)">
               {/* Connecting vectors from M1 & M2 to Final Element */}
-              <path d="M -60 -11 L -20 -11 L 0 44" stroke="#8b5cf6" strokeWidth="2" fill="none" />
+              <path d="M -60 -11 L -20 -11 L 0 44" stroke="#06b6d4" strokeWidth="2" fill="none" />
               <path d="M -60 99 L -20 99 L 0 44" stroke="#64748b" strokeWidth="2" fill="none" />
 
               <rect x="0" y="8" width="180" height="72" rx="8" fill="#18181b" stroke="#10b981" strokeWidth="2" />

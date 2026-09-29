@@ -25,7 +25,7 @@ export default function DetachedAuditPage() {
               <span className="font-mono font-bold text-xs tracking-wider text-zinc-100">
                 STANDALONE MERKLE AUDIT LEDGER & HITL GATE
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] font-mono font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 IMMUTABLE CHAIN
               </span>

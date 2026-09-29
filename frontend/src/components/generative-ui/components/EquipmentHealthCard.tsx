@@ -97,7 +97,7 @@ export default function EquipmentHealthCard({
 
         {/* Health Status Pill & Rescan */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-700 text-emerald-300 font-bold">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/80 border border-emerald-700 text-emerald-300 font-bold">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>{score}/100 HEALTH INDEX</span>
           </div>

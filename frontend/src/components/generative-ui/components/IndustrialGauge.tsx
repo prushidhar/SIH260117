@@ -141,7 +141,7 @@ export default function IndustrialGauge({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${statusColors.badge}`}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${statusColors.badge}`}>
             <StatusIcon className="w-3 h-3" />
             <span>{statusColors.label}</span>
           </span>

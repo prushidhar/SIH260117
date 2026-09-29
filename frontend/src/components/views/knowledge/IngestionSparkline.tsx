@@ -98,7 +98,7 @@ export default function IngestionSparkline({
               <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
                 REAL-TIME VECTOR INGESTION SPARKLINE
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 text-[9px] font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 {ingestion ? 'INGESTING ACTIVE' : 'ENGINE READY'}
               </span>
@@ -145,12 +145,12 @@ export default function IngestionSparkline({
         >
           <defs>
             <linearGradient id="ingestionAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0" />
             </linearGradient>
             <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#06b6d4" />
               <stop offset="100%" stopColor="#10b981" />
             </linearGradient>
           </defs>

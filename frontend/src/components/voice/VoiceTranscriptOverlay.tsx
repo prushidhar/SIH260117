@@ -120,7 +120,7 @@ export default function VoiceTranscriptOverlay() {
 
         {/* Whisper badge */}
         <div className="flex-shrink-0">
-          <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 bg-slate-50 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-zinc-700 font-semibold whitespace-nowrap">
+          <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 bg-slate-50 dark:bg-zinc-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-zinc-700 font-semibold whitespace-nowrap">
             WHISPER LOCAL
           </span>
         </div>

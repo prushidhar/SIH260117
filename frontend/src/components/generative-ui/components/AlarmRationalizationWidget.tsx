@@ -61,7 +61,7 @@ export default function AlarmRationalizationWidget({
     {
       id: 'alm-01',
       tag: 'PS-101LL',
-      description: 'Crude Slurry Charge Pump P-101 Suction Pressure Low-Low (Trip Initiated)',
+      description: 'process stream Slurry Charge Pump P-101 Suction Pressure Low-Low (Trip Initiated)',
       timestamp: '14:32:00.104',
       priority: 'CRITICAL',
       category: 'FIRST_OUT',
@@ -83,7 +83,7 @@ export default function AlarmRationalizationWidget({
     {
       id: 'alm-03',
       tag: 'FT-101L',
-      description: 'Crude Transfer Header L-101 Flow Rate Low-Low (< 45 m³/h)',
+      description: 'process stream Transfer Header L-101 Flow Rate Low-Low (< 45 m³/h)',
       timestamp: '14:32:00.418',
       priority: 'HIGH',
       category: 'CONSEQUENTIAL',
@@ -127,7 +127,7 @@ export default function AlarmRationalizationWidget({
     {
       id: 'alm-07',
       tag: 'E-101-dT',
-      description: 'Crude Pre-Heater E-101 Thermal Differential Collapsed',
+      description: 'process stream Pre-Heater E-101 Thermal Differential Collapsed',
       timestamp: '14:32:01.120',
       priority: 'MEDIUM',
       category: 'CONSEQUENTIAL',
@@ -226,7 +226,7 @@ export default function AlarmRationalizationWidget({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">{title}</h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                   ISA-18.2 / IEC 62682
                 </span>
               </div>
@@ -290,7 +290,7 @@ export default function AlarmRationalizationWidget({
               </div>
             </div>
             <span
-              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+              className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
                 mode === 'RATIONALIZED'
                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                   : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
@@ -308,7 +308,7 @@ export default function AlarmRationalizationWidget({
               </div>
             </div>
             <span
-              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+              className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
                 mode === 'RATIONALIZED'
                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                   : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'

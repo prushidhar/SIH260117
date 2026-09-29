@@ -139,7 +139,7 @@ export default function CompressorAntiSurgeWidget({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
-              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
                 {standard}
               </span>
             </div>
@@ -152,7 +152,7 @@ export default function CompressorAntiSurgeWidget({
         {/* Surge Status Badge */}
         <div className="flex items-center gap-2">
           <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold border ${
               isSurgeTrip
                 ? 'bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse'
                 : isSurgeWarning

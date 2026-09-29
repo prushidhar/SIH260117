@@ -289,7 +289,7 @@ export const TurnaroundSchedulerWidget: React.FC<TurnaroundSchedulerProps> = ({
                 </span>
               </div>
               <div className="text-[10px] opacity-80 mt-0.5">
-                Basis: ${initialHourlyCost.toLocaleString()}/hr crude throughput revenue
+                Basis: ${initialHourlyCost.toLocaleString()}/hr process stream throughput revenue
               </div>
             </div>
           </div>

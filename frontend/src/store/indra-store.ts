@@ -1004,7 +1004,7 @@ export const useIndraStore = create<IndraState>()(
 
         let finalMarkdown = '';
         if (isGreeting) {
-          finalMarkdown = `### INDRA Sovereign AI Workbench — Capabilities Overview
+          finalMarkdown = `### INDRA Sovereign AI Workbench: Capabilities Overview
 
 I am an air-gapped, on-premise industrial AI assistant built for refineries, power generation, heavy chemical processing, and discrete manufacturing.
 

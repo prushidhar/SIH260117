@@ -188,10 +188,10 @@ export default function AuditLedgerView() {
             <h1 className="text-base font-bold text-zinc-100 tracking-wider">
               MERKLE AUDIT LEDGER & 3-TIER HITL TIMELINE
             </h1>
-            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-800/60 font-bold">
+            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-800/60 font-bold">
               SHA-256 IMMUTABLE
             </span>
-            <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-800/60 font-semibold hidden sm:inline">
+            <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-800/60 font-semibold hidden sm:inline">
               AIR-GAP LOCAL (127.0.0.1)
             </span>
           </div>
@@ -203,7 +203,7 @@ export default function AuditLedgerView() {
         {/* Action Toolbar */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Integrity status pill */}
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold border ${
             isValidChain 
               ? 'bg-emerald-950/60 border-emerald-800/80 text-emerald-300' 
               : 'bg-rose-950/60 border-rose-800/80 text-rose-300'
@@ -341,7 +341,7 @@ export default function AuditLedgerView() {
                         <span className="text-xs font-bold text-zinc-100">
                           {item.tool || item.tool_name || item.title || 'Tool Authorization'}
                         </span>
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800">
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-rose-950/80 text-rose-300 border border-rose-800">
                           {item.severity || 'CRITICAL'}
                         </span>
                       </div>
@@ -374,7 +374,7 @@ export default function AuditLedgerView() {
                     <span className="font-bold text-zinc-100">
                       Sign-Off: {selectedApproval.tool || selectedApproval.tool_name || selectedApproval.title || 'Action'}
                     </span>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-800/60 font-semibold">
+                    <span className="text-[10px] text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-md border border-emerald-800/60 font-semibold">
                       Step #{selectedApproval.step_index ?? 0}
                     </span>
                   </div>
@@ -630,7 +630,7 @@ export default function AuditLedgerView() {
                         <span className="px-2 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold text-[10px]">
                           BLOCK #{b.index}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusBadgeStyle}`}>
+                        <span className={`px-2 py-0.5 rounded-md border text-[9px] font-bold ${statusBadgeStyle}`}>
                           {b.status}
                         </span>
                         <span className="text-zinc-100 font-bold text-xs">

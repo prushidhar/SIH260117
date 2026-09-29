@@ -36,7 +36,7 @@ export default function PIDSchematicNode({ id, data }: { id: string; data: any }
               {data?.title || 'P&ID Engineering Schematic'}
             </div>
             <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">
-              {data?.subtitle || 'Crude Unit Pre-Heat Loop'}
+              {data?.subtitle || 'process stream Unit Pre-Heat Loop'}
             </div>
           </div>
         </div>

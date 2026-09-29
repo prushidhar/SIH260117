@@ -204,7 +204,7 @@ export default function ExecutivePresentationWidget({
           <div className="min-w-0">
             <div className="font-semibold text-slate-800 dark:text-zinc-100 text-sm flex items-center gap-1.5 truncate">
               <span>Executive 16:9 Presentation Deck</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 font-mono font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 font-mono font-bold">
                 BOARD-READY (.PPTX)
               </span>
             </div>

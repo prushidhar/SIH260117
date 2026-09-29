@@ -21,7 +21,7 @@ import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
 import type { WaterHammerCardProps } from '../types';
 
 export default function WaterHammerCard({
-  assetTag = 'PL-204 (24-inch NPS Crude Pipeline, 12.5 km)',
+  assetTag = 'PL-204 (24-inch NPS process stream Pipeline, 12.5 km)',
   title = 'JOUKOWSKY WATER HAMMER & TRANSIENT ACOUSTIC SURGE',
   standard = 'ASME B31.4 § 404.3.4',
   steadyPressureBar = 38.5,
@@ -162,8 +162,8 @@ export default function WaterHammerCard({
             onChange={(e) => setSelectedAsset(e.target.value)}
             className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
-            <option value="PL-204 (24-inch NPS Crude Pipeline, 12.5 km)">
-              PL-204 (24-inch NPS Crude Pipeline, 12.5 km)
+            <option value="PL-204 (24-inch NPS process stream Pipeline, 12.5 km)">
+              PL-204 (24-inch NPS process stream Pipeline, 12.5 km)
             </option>
             <option value="PL-108 (16-inch Condensate, 8.2 km)">
               PL-108 (16-inch Condensate, 8.2 km)
@@ -302,12 +302,12 @@ export default function WaterHammerCard({
 
             {/* Closure Regime Badge */}
             {isRapidClosure ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse">
                 <ShieldAlert className="w-3 h-3" />
                 RAPID CLOSURE (FULL JOUKOWSKY SHOCK)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 <ShieldCheck className="w-3 h-3" />
                 GRADUAL CLOSURE (ATTENUATED REFLECTION)
               </span>
