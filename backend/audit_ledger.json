@@ -8530,5 +8530,296 @@
     },
     "previous_hash": "6941b0db2b1c7256c28295db90c27b1f0fda6a7b21a29f8044f32dee8d6230a7",
     "hash": "2d700b5bf5a3082b8fa3bf058106b13e89d4749566280e93c47ffa9a87acfcb2"
+  },
+  {
+    "timestamp": 1790688235.526296,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "test-hi-1",
+      "prompt": "hi"
+    },
+    "previous_hash": "2d700b5bf5a3082b8fa3bf058106b13e89d4749566280e93c47ffa9a87acfcb2",
+    "hash": "2bc9788ad0d3efbba4bb575f62717793bff548c11dffd52126f660b5e0cd7119"
+  },
+  {
+    "timestamp": 1790688235.697934,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "kb_search",
+      "args": {
+        "query": "hi"
+      },
+      "result": {
+        "results": []
+      },
+      "execution_time_ms": 2.86
+    },
+    "previous_hash": "2bc9788ad0d3efbba4bb575f62717793bff548c11dffd52126f660b5e0cd7119",
+    "hash": "2100916f9d29bd0ae7d8f3922b68b48f0c644a350fdf39da29e0598fd03ba81f"
+  },
+  {
+    "timestamp": 1790688235.729974,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "test-hi-1",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 0
+    },
+    "previous_hash": "2100916f9d29bd0ae7d8f3922b68b48f0c644a350fdf39da29e0598fd03ba81f",
+    "hash": "d3c0d5ff4a6563c5c06c1330424ec4da16145e150574a948db85db785b0c1017"
+  },
+  {
+    "timestamp": 1790688235.7597554,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "test-hi-1",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 0
+    },
+    "previous_hash": "d3c0d5ff4a6563c5c06c1330424ec4da16145e150574a948db85db785b0c1017",
+    "hash": "2e66de26a5f2a706deea0d7df0181dbfeb675a61f1006a6dda9da92459b93567"
+  },
+  {
+    "timestamp": 1790689286.95455,
+    "event_type": "COMPLIANCE_BUNDLE_SEALED",
+    "payload": {
+      "task_id": "test-task",
+      "equipment_tag": "CDU-Pipe-104",
+      "bundle_sha256": "94b66fd7f6e14f63f5011a1660f1137b6d3d085031763cd89383fe134b6ba012",
+      "file_count": 4
+    },
+    "previous_hash": "2e66de26a5f2a706deea0d7df0181dbfeb675a61f1006a6dda9da92459b93567",
+    "hash": "52af2b1580b4927ff118be9109979fb0509343813f8818172561698ba501ed45"
+  },
+  {
+    "timestamp": 1790689287.8171659,
+    "event_type": "engineering_consensus_sealed",
+    "payload": {
+      "task_id": "task-cogen-tar-evaluation",
+      "asset_tag": "HEX-301",
+      "verdict": "UNANIMOUSLY_APPROVED_COMMERCIAL_SERVICE",
+      "consensus_score_pct": 100.0,
+      "cert_hash": "ff249dd8219ea2698e8b93373b6d4c7d8411dde0247dd0989ee3cc62954f4658"
+    },
+    "previous_hash": "52af2b1580b4927ff118be9109979fb0509343813f8818172561698ba501ed45",
+    "hash": "4cb23f55875c217357b62c124fa2b06fb2cd5e69b39bbe64a72ad6e0e82baff7"
+  },
+  {
+    "timestamp": 1790689398.4026868,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-5862e22d",
+      "prompt": "what can you do"
+    },
+    "previous_hash": "4cb23f55875c217357b62c124fa2b06fb2cd5e69b39bbe64a72ad6e0e82baff7",
+    "hash": "088ac8c5636d2875152bb0b76795c531e8ed6fafb5effedba27c02435d081e91"
+  },
+  {
+    "timestamp": 1790689398.5808911,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-5862e22d",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "088ac8c5636d2875152bb0b76795c531e8ed6fafb5effedba27c02435d081e91",
+    "hash": "58ec43b443853bf1cc4c4771818748a1b3adee62564701a3d25990eef08a449a"
+  },
+  {
+    "timestamp": 1790689398.6114364,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-5862e22d",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "58ec43b443853bf1cc4c4771818748a1b3adee62564701a3d25990eef08a449a",
+    "hash": "ddf799e6c59596d399570b2cbc7d5371b91430fb107209dabf028b99fb21220d"
+  },
+  {
+    "timestamp": 1790689459.2745714,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-4f5b6b5b",
+      "prompt": "what can you do"
+    },
+    "previous_hash": "ddf799e6c59596d399570b2cbc7d5371b91430fb107209dabf028b99fb21220d",
+    "hash": "c9339222d91233d37827e86a56dee8629960be6e7edfe3f0b5e7c53e42568b8c"
+  },
+  {
+    "timestamp": 1790689459.4875603,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-4f5b6b5b",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "c9339222d91233d37827e86a56dee8629960be6e7edfe3f0b5e7c53e42568b8c",
+    "hash": "1fc5bdc18cb664c9c61b1d98d4bb39ce462dd7d6074cf5575de3f2bda43cfff5"
+  },
+  {
+    "timestamp": 1790689459.5180056,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-4f5b6b5b",
+      "grounding_score": 0.95,
+      "status": "CONDITIONALLY_VERIFIED",
+      "sources_count": 0
+    },
+    "previous_hash": "1fc5bdc18cb664c9c61b1d98d4bb39ce462dd7d6074cf5575de3f2bda43cfff5",
+    "hash": "224993748038cb288ff5a95854940ce82838efa07acbe9368e5222a60067bf55"
+  },
+  {
+    "timestamp": 1790689506.1322565,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-5267ba5d",
+      "prompt": "Calculate ASME B31.3 wall thickness for P-101 at 450 psi"
+    },
+    "previous_hash": "224993748038cb288ff5a95854940ce82838efa07acbe9368e5222a60067bf55",
+    "hash": "42aa0f37d98fdceba381446f233a042f2b6a7b6d2ae2e4798bfcc0243b1c0fb0"
+  },
+  {
+    "timestamp": 1790689506.3172631,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "kb_search",
+      "args": {
+        "query": "ASME B31.3 Process Piping straight pipe wall thickness allowable stress"
+      },
+      "result": {
+        "results": [
+          {
+            "id": "std-asme-b313_chunk_0",
+            "title": "ASME B31.3 Process Piping Design & Inspection Standards",
+            "snippet": "ASME B31.3 Process Piping Code (2022 Edition) Paragraph 304.1.2: Minimum required straight pipe wall thickness t under internal design pressure P: Formula: t = (P * D) / (2 * (S * E * W + P * Y)) + c Where: - P: internal design gauge pressure (psig or MPa) - D: outside diameter of pipe (inches or mm...",
+            "relevance_score": 47.855,
+            "code_reference": "ASME B31.3 Process Piping Design & Inspection Standards"
+          },
+          {
+            "id": "doc-insp-cdu104_chunk_0",
+            "title": "Ultrasonic Inspection Report \u2014 Crude Distillation Line CDU-Pipe-104",
+            "snippet": "Sovereign Refineries & Petrochemicals Ltd. STATUTORY PLANT ASSET INTEGRITY INSPECTION REPORT: INSP-2025-084-UT Unit: Crude Distillation Unit II (CDU-II) Asset Identification: CDU-Pipe-104 (Atmospheric Crude Transfer Header Line) Governing Standards: ASME B31.3 Chapter II, API 570, ASME Section V Art...",
+            "relevance_score": 44.363,
+            "code_reference": "Ultrasonic Inspection Report \u2014 Crude Distillation Line CDU-Pipe-104"
+          },
+          {
+            "id": "std-asme-b313-appendix-x-thermal-flexibility_chunk_0",
+            "title": "ASME B31.3 Appendix X & \u00a7 319 Piping Flexibility Analysis & Thermal Expansion Stress",
+            "snippet": "ASME B31.3 Process Piping \u00a7 319 & Appendix X (Piping Flexibility Analysis): Rules for Thermal Expansion, Cold Spring, and Allowable Displacement Stress Range: - Thermal Growth Calculation: Delta_L = L * alpha * (T_op - T_amb). - Allowable Displacement Stress Range (SA) per \u00a7 302.3.5: S_A = f * [1.25...",
+            "relevance_score": 42.511,
+            "code_reference": "ASME B31.3 Appendix X & \u00a7 319 Piping Flexibility Analysis & Thermal Expansion Stress"
+          },
+          {
+            "id": "std-api-570_chunk_0",
+            "title": "API 570 Piping Inspection Code \u2014 Fitness for Service & Corrosion Rates",
+            "snippet": "API 570 Piping Inspection Code (4th Edition): In-service inspection, rating, repair, and alteration of metallic and fiberglass piping systems. Section 7: Inspection Data Evaluation, Maximum Allowable Working Pressure, and Remaining Life. Remaining Life calculation: Remaining Life (years) = (t_actual...",
+            "relevance_score": 41.478,
+            "code_reference": "API 570 Piping Inspection Code \u2014 Fitness for Service & Corrosion Rates"
+          },
+          {
+            "id": "std-asme-b311_chunk_0",
+            "title": "ASME B31.1 Power Piping Code \u2014 Steam Headers & Boiler External Piping",
+            "snippet": "ASME B31.1 Power Piping Code (2022 Edition): Piping Systems in Electric Power Generating Stations, Industrial Plants, and District Heating: - Boiler External Piping (BEP): Piping connecting the boiler drum to the first isolation or stop valve. Governed strictly by ASME Section I requirements and cer...",
+            "relevance_score": 37.516,
+            "code_reference": "ASME B31.1 Power Piping Code \u2014 Steam Headers & Boiler External Piping"
+          }
+        ]
+      },
+      "execution_time_ms": 4.55
+    },
+    "previous_hash": "42aa0f37d98fdceba381446f233a042f2b6a7b6d2ae2e4798bfcc0243b1c0fb0",
+    "hash": "9d83aee6d42ab97543b5abd324fa935cac045595d23572fac8a161b5ac5bff54"
+  },
+  {
+    "timestamp": 1790689506.4741528,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "calculate_pipe_thickness_asme_b313",
+      "args": {
+        "pressure_psig": 450.0,
+        "outer_diameter_in": 10.75,
+        "stress_value_psi": 20000.0,
+        "joint_quality_factor": 1.0,
+        "corrosion_allowance_in": 0.125
+      },
+      "result": {
+        "status": "success",
+        "design_pressure_psig": 450.0,
+        "outer_diameter_inches": 10.75,
+        "allowable_stress_psi": 20000.0,
+        "joint_quality_factor_e": 1.0,
+        "material_coefficient_y": 0.4,
+        "corrosion_allowance_inches": 0.125,
+        "t_design_inches": 0.1199,
+        "t_minimum_required_inches": 0.2449,
+        "recommended_commercial_schedule": "Sch 40 (Standard) (0.365 in nominal wall, +49.1% safety margin)",
+        "formula_used": "t = (P * D) / (2 * (S * E * W + P * Y)) + c",
+        "code_reference": "ASME B31.3 Process Piping (2022) Paragraph 304.1.2",
+        "verified": true
+      },
+      "execution_time_ms": 126.6
+    },
+    "previous_hash": "9d83aee6d42ab97543b5abd324fa935cac045595d23572fac8a161b5ac5bff54",
+    "hash": "afe31436390160b6284314bc107b377cbaa92157ea3b61ae07b49bc2d95945ad"
+  },
+  {
+    "timestamp": 1790689506.519096,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-5267ba5d",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 3
+    },
+    "previous_hash": "afe31436390160b6284314bc107b377cbaa92157ea3b61ae07b49bc2d95945ad",
+    "hash": "b1502d1f540b0c25ad4f816bea3daa93a69e3c15eded43379d9c004d5ac22588"
+  },
+  {
+    "timestamp": 1790689506.556483,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-5267ba5d",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 3
+    },
+    "previous_hash": "b1502d1f540b0c25ad4f816bea3daa93a69e3c15eded43379d9c004d5ac22588",
+    "hash": "25682c0efdc3d7237aa6185272aa8aa02162f44b9a9863f80a13355a10ce6eb6"
+  },
+  {
+    "timestamp": 1790689506.7800288,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-5267ba5d\\artifacts\\INDRA_PIPE_THICKNESS_P_101.docx"
+    },
+    "previous_hash": "25682c0efdc3d7237aa6185272aa8aa02162f44b9a9863f80a13355a10ce6eb6",
+    "file_checksum": "765da744c0883cf72c1a349cf57fdc16f8bf6e9948507e4120c8c6f09ef4424a",
+    "hash": "df67a8974a8cff9bbeb931c664d449a50b51002a3d45dc0a92295ef55ef5b34d"
+  },
+  {
+    "timestamp": 1790689506.8519132,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-5267ba5d\\artifacts\\INDRA_PIPE_THICKNESS_P101_DATA.xlsx"
+    },
+    "previous_hash": "df67a8974a8cff9bbeb931c664d449a50b51002a3d45dc0a92295ef55ef5b34d",
+    "file_checksum": "5b75306a5aa71c11ca9024ff76aac81c04ed35e78df4d55aa9f28c08176c789d",
+    "hash": "c3fc97db9bc6827af5bfcc0e773fcd7acbf1245ef3af48ff5e7ef63cd491b75a"
+  },
+  {
+    "timestamp": 1790689507.317009,
+    "event_type": "file_generated",
+    "payload": {
+      "filename": "brain\\task-5267ba5d\\artifacts\\P-101_Board_Review.pptx"
+    },
+    "previous_hash": "c3fc97db9bc6827af5bfcc0e773fcd7acbf1245ef3af48ff5e7ef63cd491b75a",
+    "file_checksum": "1c2538f5bddd0cc14e48e3812fd3b418cf47eea7d7a64f680b8b5913423a4520",
+    "hash": "2678ffff7fc9a36e41b0a47c3358e494a62e4e8d5e1255ff86fd922af039330b"
   }
 ]

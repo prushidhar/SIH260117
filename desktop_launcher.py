@@ -18,12 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
 
 _KATTY_FRONTEND = Path(r"C:\Users\booya\OneDrive\Desktop\SIH frontend 1\SIH frontend 1\katty\indra")
-if (_KATTY_FRONTEND / "node_modules").exists():
-    FRONTEND_DIR = _KATTY_FRONTEND
-elif (BASE_DIR / "frontend" / "node_modules").exists():
+if (BASE_DIR / "frontend" / "node_modules").exists():
     FRONTEND_DIR = BASE_DIR / "frontend"
-else:
+elif (_KATTY_FRONTEND / "node_modules").exists():
     FRONTEND_DIR = _KATTY_FRONTEND
+else:
+    FRONTEND_DIR = BASE_DIR / "frontend"
 
 MODELS_DIR = Path(r"D:\models")
 PHYSICAL_MODELS_DIR = Path(r"C:\models")
@@ -219,7 +219,7 @@ def main():
     env["HF_HOME"] = r"D:\huggingface_cache"
 
     backend_log_path = BASE_DIR / "backend_launcher.log"
-    backend_log_file = open(backend_log_path, "w", encoding="utf-8")
+    backend_log_file = open(backend_log_path, "w", encoding="utf-8", buffering=1)
 
     python_bin = Path(sys.executable).parent / "python.exe"
     py_exec = str(python_bin) if python_bin.exists() else sys.executable
@@ -248,7 +248,7 @@ def main():
     next_cli = FRONTEND_DIR / "node_modules" / "next" / "dist" / "bin" / "next"
 
     frontend_log_path = BASE_DIR / "frontend_launcher.log"
-    frontend_log_file = open(frontend_log_path, "w", encoding="utf-8")
+    frontend_log_file = open(frontend_log_path, "w", encoding="utf-8", buffering=1)
 
     if node_exe.exists() and next_cli.exists():
         frontend_proc = subprocess.Popen(

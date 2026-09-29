@@ -9,6 +9,7 @@ Executes a 6-node state graph covering:
 6. Executive synthesis report streaming via ReportSynthesizer
 """
 import os
+import asyncio
 import json
 import time
 import math
@@ -248,7 +249,12 @@ class AgentDAG:
         intent = "coding" if is_code_request else classification.get("intent", "conceptual")
         self.state.intent = intent
 
-        # Generate specific, professional plan steps tailored to intent
+        if intent == "conversational":
+            tag = None
+            self.state.equipment_tag = None
+            detected_domains = []
+            self.state.detected_domains = []
+
         has_real_tag = bool(tag and tag not in ("EQUIP-01", "Plant Asset", "Specified Asset"))
         is_approval = any(kw in state["prompt"].lower() for kw in ["approval note", "approval", "statutory", "sign-off", "inspection report"])
 
@@ -355,6 +361,13 @@ class AgentDAG:
 
     async def _node_retrieve_context(self, state: GraphState) -> Dict[str, Any]:
         """Node 2: Semantic retrieval of governing industrial standards (BM25 enriched)."""
+        intent = state.get("intent") or getattr(self.state, "intent", "conceptual")
+        if intent == "conversational":
+            return {
+                "kb_hits": [],
+                "status": "CONTEXT_RETRIEVED"
+            }
+
         prompt = state["prompt"]
         domains = state.get("detected_domains", [])
         search_queries = []
@@ -391,10 +404,16 @@ class AgentDAG:
 
     async def _node_execute_tools(self, state: GraphState) -> Dict[str, Any]:
         """Node 3: Declarative multi-tool execution with Smart NLP Extractor & Equipment Registry."""
-        prompt = state["prompt"]
-        tag = state.get("equipment_tag") or parameter_extractor.extract_tag(prompt) or "CDU-104"
-        domains = state.get("detected_domains", [])
         intent = state.get("intent") or getattr(self.state, "intent", "conceptual")
+        if intent == "conversational":
+            return {
+                "active_tools": [],
+                "status": "TOOLS_EXECUTED"
+            }
+
+        prompt = state["prompt"]
+        tag = state.get("equipment_tag") or parameter_extractor.extract_tag(prompt) or "Plant Asset"
+        domains = state.get("detected_domains", [])
         active_tools = []
 
         # Check for Scanned Inspection Report / NDT queries
@@ -1117,6 +1136,32 @@ class AgentDAG:
         tag = self.state.equipment_tag or "Plant Asset"
         domains = state.get("detected_domains", ["default"])
         primary_domain = domains[0] if domains else "default"
+        intent = state.get("intent") or getattr(self.state, "intent", "conceptual")
+
+        # Conversational Fast-Path (greetings, capabilities overview, courtesies)
+        if intent == "conversational":
+            full_text = report_synthesizer.synthesize(
+                domain="general",
+                tool_results=[],
+                kb_hits=[],
+                prompt=state["prompt"],
+                equipment_tag="Plant Asset"
+            )
+            words = full_text.split(" ")
+            for i, word in enumerate(words):
+                chunk = word + (" " if i < len(words) - 1 else "")
+                try:
+                    await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                except Exception:
+                    pass
+                await asyncio.sleep(0.008)
+
+            self.state.messages.append({"role": "assistant", "content": full_text})
+            episodic_memory.add_interaction("default_user", state["prompt"], full_text)
+            return {
+                "status": "COMPLETED",
+                "messages": self.state.messages
+            }
 
         full_text = ""
         # 1. Deterministic industrial calculation: calc tools were executed with ASME/API math
@@ -1134,7 +1179,10 @@ class AgentDAG:
                 chunk_size=8
             ):
                 full_text += chunk
-                await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                try:
+                    await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                except Exception:
+                    pass
 
         else:
             # 2. General engineering, theory, coding, physics, explanation: Neural Model live generation
@@ -1165,7 +1213,10 @@ class AgentDAG:
                     max_new_tokens=1536
                 ):
                     full_text += chunk
-                    await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                    try:
+                        await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                    except Exception:
+                        pass
 
             except Exception as e:
                 print(f"[Planner] Neural generation error: {e}, falling back to ReportSynthesizer")
@@ -1181,6 +1232,10 @@ class AgentDAG:
                     chunk_size=8
                 ):
                     full_text += chunk
+                    try:
+                        await self.websocket.send_json({"type": "token", "text": chunk, "content": chunk})
+                    except Exception:
+                        pass
         intent = state.get("intent") or getattr(self.state, "intent", "conceptual")
         if intent == "coding" and full_text.strip():
             try:

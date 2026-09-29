@@ -1126,10 +1126,28 @@ async def websocket_task(websocket: WebSocket, taskId: str):
         )
         await websocket.send_json({"type": "done"})
     except Exception as e:
-        db.update_task_status(taskId, "error")
         if "disconnect" in str(e).lower() or type(e).__name__ in ["WebSocketDisconnect", "ClientDisconnected"]:
             print(f"Task {taskId}: Client disconnected gracefully.")
+            if hasattr(agent, "state") and agent.state.messages:
+                db.complete_task(
+                    task_id=taskId,
+                    messages=agent.state.messages,
+                    tool_calls=getattr(agent.state, 'recorded_tool_calls', []),
+                    deliverables=[
+                        {
+                            "filename": os.path.basename(p),
+                            "name": os.path.basename(p).replace("_", " ").replace(".docx", "").replace(".xlsx", "").replace(".pptx", ""),
+                            "url": f"/files/{taskId}/artifacts/{os.path.basename(p)}",
+                            "kind": os.path.splitext(p)[1].lstrip('.') or "docx",
+                            "file_type": os.path.splitext(p)[1].lstrip('.') or "docx"
+                        }
+                        for p in getattr(agent.state, 'deliverables', [])
+                    ]
+                )
+            else:
+                db.update_task_status(taskId, "cancelled")
         else:
+            db.update_task_status(taskId, "error")
             import traceback
             traceback.print_exc()
             print(f"Task {taskId} unexpected error: {e}")
@@ -1146,16 +1164,20 @@ async def websocket_network(websocket: WebSocket):
     try:
         while True:
             # Monitor INDRA workbench processes only (main server + any spawned sandbox tools)
-            conns = []
-            try:
-                conns.extend(proc.net_connections())
-                for child in proc.children(recursive=True):
-                    try:
-                        conns.extend(child.net_connections())
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+            def _get_conns():
+                c_list = []
+                try:
+                    c_list.extend(proc.net_connections())
+                    for child in proc.children(recursive=True):
+                        try:
+                            c_list.extend(child.net_connections())
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+                return c_list
+
+            conns = await asyncio.to_thread(_get_conns)
 
             has_blocked = False
             for conn in conns:
@@ -1170,7 +1192,7 @@ async def websocket_network(websocket: WebSocket):
 
             # In normal 0-WAN localhost operation, do NOT broadcast fake dropped packet events
             # to prevent spamming the OS with intrusion notifications.
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(5.0)
     except Exception as e:
         pass
     finally:

@@ -23,6 +23,26 @@ const nextConfig = {
 
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/history',
+        destination: '/api/history',
+      },
+      {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:8000/api/:path*',
+      },
+      {
+        source: '/files/:path*',
+        destination: 'http://127.0.0.1:8000/files/:path*',
+      },
+      {
+        source: '/health',
+        destination: 'http://127.0.0.1:8000/health',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
