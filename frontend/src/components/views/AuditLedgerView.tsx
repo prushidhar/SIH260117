@@ -1,93 +1,115 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  ShieldCheck,
-  Lock,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  UserCheck,
-  Hash,
-  Link as LinkIcon,
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  ShieldCheck, 
+  Lock, 
+  CheckCircle2, 
+  XCircle, 
+  RefreshCw, 
+  UserCheck, 
+  Hash, 
+  Link as LinkIcon, 
   AlertTriangle,
   FileCheck,
   Cpu,
   Clock,
   ExternalLink,
   Download,
-  Share2,
-  ChevronRight,
-  Sparkles,
-  FileSignature
+  Filter,
+  Search,
+  ChevronDown,
+  Eye,
+  FileSpreadsheet,
+  FileText,
+  X,
+  Copy,
+  Check,
+  ArrowRight,
 } from 'lucide-react';
-import useIndraStore, { API_BASE, type AuditBlock, type PendingApproval } from '@/store/indra-store';
+import { API_BASE, type AuditBlock, type PendingApproval } from '@/store/indra-store';
 import { useAuditLedgerQuery, useApprovalsQuery, useSignApprovalMutation } from '@/lib/queries';
 import { multiWindowSync } from '@/lib/sync/multi-window-sync';
+import {
+  type AuditLedgerEvent,
+  DEFAULT_AUDIT_BLOCKS,
+  generateComplianceReport,
+} from '@/lib/audit/merkle-verifier';
+import BlockChainTopologyMap from './audit/BlockChainTopologyMap';
+import { AutoRefreshRing, HitlAutoHoldClock } from './audit/HitlCountdownTimer';
+import TamperVerifierModal from './audit/TamperVerifierModal';
+
+type FilterStatus = 'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED' | 'CRITICAL OVERRIDE';
 
 export default function AuditLedgerView() {
   const { data: ledgerData, isLoading: loadingLedger, refetch: fetchLedger } = useAuditLedgerQuery();
   const { data: pendingApprovals = [], isLoading: loadingApprovals, refetch: fetchPendingApprovals } = useApprovalsQuery();
   const signMutation = useSignApprovalMutation();
-  const { addToast } = useIndraStore();
 
-  const blocks: AuditBlock[] = ledgerData?.chain || [];
-  const isValidChain: boolean = ledgerData?.verified ?? true;
-  const totalBlocks: number = ledgerData?.total_blocks || blocks.length;
-  const merkleRoot: string = ledgerData?.merkle_root || '01a6aef91e78e3995f33bc184a259bb7e7355dc0366a7ec26f0ac1c9a62a63d9';
+  // Modal states
+  const [isVerifierOpen, setIsVerifierOpen] = useState(false);
+  const [inspectedBlock, setInspectedBlock] = useState<AuditLedgerEvent | null>(null);
+  const [copiedRoot, setCopiedRoot] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
+  // Filter state for Audit Matrix
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // HITL Sign-off Form State
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
-
-  // Sign-off Form State
-  const [engineerName, setEngineerName] = useState('Superintendent Sharma');
-  const [employeeId, setEmployeeId] = useState('EMP-108');
-  const [tier, setTier] = useState<'1' | '2' | '3'>('3');
+  const [engineerName, setEngineerName] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+  const [tier, setTier] = useState<'1' | '2' | '3'>('2');
   const [notes, setNotes] = useState('');
   const [signing, setSigning] = useState(false);
   const [signSuccess, setSignSuccess] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
-  const [demoApprovals, setDemoApprovals] = useState<PendingApproval[]>([]);
 
-  const activePendingList = pendingApprovals.length > 0 ? pendingApprovals : demoApprovals;
+  // Synthesize or map blockchain events
+  const allBlocks: AuditLedgerEvent[] = useMemo(() => {
+    const rawBlocks = ledgerData?.chain || [];
+    if (rawBlocks.length >= 3) {
+      return rawBlocks.map((b: AuditBlock, idx: number) => ({
+        id: b.id || `live-block-${b.index ?? idx}`,
+        index: b.index !== undefined ? b.index : idx,
+        timestamp: b.timestamp || new Date().toISOString(),
+        eventType: b.event_type || b.action || 'SOVEREIGN_ACTION',
+        status: (b.status as any) || (b.valid === false ? 'REJECTED' : 'APPROVED'),
+        assetTag: b.asset_tag || b.tag || 'CDU-MAIN',
+        severity: (b.severity as any) || 'MEDIUM',
+        operator: b.operator || b.signature || 'LEAD_DCS_OPERATOR',
+        hash: b.hash || b.merkle_root || 'sha256:sealed',
+        previousHash: b.previous_hash || b.prev_hash || '00000000000000000000000000000000',
+        payload: b.payload || b.details || { action: b.action, task_id: b.task_id },
+      }));
+    }
+    return DEFAULT_AUDIT_BLOCKS;
+  }, [ledgerData]);
+
+  const isValidChain: boolean = ledgerData?.verified ?? true;
+  const totalBlocks: number = allBlocks.length;
+  const merkleRoot: string =
+    ledgerData?.merkle_root ||
+    allBlocks[allBlocks.length - 1]?.hash ||
+    'sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069';
 
   useEffect(() => {
-    if (activePendingList.length > 0 && !selectedApproval) {
-      setSelectedApproval(activePendingList[0]);
+    if (pendingApprovals.length > 0 && !selectedApproval) {
+      setSelectedApproval(pendingApprovals[0]);
     }
-  }, [activePendingList, selectedApproval]);
+  }, [pendingApprovals, selectedApproval]);
 
-  const handleSeedDemoApproval = () => {
-    const demo: PendingApproval = {
-      task_id: `task-statutory-${Date.now().toString().slice(-6)}`,
-      step_index: 0,
-      tool: 'calculate_pipe_thickness_asme_b313',
-      title: 'Statutory Plant Asset Integrity Approval: CDU-Pipe-104',
-      description: 'Ultrasonic inspection measured wall thickness at 7.2 mm (Nominal: 12.7 mm). Plant Superintendent sign-off required for continued service under ASME B31.3 §304.1.2 / API 570.',
-      severity: 'CRITICAL',
-      arguments: {
-        asset_tag: 'CDU-Pipe-104',
-        measured_thickness_mm: 7.2,
-        nominal_thickness_mm: 12.7,
-        design_pressure_psig: 464.1,
-        calculated_t_min_in: 0.2486,
-        corrosion_rate_mmyr: 0.45,
-        governing_standard: 'ASME B31.3-2022 §304.1.2 / API 570',
-        action_required: 'Plant Operations Superintendent Authorization for Continued Service'
-      },
-      created_at: new Date().toLocaleTimeString()
-    };
-    setDemoApprovals([demo]);
-    setSelectedApproval(demo);
-    addToast({
-      type: 'info',
-      title: 'Sample Statutory Decision Loaded',
-      message: 'ASME B31.3 plant superintendent approval queued for testing.',
-    });
+  // Handle revalidation
+  const handleRefreshAll = () => {
+    fetchLedger();
+    fetchPendingApprovals();
   };
 
+  // 3-Tier Human-in-the-Loop Sign-off submission
   const handleSignApproval = async (decision: 'APPROVED' | 'REJECTED') => {
     if (!selectedApproval) return;
-    const signer = `${engineerName.trim() || 'Admin User'} (${employeeId || 'EMP-108'}) [Tier ${tier}]`;
+    const signer = engineerName.trim() || 'Admin User';
 
     try {
       setSigning(true);
@@ -95,254 +117,249 @@ export default function AuditLedgerView() {
       setSignSuccess(null);
 
       await signMutation.mutateAsync({
-        taskId: selectedApproval.task_id || (selectedApproval as any).taskId || 'sample-task',
+        taskId: selectedApproval.task_id || (selectedApproval as any).taskId || selectedApproval.id,
         stepIndex: typeof selectedApproval.step_index === 'number' ? selectedApproval.step_index : 0,
         approved: decision === 'APPROVED',
-        signature: signer,
+        signature: `${signer} (Tier ${tier} Certified)`,
       });
 
-      setSignSuccess(`Action recorded: Plant Decision ${decision === 'APPROVED' ? 'APPROVED' : 'REJECTED'} by ${signer} & cryptographically sealed into Merkle Ledger.`);
+      setSignSuccess(`Action recorded: Tool execution ${decision === 'APPROVED' ? 'Approved' : 'Rejected'} by ${signer} & sealed into Merkle Ledger.`);
       setNotes('');
-      setDemoApprovals([]);
-
+      
       setTimeout(() => {
         setSignSuccess(null);
         setSelectedApproval(null);
-        fetchLedger();
-      }, 2500);
-    } catch {
-      // Local fallback simulation if offline
-      setSignSuccess(`Action recorded: Plant Decision ${decision === 'APPROVED' ? 'APPROVED' : 'REJECTED'} by ${signer} & cryptographically sealed into Merkle Ledger.`);
-      setDemoApprovals([]);
-      setTimeout(() => {
-        setSignSuccess(null);
-        setSelectedApproval(null);
-      }, 2500);
+      }, 3000);
+    } catch (err: any) {
+      setSignError(err.message || 'Failed to submit signature to backend.');
     } finally {
       setSigning(false);
     }
   };
 
-  const handleExportAuditCertificate = () => {
-    const cert = {
-      certificate_id: `CERT-INDRA-${Date.now()}`,
-      issued_at: new Date().toISOString(),
-      governing_standard: 'IEC 62443 / CMMC OT RESTRICTED / ISO 27001',
-      airgap_verification: '100% ON-PREMISE ZERO-WAN LOOPBACK VERIFIED',
-      merkle_root: merkleRoot,
-      total_blocks: totalBlocks || blocks.length,
-      integrity_status: isValidChain ? 'VERIFIED_PRISTINE (0 TAMPERING)' : 'CORRUPTED',
-      blocks: blocks.map((b, i) => ({
-        block_index: b.index ?? i,
-        timestamp: b.timestamp,
-        event: b.event_type || b.action,
-        previous_hash: b.previous_hash,
-        merkle_root: b.merkle_root || b.hash,
-        operator: b.operator || 'System Automated'
-      }))
-    };
+  // Filtered blocks for Audit Matrix
+  const filteredBlocks = useMemo(() => {
+    return allBlocks.filter((b) => {
+      // Status filter
+      if (statusFilter !== 'ALL' && b.status !== statusFilter) {
+        return false;
+      }
+      // Text query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesTag = b.assetTag.toLowerCase().includes(q);
+        const matchesEvent = b.eventType.toLowerCase().includes(q);
+        const matchesOperator = b.operator.toLowerCase().includes(q);
+        const matchesHash = b.hash.toLowerCase().includes(q);
+        return matchesTag || matchesEvent || matchesOperator || matchesHash;
+      }
+      return true;
+    });
+  }, [allBlocks, statusFilter, searchQuery]);
 
-    const blob = new Blob([JSON.stringify(cert, null, 2)], { type: 'application/json' });
+  // Export handlers
+  const handleExport = (format: 'csv' | 'json') => {
+    const report = generateComplianceReport(filteredBlocks, merkleRoot, format);
+    const blob = new Blob([report.content], { type: report.mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `INDRA_Merkle_Audit_Certificate_${Date.now()}.json`;
+    a.download = report.filename;
     a.click();
     URL.revokeObjectURL(url);
+    setExportDropdownOpen(false);
+  };
 
-    addToast({
-      type: 'success',
-      title: 'Cryptographic Audit Certificate Exported',
-      message: 'Tamper-evident JSON verification bundle downloaded to local disk.',
-    });
+  const handleCopyRoot = () => {
+    navigator.clipboard.writeText(merkleRoot);
+    setCopiedRoot(true);
+    setTimeout(() => setCopiedRoot(false), 2000);
   };
 
   return (
-    <div className="flex-1 min-h-0 h-full flex flex-col bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-800 dark:text-zinc-200 overflow-hidden p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 border-b border-slate-200/80 dark:border-zinc-800/80 mb-6 gap-3">
+    <div className="flex-1 min-h-0 h-full flex flex-col bg-zinc-950 text-zinc-200 overflow-hidden p-5 font-mono select-none">
+      {/* Top SCADA Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-zinc-800/80 gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
             </div>
-            <h1 className="text-base font-bold text-slate-900 dark:text-zinc-100 font-mono">
-              Merkle Audit Ledger & 3-Tier HITL Governance
+            <h1 className="text-base font-bold text-zinc-100 tracking-wider">
+              MERKLE AUDIT LEDGER & 3-TIER HITL TIMELINE
             </h1>
-            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50 font-mono font-bold">
+            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-800/60 font-bold">
               SHA-256 IMMUTABLE
             </span>
+            <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-800/60 font-semibold hidden sm:inline">
+              AIR-GAP LOCAL (127.0.0.1)
+            </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-mono">
-            Every sovereign calculation, P&ID reconciliation, and plant maintenance approval is cryptographically linked and signed.
+          <p className="text-xs text-zinc-400 mt-1">
+            OSHA 1910.119 / API 570 / ASME B31.3 deterministic ledger with client-side cryptographic seal verification.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold border ${
+        {/* Action Toolbar */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Integrity status pill */}
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
             isValidChain 
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300' 
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+              ? 'bg-emerald-950/60 border-emerald-800/80 text-emerald-300' 
+              : 'bg-rose-950/60 border-rose-800/80 text-rose-300'
           }`}>
-            {isValidChain ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
-            <span>{isValidChain ? 'CRYPTOGRAPHICALLY VERIFIED' : 'INTEGRITY CHECK FAILED'}</span>
+            {isValidChain ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />}
+            <span>{isValidChain ? 'CRYPTOGRAPHICALLY SEALED (0 TAMPER)' : 'CHAIN BROKEN'}</span>
           </div>
 
+          {/* 30-Second Auto Refresh Circular Timer */}
+          <AutoRefreshRing
+            intervalSeconds={30}
+            onRefresh={handleRefreshAll}
+            isRefreshing={loadingLedger || loadingApprovals}
+          />
+
+          {/* One-Click Verify Merkle Tree Button */}
           <button
-            onClick={handleExportAuditCertificate}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer"
-            title="Download cryptographically sealed audit certificate"
+            onClick={() => setIsVerifierOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-xs text-emerald-300 font-bold transition-all shadow-sm cursor-pointer"
+            title="Recalculate SHA-256 hashes client-side with NIST FIPS 180-4 Seal"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export Certificate</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Verify Merkle Tree</span>
           </button>
 
-          <button
-            onClick={() => { fetchLedger(); fetchPendingApprovals(); }}
-            disabled={loadingLedger}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 text-xs text-slate-700 dark:text-zinc-300 font-mono transition-colors shadow-2xs cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingLedger ? 'animate-spin' : ''}`} />
-            <span>Verify</span>
-          </button>
-
+          {/* Pop Out Window Button */}
           <button
             onClick={() => multiWindowSync.openWindow('audit')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs text-emerald-800 dark:text-emerald-300 font-mono transition-colors shadow-2xs cursor-pointer font-bold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs text-zinc-300 font-bold transition-colors shadow-2xs cursor-pointer"
             title="Detach Ledger to Dedicated Popout Window"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>Pop Out</span>
+            <span className="hidden sm:inline">Pop Out</span>
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-6 scrollbar-thin dark:scrollbar-thumb-zinc-700 pr-1">
+      {/* Main Scrollable Body */}
+      <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin dark:scrollbar-thumb-zinc-700 pr-1">
         {/* Merkle Root Telemetry Bar */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between font-mono text-xs gap-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+            <div className="p-2.5 rounded-xl bg-emerald-950/70 text-emerald-400 border border-emerald-800/60">
               <Lock className="w-4 h-4" />
             </div>
+            <div className="min-w-0">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">
+                ACTIVE STATUTORY MERKLE ROOT (SHA-256)
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-zinc-100 font-bold truncate max-w-md">
+                  {merkleRoot}
+                </span>
+                <button
+                  onClick={handleCopyRoot}
+                  className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                  title="Copy Merkle Root"
+                >
+                  {copiedRoot ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-right">
             <div>
-              <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
-                Active Merkle Root (SHA-256)
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">
+                CONSENSUS ENGINE
               </div>
-              <div className="text-slate-800 dark:text-zinc-200 font-bold truncate max-w-lg mt-0.5 select-all">
-                {merkleRoot}
+              <div className="text-emerald-400 font-bold text-xs mt-0.5">
+                LOCAL AIR-GAP (0 WAN EGRESS)
               </div>
             </div>
-          </div>
-
-          <div className="text-left sm:text-right">
-            <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
-              Chain Integrity Status
-            </div>
-            <div className="text-emerald-700 dark:text-emerald-400 font-bold text-sm mt-0.5">
-              {totalBlocks || blocks.length} Immutable Blocks &bull; 0 Collisions
+            <div className="pl-4 border-l border-zinc-800">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">
+                TOTAL CHAIN BLOCKS
+              </div>
+              <div className="text-emerald-400 font-bold text-sm mt-0.5">
+                {totalBlocks} Blocks
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Visual Merkle Block Chain Flow */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xs space-y-3 font-mono text-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-2">
-            <div className="flex items-center gap-2">
-              <LinkIcon className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-              <span className="font-bold text-slate-900 dark:text-zinc-100 uppercase text-[11px] tracking-wider">
-                Cryptographic Chaining Visualization (Genesis $\rightarrow$ Head)
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-400">100% Deterministic Continuity</span>
-          </div>
+        {/* 1. Interactive Block-Chain Topology Map */}
+        <BlockChainTopologyMap
+          blocks={allBlocks}
+          onSelectBlock={(block) => setInspectedBlock(block)}
+        />
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
-            {(blocks.length > 0 ? blocks : [
-              { index: 0, event_type: 'GENESIS_BLOCK', hash: '000000000019d6689c085ae165831e93', previous_hash: '0000000000000000' },
-              { index: 1, event_type: 'ASME_B31_3_CALC', hash: '7e05f7b908b7619736c97a808006d091', previous_hash: '000000000019d668' },
-              { index: 2, event_type: 'HITL_SUPERINTENDENT_SIGN', hash: '01a6aef91e78e3995f33bc184a259bb', previous_hash: '7e05f7b908b76197' }
-            ]).slice(0, 6).map((blk, i) => (
-              <div key={i} className="flex items-center gap-2 shrink-0">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-[10px] w-44 space-y-1">
-                  <div className="flex items-center justify-between text-violet-600 dark:text-violet-400 font-bold">
-                    <span>BLOCK #{blk.index ?? i}</span>
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                  </div>
-                  <div className="font-semibold text-slate-700 dark:text-zinc-300 truncate">
-                    {blk.event_type || 'AI_TASK_EXEC'}
-                  </div>
-                  <div className="text-[9px] text-slate-400 truncate">
-                    Hash: {((blk as any).merkle_root || (blk as any).hash || '').slice(0, 16)}...
-                  </div>
-                </div>
-                {i < Math.min(blocks.length - 1, 5) && (
-                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-zinc-700 shrink-0" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 3-Tier Human-in-the-Loop (HITL) Sign-off Section */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+        {/* 2. 3-Tier Human-in-the-Loop (HITL) Sign-off Section */}
+        <div className="p-4.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
-                <UserCheck className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+              <div className="w-6 h-6 rounded-lg bg-emerald-950/70 border border-emerald-800/60 flex items-center justify-center">
+                <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <h2 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider font-mono">
-                3-Tier Statutory Plant Sign-Off Gate (API 570 / ASME B31.3)
+              <h2 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
+                Human-in-the-Loop (HITL) 3-Tier Sign-Off Gate
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 font-semibold">
-              {activePendingList.length} pending decisions
+            <span className="text-[10px] text-zinc-400 font-semibold">
+              {pendingApprovals.length} pending decisions awaiting authorization
             </span>
           </div>
 
-          {activePendingList.length === 0 ? (
-            <div className="text-xs text-slate-400 italic py-6 text-center border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/40 space-y-2">
-              <p>No statutory approvals currently pending in queue.</p>
-              <button
-                onClick={handleSeedDemoApproval}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-mono font-bold transition-all cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Simulate Statutory Sign-Off (ASME B31.3 / CDU-Pipe-104)</span>
-              </button>
+          {pendingApprovals.length === 0 ? (
+            <div className="text-xs text-zinc-500 italic py-5 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-950/50">
+              No pending operator approvals. Critical actions triggered by ASME B31.3 limits or SIL setpoint overrides will pause here for 3-tier plant authorization.
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* List of pending approvals */}
               <div className="space-y-2">
-                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-mono font-semibold">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
                   Select Action Requiring Authorization:
                 </div>
-                {activePendingList.map((item, idx) => {
+                {pendingApprovals.map((item, idx) => {
                   const itemKey = `${item.task_id}-${item.step_index ?? idx}`;
-                  const isSelected = selectedApproval?.task_id === item.task_id && (selectedApproval?.step_index ?? 0) === (item.step_index ?? idx);
+                  const isSelected =
+                    selectedApproval?.task_id === item.task_id &&
+                    (selectedApproval?.step_index ?? 0) === (item.step_index ?? idx);
+
                   return (
                     <div
                       key={itemKey}
                       onClick={() => setSelectedApproval(item)}
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-violet-50/70 dark:bg-violet-950/40 border-violet-400 dark:border-violet-600 shadow-xs ring-2 ring-violet-500/20'
-                          : 'bg-slate-50 dark:bg-zinc-950 border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
+                          ? 'bg-zinc-850 border-emerald-500/80 shadow-md ring-1 ring-emerald-500/30'
+                          : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-xs font-bold text-slate-800 dark:text-zinc-200">
-                          {item.title || item.tool || 'Statutory Plant Approval'}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-bold text-zinc-100">
+                          {item.tool || item.tool_name || item.title || 'Tool Authorization'}
                         </span>
-                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800">
                           {item.severity || 'CRITICAL'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed line-clamp-2">
-                        {item.description || (item.arguments ? JSON.stringify(item.arguments) : 'Action waiting for superintendent authorization')}
+
+                      <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2">
+                        {item.description || (item.arguments ? JSON.stringify(item.arguments) : 'Deterministic action waiting for approval')}
                       </p>
-                      <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200/60 dark:border-zinc-800/80 text-[10px] font-mono text-slate-400 dark:text-zinc-500">
-                        <span>Task: {item.task_id?.slice(0, 14)}</span>
+
+                      {/* 5-minute auto-hold countdown timer */}
+                      <div className="mt-2.5">
+                        <HitlAutoHoldClock
+                          initialSeconds={300}
+                          label="5-MIN AUTO-HOLD"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-zinc-850 text-[10px] text-zinc-500">
+                        <span>Task: {item.task_id?.slice(0, 8)}... (Step #{item.step_index ?? idx})</span>
                         <span>{item.created_at || 'Pending'}</span>
                       </div>
                     </div>
@@ -351,173 +368,403 @@ export default function AuditLedgerView() {
               </div>
 
               {/* Digital Signature Panel */}
-              {selectedApproval && (
-                <div className="p-4.5 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 space-y-3 font-mono text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-zinc-800">
-                    <span className="font-bold text-slate-900 dark:text-zinc-100">
-                      Sign-Off Authorization Deck
+              {selectedApproval ? (
+                <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                    <span className="font-bold text-zinc-100">
+                      Sign-Off: {selectedApproval.tool || selectedApproval.tool_name || selectedApproval.title || 'Action'}
                     </span>
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50 font-semibold">
-                      Tier 3 Superintendent
+                    <span className="text-[10px] text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-800/60 font-semibold">
+                      Step #{selectedApproval.step_index ?? 0}
                     </span>
                   </div>
 
-                  {/* Signer inputs */}
+                  {/* 3-Tier Authority Level Selector */}
+                  <div>
+                    <label className="block text-[10px] text-zinc-400 mb-1 uppercase font-semibold">
+                      Statutory Sign-off Authority Tier:
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setTier('1')}
+                        className={`py-1.5 px-2 rounded-lg border font-bold transition-all cursor-pointer ${
+                          tier === '1'
+                            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        Tier 1: Operator
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTier('2')}
+                        className={`py-1.5 px-2 rounded-lg border font-bold transition-all cursor-pointer ${
+                          tier === '2'
+                            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        Tier 2: PE Lead
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTier('3')}
+                        className={`py-1.5 px-2 rounded-lg border font-bold transition-all cursor-pointer ${
+                          tier === '3'
+                            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        Tier 3: Plant Mgr
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-1 uppercase font-semibold">
-                        Authorized Official:
+                      <label className="block text-[10px] text-zinc-400 mb-1 uppercase font-semibold">
+                        Digital Signer Name:
                       </label>
                       <input
                         type="text"
                         value={engineerName}
                         onChange={(e) => setEngineerName(e.target.value)}
-                        placeholder="Superintendent Sharma"
-                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-bold outline-none"
+                        placeholder="Admin User / PE_48291"
+                        className="w-full px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 outline-none focus:border-emerald-500 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-1 uppercase font-semibold">
-                        Employee ID / Badge:
+                      <label className="block text-[10px] text-zinc-400 mb-1 uppercase font-semibold">
+                        Employee / License ID:
                       </label>
                       <input
                         type="text"
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
-                        placeholder="EMP-108"
-                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-bold outline-none"
+                        placeholder="PE-LIC-TX-99042"
+                        className="w-full px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 outline-none focus:border-emerald-500 transition-colors"
                       />
                     </div>
                   </div>
 
-                  {/* Parameters */}
                   {selectedApproval.arguments && (
                     <div>
-                      <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-1 uppercase font-semibold">
-                        Audit Arguments Verified:
+                      <label className="block text-[10px] text-zinc-400 mb-1 uppercase font-semibold">
+                        Action Parameters:
                       </label>
-                      <pre className="p-2.5 rounded-xl bg-slate-900 dark:bg-black text-[10px] text-emerald-400 overflow-x-auto font-mono max-h-36 scrollbar-thin">
+                      <pre className="p-2 rounded-lg bg-black/80 text-[10px] text-zinc-300 overflow-x-auto max-h-24">
                         {JSON.stringify(selectedApproval.arguments, null, 2)}
                       </pre>
                     </div>
                   )}
 
                   {signError && (
-                    <div className="text-[11px] text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-800 font-medium">
+                    <div className="text-[11px] text-rose-300 bg-rose-950/60 p-2.5 rounded-xl border border-rose-800 font-medium">
                       {signError}
                     </div>
                   )}
 
                   {signSuccess && (
-                    <div className="text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 font-medium">
+                    <div className="text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-800 font-medium">
                       {signSuccess}
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-1">
                     <button
                       onClick={() => handleSignApproval('APPROVED')}
                       disabled={signing}
-                      className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+                      className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>AUTHORIZE & SEAL TO MERKLE ROOT</span>
+                      <span>SIGN & APPROVE (TIER {tier})</span>
                     </button>
 
                     <button
                       onClick={() => handleSignApproval('REJECTED')}
                       disabled={signing}
-                      className="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="px-4 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-800 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <XCircle className="w-3.5 h-3.5" />
                       <span>REJECT</span>
                     </button>
                   </div>
                 </div>
+              ) : (
+                <div className="flex items-center justify-center p-6 text-xs text-zinc-500 italic border border-dashed border-zinc-800 rounded-xl bg-zinc-950/50">
+                  Select an action on the left to sign off
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Cryptographic Ledger Chain Explorer */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-              Cryptographic Audit Blocks ({totalBlocks || blocks.length})
-            </h2>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
-              SHA-256 Chained Blocks Verified
-            </span>
+        {/* 3. Filterable Audit Matrix Section */}
+        <div className="p-4.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-md space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800 gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
+                  Filterable Audit Matrix & Statutory Ledger
+                </h2>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                Displaying {filteredBlocks.length} of {allBlocks.length} cryptographic events
+              </p>
+            </div>
+
+            {/* Compliance Report Export Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 text-xs font-bold text-zinc-200 transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Export Compliance Report</span>
+                <ChevronDown className="w-3 h-3 text-zinc-400" />
+              </button>
+
+              {exportDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-zinc-950 border border-zinc-800 shadow-2xl p-1.5 z-20 space-y-1">
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900 transition-colors text-left cursor-pointer"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                    <div>
+                      <div className="font-bold">Export CSV</div>
+                      <div className="text-[9px] text-zinc-500">Excel / OSHA PSM Format</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleExport('json')}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900 transition-colors text-left cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-cyan-400" />
+                    <div>
+                      <div className="font-bold">Export JSON</div>
+                      <div className="text-[9px] text-zinc-500">Full Cryptographic Chain</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2.5">
-            {(blocks.length > 0 ? blocks : [
-              {
-                index: 0,
-                event_type: 'GENESIS_BLOCK',
-                hash: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',
-                previous_hash: '0000000000000000000000000000000000000000000000000000000000000000',
-                timestamp: '2026-09-26 12:00:00 UTC',
-                operator: 'INDRA Sovereign Genesis Core'
-              }
-            ]).map((b, idx) => {
-              const eventType = b.event_type || b.action || 'ASME_B31_3_EXECUTION';
-              const merkleRootVal = b.merkle_root || b.hash || 'sha256:sealed';
-              const prevHash = b.previous_hash || b.prev_hash || '00000000000000000000000000000000';
-              const blockNum = b.index !== undefined ? b.index : idx;
+          {/* Filter Pills and Search Bar */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+              {(['ALL', 'APPROVED', 'PENDING', 'REJECTED', 'CRITICAL OVERRIDE'] as FilterStatus[]).map(
+                (status) => {
+                  const isActive = statusFilter === status;
+                  return (
+                    <button
+                      key={status}
+                      onClick={() => setStatusFilter(status)}
+                      className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow-sm'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                      }`}
+                    >
+                      {status === 'ALL' ? 'ALL EVENTS' : status}
+                    </button>
+                  );
+                }
+              )}
+            </div>
 
-              return (
-                <div
-                  key={b.hash || `${b.timestamp}-${idx}`}
-                  className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-violet-300 dark:hover:border-violet-700 transition-all font-mono text-xs space-y-2 shadow-xs"
+            {/* Search Input */}
+            <div className="relative min-w-[240px]">
+              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tag, operator, action..."
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 outline-none focus:border-emerald-500 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-[10px]">
-                        BLOCK #{blockNum}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/50 text-[10px] font-bold">
-                        {eventType}
-                      </span>
-                    </div>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
 
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-zinc-500">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{b.timestamp || 'Recorded'}</span>
-                    </div>
-                  </div>
+          {/* Matrix List / Table */}
+          <div className="space-y-2">
+            {filteredBlocks.length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-950/50 text-xs text-zinc-500">
+                No audit blocks match the selected filter criteria.
+              </div>
+            ) : (
+              filteredBlocks.map((b) => {
+                const isApproved = b.status === 'APPROVED';
+                const isPending = b.status === 'PENDING';
+                const isOverride = b.status === 'CRITICAL OVERRIDE';
+                const isRejected = b.status === 'REJECTED';
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] pt-1.5 border-t border-slate-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400 truncate">
-                      <LinkIcon className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 flex-shrink-0" />
-                      <span className="text-slate-400 dark:text-zinc-500">previous_hash:</span>
-                      <span className="truncate text-slate-600 dark:text-zinc-300 font-medium">{prevHash}</span>
-                    </div>
+                const statusBadgeStyle = isApproved
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80'
+                  : isOverride
+                  ? 'bg-rose-950/80 text-rose-300 border-rose-700/80 animate-pulse'
+                  : isPending
+                  ? 'bg-amber-950/80 text-amber-300 border-amber-700/80'
+                  : 'bg-zinc-800 text-zinc-400 border-zinc-700';
 
-                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 truncate font-semibold">
-                      <Hash className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                      <span className="text-slate-400 dark:text-zinc-500 font-normal">merkle_root:</span>
-                      <span className="truncate text-emerald-700 dark:text-emerald-400">{merkleRootVal}</span>
-                    </div>
-                  </div>
-
-                  {b.operator && (
-                    <div className="text-[10px] text-slate-500 dark:text-zinc-400 pt-0.5 flex items-center justify-between">
-                      <div>
-                        <span className="text-slate-400 dark:text-zinc-500">Sealed By: </span>
-                        <span className="font-semibold text-slate-700 dark:text-zinc-300">{b.operator}</span>
+                return (
+                  <div
+                    key={b.id}
+                    className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800/90 hover:border-zinc-700 transition-all text-xs space-y-2.5"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold text-[10px]">
+                          BLOCK #{b.index}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusBadgeStyle}`}>
+                          {b.status}
+                        </span>
+                        <span className="text-zinc-100 font-bold text-xs">
+                          {b.eventType}
+                        </span>
                       </div>
-                      <span className="text-emerald-600 font-bold text-[9px] bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                        SIGNATURE VERIFIED
+
+                      <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+                        <span className="text-emerald-400 font-bold">TAG: {b.assetTag}</span>
+                        <span className="text-zinc-500 text-[10px] flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {b.timestamp}
+                        </span>
+                        <button
+                          onClick={() => setInspectedBlock(b)}
+                          className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-emerald-400 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>Inspect</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Hash & Previous Hash linkage summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] pt-2 border-t border-zinc-900">
+                      <div className="flex items-center gap-1.5 text-zinc-400 truncate">
+                        <LinkIcon className="w-3 h-3 text-zinc-600 flex-shrink-0" />
+                        <span className="text-zinc-500">previous_hash:</span>
+                        <span className="font-mono text-zinc-300 truncate">{b.previousHash}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-emerald-400 truncate">
+                        <Hash className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                        <span className="text-zinc-500">block_hash:</span>
+                        <span className="font-mono text-emerald-400 truncate">{b.hash}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-0.5">
+                      <span>Operator: <strong className="text-zinc-300">{b.operator}</strong></span>
+                      <span className="truncate max-w-sm text-right text-zinc-400">
+                        Payload: {JSON.stringify(b.payload).substring(0, 70)}...
                       </span>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
+
+      {/* Block Inspector Modal */}
+      {inspectedBlock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl p-6 font-mono text-xs space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold text-[10px]">
+                  BLOCK #{inspectedBlock.index}
+                </span>
+                <h3 className="font-bold text-zinc-100 text-sm">
+                  {inspectedBlock.eventType}
+                </h3>
+              </div>
+              <button
+                onClick={() => setInspectedBlock(null)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-850 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">ASSET TAG</span>
+                  <span className="font-bold text-emerald-400">{inspectedBlock.assetTag}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">STATUS</span>
+                  <span className="font-bold text-zinc-200">{inspectedBlock.status}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">SIGNER / OPERATOR</span>
+                  <span className="font-bold text-zinc-200">{inspectedBlock.operator}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">TIMESTAMP (UTC)</span>
+                  <span className="font-bold text-zinc-200">{inspectedBlock.timestamp}</span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-zinc-500 block mb-1">CURRENT SHA-256 HASH</span>
+                <div className="p-2 rounded-lg bg-black text-[11px] font-mono text-emerald-400 break-all border border-zinc-850">
+                  {inspectedBlock.hash}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-zinc-500 block mb-1">PREVIOUS BLOCK HASH</span>
+                <div className="p-2 rounded-lg bg-black text-[11px] font-mono text-zinc-400 break-all border border-zinc-850">
+                  {inspectedBlock.previousHash}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-zinc-500 block mb-1">PAYLOAD & RECONCILIATION PARAMETERS</span>
+                <pre className="p-3 rounded-xl bg-black text-[11px] font-mono text-zinc-200 overflow-x-auto max-h-48 border border-zinc-850">
+                  {JSON.stringify(inspectedBlock.payload, null, 2)}
+                </pre>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setInspectedBlock(null)}
+                className="px-4 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold transition-colors cursor-pointer"
+              >
+                Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cryptographic Verifier Modal */}
+      <TamperVerifierModal
+        isOpen={isVerifierOpen}
+        onClose={() => setIsVerifierOpen(false)}
+        blocks={allBlocks}
+        expectedRoot={merkleRoot}
+      />
     </div>
   );
 }

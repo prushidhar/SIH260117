@@ -1,294 +1,393 @@
+'use client';
+
 import React, { useState, useMemo } from 'react';
 import {
   Droplets,
   Flame,
-  Activity,
-  ShieldCheck,
+  Gauge,
+  Crosshair,
+  FileCheck,
+  Sliders,
   CheckCircle2,
   AlertTriangle,
-  Sliders,
-  SlidersHorizontal,
-  Waves,
-  Maximize2,
-  FileCheck,
-  Radio
+  Zap,
+  ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
-import { sovereignAudio } from '../../../lib/sound/sovereign-audio';
-import { useIndraStore } from '../../../store/indra-store';
+import useIndraStore from '@/store/indra-store';
+import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
+import type { TegDehydrationWidgetProps } from '../types';
 
-export interface TegDehydrationProps {
-  gasFlowMmscfd?: number;
-  inletPressurePsia?: number;
-  inletTempC?: number;
-  leanTegConcentration?: number;
-  tegCirculationRateLPerKg?: number;
-  targetDewpointC?: number;
-  tag?: string;
-}
+export default function TegDehydrationWidget({
+  assetTag = 'V-204',
+  title = 'GPSA SEC 20 TEG GLYCOL DEHYDRATION & REBOILER DUTY',
+  gasInletFlowMmscfd = 45.0,
+  gasInletPressureBar = 68.0,
+  gasInletTempC = 32.0,
+  richGlycolConcentrationPercent = 96.4,
+  leanGlycolConcentrationPercent = 99.85,
+  reboilerTempC = 204.0, // 400°F (thermal degradation limit is 206.7°C / 404°F)
+  reboilerDutyKw = 485.0,
+  waterDewPointC = -38.5,
+  waterContentLbsMmscf = 3.6, // pipeline custody transfer spec is <= 4.0 lbs/MMSCF
+  glycolCirculationRateGpm = 18.5,
+}: TegDehydrationWidgetProps) {
+  const { selectTag, addDeliverable, addToast } = useIndraStore();
 
-export const TegDehydrationWidget: React.FC<TegDehydrationProps> = ({
-  gasFlowMmscfd = 50.0,
-  inletPressurePsia = 1000.0,
-  inletTempC = 40.0,
-  leanTegConcentration = 99.5,
-  tegCirculationRateLPerKg = 25.0,
-  targetDewpointC = -70.0,
-  tag = 'TEG-COL-01'
-}) => {
-  const [gasFlow, setGasFlow] = useState<number>(gasFlowMmscfd);
-  const [pressure, setPressure] = useState<number>(inletPressurePsia);
-  const [inletTemp, setInletTemp] = useState<number>(inletTempC);
-  const [leanConc, setLeanConc] = useState<number>(leanTegConcentration);
-  const [circRate, setCircRate] = useState<number>(tegCirculationRateLPerKg);
-  const [targetDewpoint, setTargetDewpoint] = useState<number>(targetDewpointC);
-  const [isDispatched, setIsDispatched] = useState<boolean>(false);
+  const [reboilerTemp, setReboilerTemp] = useState<number>(reboilerTempC);
+  const [circRateGpm, setCircRateGpm] = useState<number>(glycolCirculationRateGpm);
 
-  const selectTag = useIndraStore((s) => s.selectTag);
+  // Dynamic lean concentration model based on reboiler temp:
+  // At 204°C + stripping gas: 99.85%
+  // Below 190°C: ~98.8%
+  const dynamicLeanConcentration = useMemo(() => {
+    if (reboilerTemp >= 204) return 99.85;
+    const base = 98.2 + ((reboilerTemp - 180) / (204 - 180)) * (99.85 - 98.2);
+    return parseFloat(base.toFixed(2));
+  }, [reboilerTemp]);
 
-  // Deterministic GPSA Engineering Data Book Sec 20 Thermodynamics
-  const tegMath = useMemo(() => {
-    // Water content correlation (McKetta-Wehe approximation)
-    const inletWaterLbPerMmscfd = Number((65.0 * Math.exp(-0.02 * (pressure - 1000) / 100) * (1 + 0.01 * (inletTemp - 40))).toFixed(1));
-    const waterRemovedLbPerDay = Number(((inletWaterLbPerMmscfd - 1.0) * gasFlow).toFixed(1));
-    const dewpointDepressionC = Number((inletTemp - targetDewpoint).toFixed(1));
-    const tegFlowGalPerHr = Number(((waterRemovedLbPerDay / 24.0) * circRate * 0.2642).toFixed(1));
-    const reboilerDutyKw = Number((tegFlowGalPerHr * 1000.0 * 0.293071 / 1000.0).toFixed(1));
-    const contactorDiaM = Number((Math.sqrt((gasFlow * 1e6 / (24 * 60) * (14.7 / pressure) * ((inletTemp + 459.67) / 519.67)) / (0.25 * 60 * Math.PI)) * 2 * 0.3048).toFixed(2));
-    const richConc = Number(Math.max(91.0, Math.min(leanConc, leanConc - (waterRemovedLbPerDay / 24.0 / Math.max(tegFlowGalPerHr, 0.1)) * 8.0)).toFixed(1));
-    const isNormal = richConc >= 94.0;
+  // Dynamic water content in treated dry gas (lbs/MMSCF):
+  // Lower lean concentration or lower circulation rate increases moisture
+  const dynamicWaterContent = useMemo(() => {
+    const leanPurityFactor = (100 - dynamicLeanConcentration) * 12;
+    const circFactor = Math.max(0.6, 20 / (circRateGpm || 1));
+    const moisture = (2.2 + leanPurityFactor * 0.8) * circFactor;
+    return parseFloat(moisture.toFixed(1));
+  }, [dynamicLeanConcentration, circRateGpm]);
 
-    return {
-      inletWaterLbPerMmscfd,
-      waterRemovedLbPerDay,
-      dewpointDepressionC,
-      tegFlowGalPerHr,
-      reboilerDutyKw,
-      contactorDiaM: Math.max(0.8, contactorDiaM),
-      richConc,
-      isNormal
-    };
-  }, [gasFlow, pressure, inletTemp, leanConc, circRate, targetDewpoint]);
+  // Water dew point depression based on moisture content
+  const dynamicDewPointC = useMemo(() => {
+    // 4.0 lbs/MMSCF corresponds to ~-38°C at 68 bar
+    const dp = -52 + dynamicWaterContent * 3.8;
+    return parseFloat(dp.toFixed(1));
+  }, [dynamicWaterContent]);
 
-  const handleTransmit = () => {
-    sovereignAudio.playSuccess();
-    setIsDispatched(true);
-    setTimeout(() => setIsDispatched(false), 3000);
+  // Dynamic reboiler duty (kW): Sensible heat + Latent heat of water vaporization
+  const dynamicReboilerDutyKw = useMemo(() => {
+    const sensible = circRateGpm * 14.2;
+    const duty = sensible + 220;
+    return Math.round(duty);
+  }, [circRateGpm]);
+
+  // Thermal degradation risk check: TEG begins pyrolytic decomposition at > 206.7°C (404°F)
+  const isThermalDegradationRisk = reboilerTemp >= 206.0;
+  const isPipelineSpecCompliant = dynamicWaterContent <= 4.0;
+
+  const handleLocateTag = () => {
+    selectTag(assetTag);
+    broadcastSyncEvent({
+      type: 'TAG_SELECTED',
+      tag: assetTag,
+      metadata: {
+        source: 'TegDehydrationWidget',
+        moisture: dynamicWaterContent,
+        leanConc: dynamicLeanConcentration,
+        reboilerTemp,
+      },
+    });
+  };
+
+  const handleExportTegAudit = () => {
+    const now = new Date().toLocaleTimeString();
+    addDeliverable({
+      id: `del-teg-${Date.now()}`,
+      name: `GPSA_Sec20_TEG_Audit_${assetTag}.docx`,
+      filename: `GPSA_Sec20_TEG_Audit_${assetTag}.docx`,
+      type: 'docx',
+      size: '2.5 MB',
+      generatedAt: now,
+      timestamp: now,
+      description: `GPSA Section 20 Glycol Dehydration Compliance Audit for ${assetTag}`,
+      url: '#',
+      hash: 'c891240981b23901a87b1c09841829e712903847120938471092837419283749',
+    });
+
+    addToast({
+      type: 'success',
+      title: 'TEG Audit Compiled',
+      message: `Glycol dehydration statutory audit report added to deliverables.`,
+    });
   };
 
   return (
-    <div className="w-full bg-slate-900 border border-teal-500/30 rounded-2xl p-5 shadow-2xl text-slate-100 font-sans my-4 overflow-hidden relative">
-      {/* Background radial highlight */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl font-mono text-xs text-zinc-200 select-none">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400">
-            <Droplets className="w-6 h-6 animate-pulse" />
-          </div>
+      <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-zinc-800/80 gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLocateTag}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-950/80 hover:bg-teal-900/90 border border-teal-700/80 text-teal-300 font-bold transition-all cursor-pointer group"
+            title="Locate TEG contactor on P&ID"
+          >
+            <Crosshair className="w-3.5 h-3.5 text-teal-400 group-hover:rotate-45 transition-transform" />
+            <span>{assetTag}</span>
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-base tracking-wide text-white">TEG Glycol Dehydration Contactor</h3>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
+              <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
                 GPSA SEC 20
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-mono mt-0.5">
-              Asset: <button onClick={() => selectTag?.(tag)} className="text-teal-400 underline hover:text-teal-300 font-bold">{tag}</button> • Souders-Brown Liquid-Gas Absorption
-            </p>
+            <div className="text-[10px] text-zinc-400">
+              Inlet Gas: {gasInletFlowMmscfd} MMSCFD @ {gasInletPressureBar} bar a, {gasInletTempC}°C
+            </div>
           </div>
         </div>
 
+        {/* Pipeline Moisture Compliance Badge */}
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 ${
-            tegMath.isNormal
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${tegMath.isNormal ? 'bg-emerald-400' : 'bg-amber-400'} animate-ping`} />
-            {tegMath.isNormal ? 'ABSORPTION OPTIMAL' : 'CHECK SOLVENT LOADING'}
-          </span>
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+              isPipelineSpecCompliant && !isThermalDegradationRisk
+                ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                : isThermalDegradationRisk
+                ? 'bg-rose-950/80 border-rose-700 text-rose-300 animate-pulse'
+                : 'bg-amber-950/80 border-amber-700 text-amber-300'
+            }`}
+          >
+            {isPipelineSpecCompliant ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+            <span>
+              {isThermalDegradationRisk
+                ? 'TEG THERMAL DEGRADATION RISK (>206°C)'
+                : isPipelineSpecCompliant
+                ? `CUSTODY SPEC PASS (${dynamicWaterContent} lbs/MMSCF)`
+                : `SPEC EXCEEDED (${dynamicWaterContent} lbs/MMSCF)`}
+            </span>
+          </div>
+
+          <button
+            onClick={handleExportTegAudit}
+            className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-teal-400 transition-colors cursor-pointer"
+            title="Export GPSA Sec 20 audit"
+          >
+            <FileCheck className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: Left Schematic + Right KPIs */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5">
-        {/* Left Column: Contactor SVG Schematic (5 cols) */}
-        <div className="lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-between">
-          <div className="text-[11px] font-mono text-slate-400 self-start mb-2 flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-teal-400" />
-            <span>Process Flow Schematic</span>
+      {/* Dual Column Schematic Visualizer: Contactor (Left) + Reboiler/Regenerator (Right) */}
+      <div className="relative bg-zinc-900/60 rounded-xl border border-zinc-800 p-3 mb-3">
+        <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-2">
+          <span className="font-bold uppercase tracking-wider text-zinc-300">
+            COUNTER-CURRENT ABSORBER & STRIPPER MASS TRANSFER SCHEMATIC
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-teal-400 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-teal-400" /> Lean Glycol ({dynamicLeanConcentration}%)
+            </span>
+            <span className="text-amber-400 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-400" /> Rich Glycol ({richGlycolConcentrationPercent}%)
+            </span>
           </div>
+        </div>
 
-          <svg viewBox="0 0 320 280" className="w-full h-56">
+        {/* SVG Animated Process Flow Diagram */}
+        <div className="relative w-full h-52 flex items-center justify-center">
+          <svg className="w-full h-full" viewBox="0 0 540 220">
             <defs>
-              <linearGradient id="columnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#0f766e" stopOpacity="0.4" />
-                <stop offset="50%" stopColor="#14b8a6" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#0f766e" stopOpacity="0.4" />
+              <linearGradient id="glycolColumnGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
               </linearGradient>
             </defs>
 
-            {/* Main Contactor Column */}
-            <rect x="110" y="30" width="100" height="200" rx="14" fill="url(#columnGrad)" stroke="#14b8a6" strokeWidth="2" />
-            <text x="160" y="50" textAnchor="middle" fill="#5eead4" fontSize="10" fontFamily="monospace" fontWeight="bold">CONTACTOR</text>
+            {/* CONTACTOR ABSORBER COLUMN (Left) */}
+            <rect x="70" y="25" width="80" height="170" rx="14" fill="url(#glycolColumnGrad)" stroke="#38bdf8" strokeWidth="1.5" />
+            <text x="110" y="20" fill="#38bdf8" fontSize="10" fontWeight="bold" textAnchor="middle">
+              CONTACTOR V-204
+            </text>
 
-            {/* Bubble Trays */}
-            {[80, 115, 150, 185].map((y, i) => (
-              <g key={i}>
-                <line x1="115" y1={y} x2="205" y2={y} stroke="#2dd4bf" strokeWidth="1.5" strokeDasharray="4 2" />
-                <circle cx={130 + (i % 2) * 20} cy={y - 8} r="3" fill="#38bdf8" opacity="0.8" />
-                <circle cx={170 - (i % 2) * 15} cy={y - 12} r="2.5" fill="#38bdf8" opacity="0.6" />
-              </g>
+            {/* Structured Packing Trays in Absorber */}
+            {[50, 75, 100, 125, 150].map((y) => (
+              <line key={y} x1="75" y1={y} x2="145" y2={y} stroke="#334155" strokeWidth="2" strokeDasharray="4 2" />
             ))}
 
-            {/* Wet Gas Inlet (bottom-left) */}
-            <path d="M 40 200 L 110 200" stroke="#38bdf8" strokeWidth="2.5" fill="none" />
-            <text x="40" y="192" fill="#7dd3fc" fontSize="9" fontFamily="monospace">Wet Gas In</text>
+            {/* Rising Gas Bubbles in Absorber */}
+            <circle cx="95" cy="140" r="3" fill="#38bdf8" opacity="0.8" className="animate-pulse" />
+            <circle cx="120" cy="115" r="4" fill="#38bdf8" opacity="0.6" className="animate-pulse" />
+            <circle cx="105" cy="80" r="3" fill="#38bdf8" opacity="0.9" className="animate-pulse" />
+            <circle cx="115" cy="45" r="4" fill="#38bdf8" opacity="0.7" className="animate-pulse" />
 
-            {/* Dry Gas Outlet (top-left) */}
-            <path d="M 110 50 L 40 50" stroke="#10b981" strokeWidth="2.5" fill="none" />
-            <text x="40" y="44" fill="#6ee7b7" fontSize="9" fontFamily="monospace">Dry Gas Out</text>
+            {/* Wet Gas In (Bottom Left) */}
+            <path d="M 10 165 L 70 165" stroke="#38bdf8" strokeWidth="2" fill="none" />
+            <text x="15" y="158" fill="#38bdf8" fontSize="8">WET GAS IN</text>
 
-            {/* Lean TEG Inlet (top-right) */}
-            <path d="M 280 50 L 210 50" stroke="#2dd4bf" strokeWidth="2.5" fill="none" />
-            <text x="220" y="44" fill="#5eead4" fontSize="9" fontFamily="monospace">Lean TEG (99.5%)</text>
+            {/* Dry Gas Out (Top) */}
+            <path d="M 110 25 L 110 5 L 200 5" stroke="#10b981" strokeWidth="2" fill="none" />
+            <text x="140" y="15" fill="#10b981" fontSize="8" fontWeight="bold">DRY GAS OUT ({dynamicWaterContent} lbs)</text>
 
-            {/* Rich TEG Outlet (bottom-right) to Reboiler */}
-            <path d="M 210 200 L 280 200" stroke="#f59e0b" strokeWidth="2.5" fill="none" />
-            <text x="215" y="192" fill="#fcd34d" fontSize="9" fontFamily="monospace">Rich TEG</text>
+            {/* Lean Glycol In (Top of Contactor) */}
+            <path d="M 230 45 L 150 45" stroke="#14b8a6" strokeWidth="2" strokeDasharray="3 2" fill="none" />
+            <text x="160" y="40" fill="#14b8a6" fontSize="8">LEAN GLYCOL IN</text>
 
-            {/* Reboiler Box */}
-            <rect x="230" y="225" width="70" height="35" rx="6" fill="#78350f" stroke="#f59e0b" strokeWidth="1.5" />
-            <text x="265" y="246" textAnchor="middle" fill="#fef3c7" fontSize="9" fontFamily="monospace" fontWeight="bold">REBOILER</text>
+            {/* Rich Glycol Out (Bottom of Contactor &rarr; Reboiler) */}
+            <path d="M 110 195 L 110 210 L 320 210 L 320 160" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3 2" fill="none" />
+            <text x="170" y="205" fill="#f59e0b" fontSize="8">RICH GLYCOL &rarr; REBOILER</text>
+
+            {/* REGENERATOR STILL COLUMN & REBOILER (Right) */}
+            {/* Still Column */}
+            <rect x="350" y="40" width="40" height="70" rx="8" fill="url(#glycolColumnGrad)" stroke="#f59e0b" strokeWidth="1.5" />
+            <text x="370" y="32" fill="#f59e0b" fontSize="9" fontWeight="bold" textAnchor="middle">STILL COL</text>
+
+            {/* Water Vapor Vent Out of Still Top */}
+            <path d="M 370 40 L 370 15 L 430 15" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="2 2" fill="none" />
+            <text x="380" y="10" fill="#94a3b8" fontSize="8">H₂O VAPOR VENT</text>
+
+            {/* Horizontal Reboiler Kettle */}
+            <rect x="320" y="110" width="130" height="55" rx="12" fill="url(#glycolColumnGrad)" stroke="#f43f5e" strokeWidth="1.5" />
+            <text x="385" y="132" fill="#f43f5e" fontSize="9" fontWeight="bold" textAnchor="middle">
+              REBOILER E-208 ({reboilerTemp}°C)
+            </text>
+            <text x="385" y="145" fill="#cbd5e1" fontSize="8" textAnchor="middle">
+              Duty: {dynamicReboilerDutyKw} kW
+            </text>
+
+            {/* Stripping Gas Sparger Vector */}
+            <line x1="335" y1="155" x2="435" y2="155" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" />
+
+            {/* Lean Surge Return & Pump */}
+            <path d="M 450 140 L 480 140 L 480 80 L 300 80 L 300 45 L 230 45" stroke="#14b8a6" strokeWidth="2" fill="none" />
+            {/* Circulation Pump Symbol */}
+            <circle cx="480" cy="110" r="10" fill="#0f172a" stroke="#14b8a6" strokeWidth="1.5" />
+            <text x="505" y="114" fill="#14b8a6" fontSize="8">P-202 ({circRateGpm} GPM)</text>
           </svg>
+        </div>
+      </div>
 
-          <div className="w-full flex items-center justify-between text-[11px] font-mono text-slate-400 px-2 pt-2 border-t border-slate-800">
-            <span>Contactor Dia: <strong className="text-teal-300">{tegMath.contactorDiaM} m</strong></span>
-            <span>4 Bubble Trays</span>
+      {/* 3 Core Performance KPI Faceplates */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        {/* Dry Gas Moisture Content */}
+        <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800">
+          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
+            <span className="uppercase font-bold flex items-center gap-1 text-teal-300">
+              <Droplets className="w-3.5 h-3.5 text-teal-400" />
+              TREATED WATER CONTENT
+            </span>
+            <span className={isPipelineSpecCompliant ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+              CUSTODY SPEC
+            </span>
+          </div>
+          <div className="text-xl font-bold text-zinc-100 mt-1">
+            {dynamicWaterContent} <span className="text-xs text-zinc-400 font-normal">lbs/MMSCF</span>
+          </div>
+          <div className="text-[9px] text-zinc-500 mt-1">
+            Max pipeline transport limit: 4.0 lbs/MMSCF
           </div>
         </div>
 
-        {/* Right Column: 6 KPI Cards (7 cols) */}
-        <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Water Removed</span>
-            <div className="text-xl font-bold font-mono text-teal-400 mt-1">{tegMath.waterRemovedLbPerDay}</div>
-            <span className="text-[10px] text-slate-500 font-mono">lb H₂O / day</span>
+        {/* Water Dew Point Depression */}
+        <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800">
+          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
+            <span className="uppercase font-bold flex items-center gap-1 text-cyan-300">
+              <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+              WATER DEW POINT
+            </span>
+            <span className="text-cyan-400 font-bold">@ 68 BAR</span>
           </div>
-
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Dew Point Depr.</span>
-            <div className="text-xl font-bold font-mono text-violet-400 mt-1">Δ {tegMath.dewpointDepressionC}°C</div>
-            <span className="text-[10px] text-slate-500 font-mono">Inlet: {inletTemp}°C</span>
+          <div className="text-xl font-bold text-cyan-400 mt-1">
+            {dynamicDewPointC}°C
           </div>
-
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">TEG Circulation</span>
-            <div className="text-xl font-bold font-mono text-sky-400 mt-1">{tegMath.tegFlowGalPerHr}</div>
-            <span className="text-[10px] text-slate-500 font-mono">gal / hr</span>
+          <div className="text-[9px] text-zinc-500 mt-1">
+            Depression below gas inlet ({gasInletTempC}°C): &Delta;{(gasInletTempC - dynamicDewPointC).toFixed(1)}°C
           </div>
+        </div>
 
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Reboiler Duty</span>
-            <div className="text-xl font-bold font-mono text-amber-400 mt-1">{tegMath.reboilerDutyKw}</div>
-            <span className="text-[10px] text-slate-500 font-mono">kW Thermal</span>
+        {/* Lean Glycol Concentration */}
+        <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800">
+          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
+            <span className="uppercase font-bold flex items-center gap-1 text-amber-300">
+              <Flame className="w-3.5 h-3.5 text-amber-400" />
+              LEAN PURITY (REBOILER)
+            </span>
+            <span className="text-amber-400 font-bold">STRIPPING GAS</span>
           </div>
-
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Lean TEG Conc.</span>
-            <div className="text-xl font-bold font-mono text-emerald-400 mt-1">{leanConc}%</div>
-            <span className="text-[10px] text-slate-500 font-mono">Triethylene Glycol</span>
+          <div className="text-xl font-bold text-zinc-100 mt-1">
+            {dynamicLeanConcentration}% <span className="text-xs text-zinc-400 font-normal">wt TEG</span>
           </div>
-
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Rich TEG Conc.</span>
-            <div className={`text-xl font-bold font-mono mt-1 ${tegMath.isNormal ? 'text-teal-400' : 'text-amber-400'}`}>
-              {tegMath.richConc}%
-            </div>
-            <span className="text-[10px] text-slate-500 font-mono">Post-Absorption</span>
+          <div className="text-[9px] text-zinc-500 mt-1">
+            Rich inlet: {richGlycolConcentrationPercent}% wt &rarr; Lean return: {dynamicLeanConcentration}%
           </div>
         </div>
       </div>
 
-      {/* Interactive Parameter Sliders */}
-      <div className="bg-slate-950/50 border border-slate-800/80 rounded-xl p-4 mb-4">
-        <div className="flex items-center gap-2 mb-3 text-xs font-mono font-bold text-slate-300">
-          <Sliders className="w-4 h-4 text-teal-400" />
-          <span>Contactor Hydraulic Controls</span>
+      {/* Interactive Operational Sliders */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        {/* Reboiler Temp Slider */}
+        <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/90 space-y-1.5">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-zinc-400 flex items-center gap-1 font-bold">
+              <Sliders className="w-3 h-3 text-rose-400" />
+              REBOILER FIRE-TUBE TEMPERATURE:
+            </span>
+            <span className={`font-bold ${isThermalDegradationRisk ? 'text-rose-400' : 'text-zinc-200'}`}>
+              {reboilerTemp}°C
+            </span>
+          </div>
+          <input
+            type="range"
+            min={180}
+            max={208}
+            step={0.5}
+            value={reboilerTemp}
+            onChange={(e) => setReboilerTemp(Number(e.target.value))}
+            className="w-full accent-rose-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+          />
+          <div className="flex items-center justify-between text-[9px] text-zinc-500">
+            <span>180°C (Low Stripping)</span>
+            <span className="text-emerald-400 font-bold">204°C Target</span>
+            <span className="text-rose-400">206.7°C Thermal Breakdown Limit</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <div className="flex justify-between text-xs font-mono text-slate-400 mb-1">
-              <span>Gas Flow Rate:</span>
-              <strong className="text-white">{gasFlow} MMSCFD</strong>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="150"
-              step="5"
-              value={gasFlow}
-              onChange={(e) => setGasFlow(parseFloat(e.target.value))}
-              className="w-full accent-teal-400 cursor-pointer"
-            />
+        {/* Glycol Circulation Rate Slider */}
+        <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/90 space-y-1.5">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-zinc-400 flex items-center gap-1 font-bold">
+              <Sliders className="w-3 h-3 text-teal-400" />
+              GLYCOL CIRCULATION PUMP RATE:
+            </span>
+            <span className="text-teal-400 font-bold">{circRateGpm} GPM</span>
           </div>
-
-          <div>
-            <div className="flex justify-between text-xs font-mono text-slate-400 mb-1">
-              <span>Inlet Pressure:</span>
-              <strong className="text-white">{pressure} psia</strong>
-            </div>
-            <input
-              type="range"
-              min="400"
-              max="1500"
-              step="25"
-              value={pressure}
-              onChange={(e) => setPressure(parseFloat(e.target.value))}
-              className="w-full accent-teal-400 cursor-pointer"
-            />
-          </div>
-
-          <div>
-            <div className="flex justify-between text-xs font-mono text-slate-400 mb-1">
-              <span>Circulation Rate:</span>
-              <strong className="text-white">{circRate} L/kg H₂O</strong>
-            </div>
-            <input
-              type="range"
-              min="15"
-              max="45"
-              step="1"
-              value={circRate}
-              onChange={(e) => setCircRate(parseFloat(e.target.value))}
-              className="w-full accent-teal-400 cursor-pointer"
-            />
+          <input
+            type="range"
+            min={8}
+            max={30}
+            step={0.5}
+            value={circRateGpm}
+            onChange={(e) => setCircRateGpm(Number(e.target.value))}
+            className="w-full accent-teal-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+          />
+          <div className="flex items-center justify-between text-[9px] text-zinc-500">
+            <span>8 GPM (Under-circulation)</span>
+            <span>18.5 GPM Nominal</span>
+            <span>30 GPM (Max Hydraulic Load)</span>
           </div>
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-        <div className="text-[11px] font-mono text-slate-400">
-          Governing: <strong className="text-slate-300">GPSA Engineering Data Book § 20 / GPA 2172</strong>
+      {/* Auxiliary Metadata Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">REBOILER HEAT DUTY</div>
+          <div className="font-bold text-zinc-200 mt-0.5">{dynamicReboilerDutyKw} kW</div>
         </div>
 
-        <button
-          onClick={handleTransmit}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            isDispatched
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-              : 'bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-600/20'
-          }`}
-        >
-          {isDispatched ? <CheckCircle2 className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
-          <span>{isDispatched ? 'Parameters Synced to DCS' : 'Commit Operating Setpoints'}</span>
-        </button>
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">WATER REMOVED</div>
+          <div className="font-bold text-zinc-200 mt-0.5">82.4 kg/h</div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">STRIPPING GAS</div>
+          <div className="font-bold text-zinc-200 mt-0.5">3.5 SCF/gal</div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">HYDRATE MARGIN</div>
+          <div className="font-bold text-emerald-400 mt-0.5">+48.5°C Margin</div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default TegDehydrationWidget;
+}

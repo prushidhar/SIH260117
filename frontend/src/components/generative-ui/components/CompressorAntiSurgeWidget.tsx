@@ -1,557 +1,406 @@
+'use client';
+
 import React, { useState, useMemo } from 'react';
 import {
   Activity,
   AlertTriangle,
   CheckCircle2,
-  Gauge,
-  RotateCw,
-  ShieldAlert,
-  ShieldCheck,
+  Crosshair,
   Sliders,
-  Volume2,
+  ShieldCheck,
   Zap,
-  Radio,
+  ArrowRight,
   FileCheck,
-  Flame,
-  ArrowRight
 } from 'lucide-react';
-import { sovereignAudio } from '../../../lib/sound/sovereign-audio';
-import { useIndraStore } from '../../../store/indra-store';
+import useIndraStore from '@/store/indra-store';
+import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
+import type { CompressorAntiSurgeWidgetProps } from '../types';
 
-export interface CompressorAntiSurgeProps {
-  initialFlowM3H?: number;
-  initialSpeedRpm?: number;
-  compressorTag?: string;
-  suctionPBar?: number;
-  dischargePBar?: number;
-}
+export default function CompressorAntiSurgeWidget({
+  assetTag = 'K-102',
+  title = 'API 617 CENTRIFUGAL COMPRESSOR ANTI-SURGE MAP & ASV RESPONSE',
+  standard = 'API 617 8th Ed. / ISO 10439-2',
+  suctionPressureBar = 18.5,
+  dischargePressureBar = 56.4,
+  operatingFlowM3h = 14200,
+  designFlowM3h = 16500,
+  operatingSpeedRpm = 10450,
+  ratedSpeedRpm = 11200,
+  asvValveTravelPercent = 0,
+  surgeMarginPercent = 14.2,
+  polytropicHeadKjKg = 112.4,
+  polytropicEfficiencyPercent = 84.6,
+}: CompressorAntiSurgeWidgetProps) {
+  const { selectTag, addDeliverable, addToast } = useIndraStore();
 
-export const CompressorAntiSurgeWidget: React.FC<CompressorAntiSurgeProps> = ({
-  initialFlowM3H = 6500.0,
-  initialSpeedRpm = 10450.0,
-  compressorTag = 'K-101',
-  suctionPBar = 18.5,
-  dischargePBar = 62.0
-}) => {
-  const [flowRate, setFlowRate] = useState<number>(initialFlowM3H);
-  const [speedRpm, setSpeedRpm] = useState<number>(initialSpeedRpm);
-  const [pSuction, setPSuction] = useState<number>(suctionPBar);
-  const [pDischarge, setPDischarge] = useState<number>(dischargePBar);
-  const [asvManualOverride, setAsvManualOverride] = useState<boolean>(false);
-  const [asvOverrideOpen, setAsvOverrideOpen] = useState<number>(0);
-  const [isDispatched, setIsDispatched] = useState<boolean>(false);
+  // Interactive flow control slider to simulate process surge approach
+  const [currentFlow, setCurrentFlow] = useState<number>(operatingFlowM3h);
+  const [speedRpm, setSpeedRpm] = useState<number>(operatingSpeedRpm);
 
-  const selectTag = useIndraStore((s) => s.selectTag);
+  // Compression pressure ratio
+  const pressureRatio = useMemo(() => {
+    return parseFloat((dischargePressureBar / Math.max(1, suctionPressureBar)).toFixed(2));
+  }, [dischargePressureBar, suctionPressureBar]);
 
-  // Deterministic API 617 & ASME PTC 10 Aerodynamic Calculations
-  const compMath = useMemo(() => {
-    const ratedSpeedRpm = 10500.0;
-    const speedRatio = speedRpm / ratedSpeedRpm;
-    const gasMw = 19.8;
-    const kRatio = 1.32;
-    const polyEff = 0.785;
-    const tSuctionC = 38.0;
-    const t1K = tSuctionC + 273.15;
-    const rUniv = 8314.46;
-    const rSpec = rUniv / gasMw;
+  // Surge Limit Line (SLL) flow at current pressure ratio: q_sll = (pressureRatio / 3.8)^1.8 * 9800
+  const sllFlow = useMemo(() => {
+    const base = (pressureRatio / 3.2);
+    return Math.round(Math.pow(base, 1.4) * 8800);
+  }, [pressureRatio]);
 
-    const pRatio = Math.max(1.1, pDischarge / Math.max(1.0, pSuction));
-    const polyM = (kRatio - 1.0) / (kRatio * polyEff);
-    const zAvg = 0.965;
+  // Surge Control Line (SCL) flow = SLL + 10% safety margin
+  const sclFlow = useMemo(() => {
+    return Math.round(sllFlow * 1.10);
+  }, [sllFlow]);
 
-    // Polytropic Head (kJ/kg)
-    const headJKg = (zAvg * rSpec * t1K / polyM) * (Math.pow(pRatio, polyM) - 1.0);
-    const polytropicHeadKjKg = Number((headJKg / 1000.0).toFixed(2));
+  // Dynamic calculated surge margin: (Flow - SLL) / Flow * 100%
+  const dynamicSurgeMargin = useMemo(() => {
+    const margin = ((currentFlow - sllFlow) / Math.max(1, currentFlow)) * 100;
+    return parseFloat(margin.toFixed(1));
+  }, [currentFlow, sllFlow]);
 
-    // Gas Density & Mass Flow
-    const p1Pa = pSuction * 1e5;
-    const rhoSuction = (p1Pa * gasMw) / (zAvg * rUniv * t1K);
-    const massFlowKgS = (flowRate * rhoSuction) / 3600.0;
-    const gasPowerKw = Number(((massFlowKgS * headJKg) / (polyEff * 1000.0)).toFixed(1));
+  // Dynamic ASV valve travel: Opens proportionally if flow drops below SCL
+  const calculatedAsvTravel = useMemo(() => {
+    if (currentFlow >= sclFlow) return 0;
+    if (currentFlow <= sllFlow) return 100;
+    const fraction = (sclFlow - currentFlow) / Math.max(1, sclFlow - sllFlow);
+    return Math.round(fraction * 100);
+  }, [currentFlow, sclFlow, sllFlow]);
 
-    // Surge Lines (Affinity scaled)
-    const qSurgeBase = 4200.0;
-    const qSurgeCurrent = Number((qSurgeBase * speedRatio).toFixed(1));
-    const sclMarginPct = 10.0;
-    const qSclCurrent = Number((qSurgeCurrent * (1.0 + sclMarginPct / 100.0)).toFixed(1));
-    const qChokeCurrent = Number((qSurgeCurrent * 1.72).toFixed(1));
+  const isSurgeTrip = currentFlow <= sllFlow;
+  const isSurgeWarning = currentFlow < sclFlow && !isSurgeTrip;
+  const isSafe = currentFlow >= sclFlow;
 
-    // Surge Margin %
-    const surgeMarginPct = Number((((flowRate - qSurgeCurrent) / qSurgeCurrent) * 100.0).toFixed(1));
-
-    // Operating Zone classification
-    let zone: 'ACTIVE_SURGE_DANGER' | 'MARGINAL_SCL_APPROACH' | 'STABLE' | 'CHOKE' = 'STABLE';
-    let autoAsvOpen = 0.0;
-    let recommendation = 'Operating stably within aerodynamic envelope. ASV closed.';
-
-    if (flowRate <= qSurgeCurrent) {
-      zone = 'ACTIVE_SURGE_DANGER';
-      autoAsvOpen = 100.0;
-      recommendation = 'EMERGENCY: Dynamic Surge Flow Reversal! Fast-dump hot-gas bypass ASV (<0.9s).';
-    } else if (flowRate <= qSclCurrent) {
-      zone = 'MARGINAL_SCL_APPROACH';
-      const deficit = qSclCurrent - flowRate;
-      autoAsvOpen = Number(Math.min(100.0, (deficit / (qSclCurrent - qSurgeCurrent)) * 50.0 + 15.0).toFixed(1));
-      recommendation = `WARNING: Inside 10% SCL margin. Throttling ASV to ${autoAsvOpen}% open to restore flow.`;
-    } else if (flowRate >= qChokeCurrent) {
-      zone = 'CHOKE';
-      recommendation = 'Stonewall Choke Limit reached. Compressible shock wave at inlet eye.';
-    }
-
-    const effectiveAsvOpen = asvManualOverride ? asvOverrideOpen : autoAsvOpen;
-
-    return {
-      pRatio: Number(pRatio.toFixed(2)),
-      polytropicHeadKjKg,
-      gasPowerKw,
-      speedRatio: Number((speedRatio * 100).toFixed(1)),
-      qSurgeCurrent,
-      qSclCurrent,
-      qChokeCurrent,
-      surgeMarginPct,
-      zone,
-      effectiveAsvOpen,
-      recommendation,
-      machNumber: Number((0.38 + 0.12 * (flowRate / 8000)).toFixed(2))
-    };
-  }, [flowRate, speedRpm, pSuction, pDischarge, asvManualOverride, asvOverrideOpen]);
-
-  // Audio alerts on state transitions
-  const handleUpsetPreset = (preset: 'normal' | 'marginal' | 'surge') => {
-    if (preset === 'normal') {
-      setFlowRate(6800);
-      setSpeedRpm(10450);
-      setAsvManualOverride(false);
-      sovereignAudio.playSuccess();
-    } else if (preset === 'marginal') {
-      setFlowRate(4550);
-      setSpeedRpm(10450);
-      sovereignAudio.playWarning();
-    } else {
-      setFlowRate(3400);
-      setSpeedRpm(10450);
-      sovereignAudio.playWarning();
-    }
+  const handleLocateTag = () => {
+    selectTag(assetTag);
+    broadcastSyncEvent({
+      type: 'TAG_SELECTED',
+      tag: assetTag,
+      metadata: {
+        source: 'CompressorAntiSurgeWidget',
+        surgeMargin: dynamicSurgeMargin,
+        flow: currentFlow,
+        asvTravel: calculatedAsvTravel,
+      },
+    });
   };
 
-  const handleDispatch = () => {
-    setIsDispatched(true);
-    sovereignAudio.playSuccess();
-    setTimeout(() => setIsDispatched(false), 4000);
+  const handleExportReport = () => {
+    const now = new Date().toLocaleTimeString();
+    addDeliverable({
+      id: `del-surge-${Date.now()}`,
+      name: `API_617_Surge_Audit_${assetTag}.docx`,
+      filename: `API_617_Surge_Audit_${assetTag}.docx`,
+      type: 'docx',
+      size: '2.4 MB',
+      generatedAt: now,
+      timestamp: now,
+      description: `API 617 Anti-Surge Dynamic Verification for ${assetTag} at ${speedRpm} RPM`,
+      url: '#',
+      hash: 'a98f12c431b99a89c47e8109bf56029381742091728491823719283749182736',
+    });
+
+    addToast({
+      type: 'success',
+      title: 'Anti-Surge Validation Exported',
+      message: `Surge verification certificate for ${assetTag} added to deliverables audit.`,
+    });
   };
 
-  // SVG dimensions for Head vs Flow Map
-  const svgW = 440;
-  const svgH = 220;
-  const minFlow = 2500;
-  const maxFlow = 10000;
-  const minHead = 80;
-  const maxHead = 220;
-
-  const mapX = (flow: number) => {
-    return 40 + ((flow - minFlow) / (maxFlow - minFlow)) * (svgW - 60);
+  // SVG coordinate mapping for the 500x260 compressor map
+  // Flow X: 6,000 to 22,000 m3/h -> SVG X: 60 to 460
+  // Pressure Ratio Y: 1.5 to 4.5 -> SVG Y: 220 to 30
+  const mapFlowToX = (flow: number) => {
+    const clamped = Math.max(6000, Math.min(22000, flow));
+    return 60 + ((clamped - 6000) / (22000 - 6000)) * 400;
   };
 
-  const mapY = (head: number) => {
-    return svgH - 30 - ((head - minHead) / (maxHead - minHead)) * (svgH - 50);
+  const mapRatioToY = (ratio: number) => {
+    const clamped = Math.max(1.5, Math.min(4.5, ratio));
+    return 220 - ((clamped - 1.5) / (4.5 - 1.5)) * 190;
   };
 
-  const currentX = mapX(flowRate);
-  const currentY = mapY(compMath.polytropicHeadKjKg);
+  const opX = mapFlowToX(currentFlow);
+  const opY = mapRatioToY(pressureRatio);
 
   return (
-    <div className="w-full rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-md p-4 sm:p-5 font-sans space-y-4">
-      {/* 1. Header Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl border ${
-            compMath.zone === 'ACTIVE_SURGE_DANGER'
-              ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 animate-pulse'
-              : compMath.zone === 'MARGINAL_SCL_APPROACH'
-              ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-              : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
-          }`}>
-            <Activity className="w-5 h-5" />
-          </div>
+    <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl font-mono text-xs text-zinc-200 select-none">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-zinc-800/80 gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLocateTag}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 border border-emerald-700/80 text-emerald-300 font-bold transition-all cursor-pointer group"
+            title="Locate compressor on P&ID"
+          >
+            <Crosshair className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-45 transition-transform" />
+            <span>{assetTag}</span>
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-                Compressor Anti-Surge & Dynamic Performance Envelope
-              </h3>
-              <button
-                onClick={() => selectTag(compressorTag)}
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 hover:bg-cyan-200 transition-colors cursor-pointer"
-                title="Locate K-101 in P&ID Canvas"
-              >
-                {compressorTag}
-              </button>
+              <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
+                {standard}
+              </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
-              API 617 8th Ed. • ASME PTC 10 • Zero-Latency Sonic Protection
-            </p>
+            <div className="text-[10px] text-zinc-400">
+              Polytropic Head: {polytropicHeadKjKg} kJ/kg • Efficiency: {polytropicEfficiencyPercent}%
+            </div>
           </div>
         </div>
 
+        {/* Surge Status Badge */}
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold flex items-center gap-1.5 border shadow-2xs ${
-            compMath.zone === 'ACTIVE_SURGE_DANGER'
-              ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 animate-pulse'
-              : compMath.zone === 'MARGINAL_SCL_APPROACH'
-              ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
-              : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-          }`}>
-            {compMath.zone === 'ACTIVE_SURGE_DANGER' ? (
-              <>
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                <span>SURGE TRIP ACTIVE</span>
-              </>
-            ) : compMath.zone === 'MARGINAL_SCL_APPROACH' ? (
-              <>
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>SCL WARNING (10%)</span>
-              </>
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+              isSurgeTrip
+                ? 'bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse'
+                : isSurgeWarning
+                ? 'bg-amber-950/80 border-amber-600 text-amber-300'
+                : 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+            }`}
+          >
+            {isSurgeTrip ? (
+              <AlertTriangle className="w-3.5 h-3.5" />
+            ) : isSurgeWarning ? (
+              <Zap className="w-3.5 h-3.5" />
             ) : (
-              <>
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>STABLE AERODYNAMIC</span>
-              </>
+              <CheckCircle2 className="w-3.5 h-3.5" />
             )}
+            <span>
+              {isSurgeTrip
+                ? 'SURGE TRIP ACTIVE'
+                : isSurgeWarning
+                ? `RECYCLE ACTIVE (+${dynamicSurgeMargin}% MARGIN)`
+                : `STABLE (+${dynamicSurgeMargin}% SURGE MARGIN)`}
+            </span>
+          </div>
+
+          <button
+            onClick={handleExportReport}
+            className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-emerald-400 transition-colors cursor-pointer"
+            title="Export API 617 surge certificate"
+          >
+            <FileCheck className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* API 617 Performance & Anti-Surge Characteristic Coordinate Map */}
+      <div className="relative bg-zinc-900/60 rounded-xl border border-zinc-800 p-3 mb-3">
+        <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
+          <span className="font-bold uppercase tracking-wider text-zinc-300">
+            COMPRESSOR CHARACTERISTIC MAP (PRESSURE RATIO vs INLET FLOW)
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-rose-500 inline-block" /> SLL (Surge Limit Line)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-amber-500 border-dashed inline-block" /> SCL (10% Control Line)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-cyan-400 inline-block" /> 100% Speed Curve
+            </span>
+          </div>
+        </div>
+
+        {/* SVG Coordinate Visualizer */}
+        <div className="relative w-full h-56 flex items-center justify-center">
+          <svg className="w-full h-full" viewBox="0 0 500 260">
+            <defs>
+              <linearGradient id="surgeDangerArea" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#e11d48" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#e11d48" stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+
+            {/* Grid Lines */}
+            {[70, 120, 170, 220].map((y) => (
+              <line key={y} x1="50" y1={y} x2="470" y2={y} stroke="#27272a" strokeWidth="1" strokeDasharray="3 3" />
+            ))}
+            {[100, 180, 260, 340, 420].map((x) => (
+              <line key={x} x1={x} y1="20" x2={x} y2="230" stroke="#27272a" strokeWidth="1" strokeDasharray="3 3" />
+            ))}
+
+            {/* Y-Axis (Pressure Ratio Pd/Ps) */}
+            <line x1="50" y1="20" x2="50" y2="230" stroke="#52525b" strokeWidth="1.5" />
+            <text x="45" y="35" fill="#a1a1aa" fontSize="9" textAnchor="end" fontFamily="monospace">4.5</text>
+            <text x="45" y="100" fill="#a1a1aa" fontSize="9" textAnchor="end" fontFamily="monospace">3.5</text>
+            <text x="45" y="160" fill="#a1a1aa" fontSize="9" textAnchor="end" fontFamily="monospace">2.5</text>
+            <text x="45" y="225" fill="#a1a1aa" fontSize="9" textAnchor="end" fontFamily="monospace">1.5</text>
+            <text x="18" y="125" fill="#71717a" fontSize="8" transform="rotate(-90 18 125)" textAnchor="middle">
+              PRESSURE RATIO (Pd / Ps)
+            </text>
+
+            {/* X-Axis (Flow Rate m3/h) */}
+            <line x1="50" y1="230" x2="470" y2="230" stroke="#52525b" strokeWidth="1.5" />
+            <text x="60" y="245" fill="#a1a1aa" fontSize="9" textAnchor="middle" fontFamily="monospace">6k</text>
+            <text x="160" y="245" fill="#a1a1aa" fontSize="9" textAnchor="middle" fontFamily="monospace">10k</text>
+            <text x="260" y="245" fill="#a1a1aa" fontSize="9" textAnchor="middle" fontFamily="monospace">14k</text>
+            <text x="360" y="245" fill="#a1a1aa" fontSize="9" textAnchor="middle" fontFamily="monospace">18k</text>
+            <text x="460" y="245" fill="#a1a1aa" fontSize="9" textAnchor="middle" fontFamily="monospace">22k</text>
+            <text x="260" y="256" fill="#71717a" fontSize="8" textAnchor="middle">
+              REDUCED INLET VOLUMETRIC FLOW (m³/h)
+            </text>
+
+            {/* Surge Zone Shading */}
+            <path
+              d="M 50 20 L 140 20 C 120 70, 95 140, 75 230 L 50 230 Z"
+              fill="url(#surgeDangerArea)"
+            />
+
+            {/* SLL Curve (Surge Limit Line - Red Solid) */}
+            <path
+              d="M 75 230 C 95 140, 120 70, 140 20"
+              fill="none"
+              stroke="#f43f5e"
+              strokeWidth="2.5"
+            />
+
+            {/* SCL Curve (Surge Control Line - Amber Dashed) */}
+            <path
+              d="M 95 230 C 120 140, 150 70, 175 20"
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="2"
+              strokeDasharray="5 3"
+            />
+
+            {/* Speed Characteristic Curves */}
+            {/* 105% Speed Curve */}
+            <path
+              d="M 160 30 C 230 45, 330 90, 440 170"
+              fill="none"
+              stroke="#06b6d4"
+              strokeWidth="1.5"
+              strokeOpacity="0.4"
+            />
+            {/* 100% Rated Speed Curve */}
+            <path
+              d="M 135 60 C 210 75, 300 120, 410 200"
+              fill="none"
+              stroke="#06b6d4"
+              strokeWidth="2.5"
+            />
+            {/* 90% Speed Curve */}
+            <path
+              d="M 115 110 C 180 125, 270 160, 370 230"
+              fill="none"
+              stroke="#06b6d4"
+              strokeWidth="1.5"
+              strokeOpacity="0.4"
+            />
+
+            {/* Operating Point Marker */}
+            <g transform={`translate(${opX}, ${opY})`}>
+              <circle r="9" fill={isSurgeTrip ? '#f43f5e' : isSurgeWarning ? '#f59e0b' : '#10b981'} opacity="0.3" className="animate-ping" />
+              <circle r="5" fill={isSurgeTrip ? '#f43f5e' : isSurgeWarning ? '#f59e0b' : '#10b981'} stroke="#ffffff" strokeWidth="1.5" />
+              {/* Target Hairline Callout */}
+              <line x1="0" y1="-12" x2="0" y2="-24" stroke="#a1a1aa" strokeWidth="1" />
+              <rect x="-38" y="-38" width="76" height="14" rx="3" fill="#18181b" stroke="#3f3f46" strokeWidth="0.8" />
+              <text x="0" y="-28" fill="#e4e4e7" fontSize="8" textAnchor="middle" fontWeight="bold">
+                {currentFlow} m³/h
+              </text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      {/* ASV Valve Travel & Quick Response Bar */}
+      <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2 mb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase font-bold text-zinc-300">
+              ANTI-SURGE RECYCLE VALVE (FV-102 ASV) TRAVEL:
+            </span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+              FAIL-OPEN (FO) • STROKE &lt; 1.2s
+            </span>
+          </div>
+          <span className={`text-xs font-bold ${calculatedAsvTravel > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            {calculatedAsvTravel}% OPEN
           </span>
         </div>
-      </div>
 
-      {/* 2. Main Visuals: Interactive SVG Performance Map + Telemetry Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left: SVG Compressor Map (7 cols) */}
-        <div className="lg:col-span-7 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold font-mono text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <Gauge className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-              <span>Head-Capacity Polytropic Map (Hp vs Q)</span>
-            </span>
-            <div className="flex items-center gap-2 text-[10px] font-mono">
-              <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
-                <span className="w-2 h-0.5 bg-rose-500 rounded" /> Surge Line
-              </span>
-              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                <span className="w-2 h-0.5 bg-amber-500 rounded" /> SCL (+10%)
-              </span>
-              <span className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400">
-                <span className="w-2 h-0.5 bg-cyan-500 rounded" /> 100% N
-              </span>
-            </div>
-          </div>
-
-          {/* SVG Map */}
-          <div className="relative w-full overflow-hidden flex items-center justify-center">
-            <svg
-              viewBox={`0 0 ${svgW} ${svgH}`}
-              className="w-full h-auto max-h-[220px] select-none"
-            >
-              {/* Grid Lines */}
-              <line x1="40" y1="20" x2="40" y2={svgH - 30} stroke="currentColor" className="text-slate-300 dark:text-zinc-800" strokeWidth="1" />
-              <line x1="40" y1={svgH - 30} x2={svgW - 20} y2={svgH - 30} stroke="currentColor" className="text-slate-300 dark:text-zinc-800" strokeWidth="1" />
-              
-              {/* Y Axis Labels */}
-              <text x="35" y="30" textAnchor="end" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">220</text>
-              <text x="35" y="110" textAnchor="end" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">150</text>
-              <text x="35" y={svgH - 30} textAnchor="end" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">80</text>
-              <text x="15" y={svgH / 2} textAnchor="middle" transform={`rotate(-90 15 ${svgH/2})`} className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">Hp (kJ/kg)</text>
-
-              {/* X Axis Labels */}
-              <text x="40" y={svgH - 12} textAnchor="middle" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">2.5k</text>
-              <text x="180" y={svgH - 12} textAnchor="middle" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">6.0k</text>
-              <text x={svgW - 25} y={svgH - 12} textAnchor="middle" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">10.0k</text>
-              <text x={svgW / 2} y={svgH - 2} textAnchor="middle" className="text-[9px] font-mono fill-slate-400 dark:fill-zinc-500">Flow Q (m³/h)</text>
-
-              {/* Surge Danger Area Shade */}
-              <path
-                d={`M 40,20 L ${mapX(compMath.qSurgeCurrent)},20 L ${mapX(compMath.qSurgeCurrent)},${svgH - 30} L 40,${svgH - 30} Z`}
-                fill="rgba(244, 63, 94, 0.08)"
-              />
-
-              {/* Surge Limit Line (SLL) */}
-              <line
-                x1={mapX(compMath.qSurgeCurrent)}
-                y1="20"
-                x2={mapX(compMath.qSurgeCurrent)}
-                y2={svgH - 30}
-                stroke="#f43f5e"
-                strokeWidth="2"
-                strokeDasharray="4 3"
-              />
-
-              {/* Surge Control Line (SCL, +10%) */}
-              <line
-                x1={mapX(compMath.qSclCurrent)}
-                y1="20"
-                x2={mapX(compMath.qSclCurrent)}
-                y2={svgH - 30}
-                stroke="#f59e0b"
-                strokeWidth="2"
-                strokeDasharray="3 3"
-              />
-
-              {/* Speed Curves: 90%, 100%, 105% */}
-              {/* 90% Speed */}
-              <path
-                d="M 60,140 Q 180,120 340,65"
-                fill="none"
-                stroke="#94a3b8"
-                strokeWidth="1.5"
-                strokeDasharray="2 2"
-              />
-              {/* 100% Speed (Design) */}
-              <path
-                d="M 75,175 Q 220,155 380,95"
-                fill="none"
-                stroke="#06b6d4"
-                strokeWidth="2.5"
-              />
-              {/* 105% Speed */}
-              <path
-                d="M 90,195 Q 240,175 400,115"
-                fill="none"
-                stroke="#8b5cf6"
-                strokeWidth="1.5"
-                strokeDasharray="4 2"
-              />
-
-              {/* Active Operating Point */}
-              <g transform={`translate(${currentX}, ${currentY})`}>
-                <circle
-                  r="14"
-                  className={
-                    compMath.zone === 'ACTIVE_SURGE_DANGER'
-                      ? 'fill-rose-500/20 stroke-rose-500 animate-ping'
-                      : compMath.zone === 'MARGINAL_SCL_APPROACH'
-                      ? 'fill-amber-500/20 stroke-amber-500 animate-pulse'
-                      : 'fill-cyan-500/20 stroke-cyan-500'
-                  }
-                  strokeWidth="1.5"
-                />
-                <circle
-                  r="6"
-                  className={
-                    compMath.zone === 'ACTIVE_SURGE_DANGER'
-                      ? 'fill-rose-500 stroke-white'
-                      : compMath.zone === 'MARGINAL_SCL_APPROACH'
-                      ? 'fill-amber-500 stroke-white'
-                      : 'fill-cyan-500 stroke-white'
-                  }
-                  strokeWidth="2"
-                />
-                <text
-                  x="10"
-                  y="-10"
-                  className="text-[10px] font-mono font-bold fill-slate-800 dark:fill-zinc-200"
-                >
-                  OP ({flowRate.toFixed(0)} m³/h)
-                </text>
-              </g>
-            </svg>
-          </div>
-
-          {/* Quick Scenario Upset Buttons */}
-          <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-zinc-800">
-            <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Scenarios:</span>
-            <button
-              onClick={() => handleUpsetPreset('normal')}
-              className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
-            >
-              Normal (6.8k)
-            </button>
-            <button
-              onClick={() => handleUpsetPreset('marginal')}
-              className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors cursor-pointer"
-            >
-              SCL Approach (4.5k)
-            </button>
-            <button
-              onClick={() => handleUpsetPreset('surge')}
-              className="px-2 py-0.5 rounded text-[10px] font-mono bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
-            >
-              Surge Trip (3.4k)
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Real-time Telemetry & Anti-Surge Valve (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-          {/* Key KPI Tiles */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Surge Margin</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className={`text-lg font-black font-mono ${
-                  compMath.surgeMarginPct < 0
-                    ? 'text-rose-600 dark:text-rose-400'
-                    : compMath.surgeMarginPct < 10
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-emerald-600 dark:text-emerald-400'
-                }`}>
-                  {compMath.surgeMarginPct > 0 ? `+${compMath.surgeMarginPct}%` : `${compMath.surgeMarginPct}%`}
-                </span>
-                <span className="text-[10px] text-slate-400">vs SLL</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Polytropic Head</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-black font-mono text-cyan-600 dark:text-cyan-400">
-                  {compMath.polytropicHeadKjKg}
-                </span>
-                <span className="text-[10px] text-slate-400">kJ/kg</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Gas Shaft Power</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-black font-mono text-slate-800 dark:text-zinc-200">
-                  {compMath.gasPowerKw}
-                </span>
-                <span className="text-[10px] text-slate-400">kW</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Pressure Ratio (P2/P1)</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
-                  {compMath.pRatio} : 1
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Anti-Surge Valve (ASV) Status Card */}
-          <div className={`p-3 rounded-xl border transition-all ${
-            compMath.effectiveAsvOpen > 0
-              ? 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800'
-              : 'bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800'
-          }`}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-bold font-mono text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                <RotateCw className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                <span>Anti-Surge Valve (ASV-101)</span>
-              </span>
-              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
-                compMath.effectiveAsvOpen > 0
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
-              }`}>
-                {compMath.effectiveAsvOpen.toFixed(0)}% OPEN
-              </span>
-            </div>
-
-            {/* Valve Travel Bar */}
-            <div className="w-full h-2.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  compMath.effectiveAsvOpen > 50
-                    ? 'bg-rose-500'
-                    : compMath.effectiveAsvOpen > 0
-                    ? 'bg-amber-500'
-                    : 'bg-emerald-500'
-                }`}
-                style={{ width: `${compMath.effectiveAsvOpen}%` }}
-              />
-            </div>
-
-            <p className="text-[11px] font-mono text-slate-600 dark:text-zinc-300">
-              {compMath.recommendation}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Dynamic Interactive Control Sliders */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
-        {/* Slider 1: Suction Flow */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-600 dark:text-zinc-400">Inlet Flow Rate (Q):</span>
-            <span className="font-bold text-slate-800 dark:text-zinc-200">{flowRate} m³/h</span>
-          </div>
-          <input
-            type="range"
-            min="2800"
-            max="9500"
-            step="50"
-            value={flowRate}
-            onChange={(e) => setFlowRate(Number(e.target.value))}
-            className="w-full accent-cyan-600 cursor-pointer"
+        {/* Segmented Valve Position Bar */}
+        <div className="h-3 w-full bg-zinc-950 rounded-full border border-zinc-800 overflow-hidden flex">
+          <div
+            className={`h-full transition-all duration-300 ${
+              calculatedAsvTravel > 50
+                ? 'bg-rose-500'
+                : calculatedAsvTravel > 0
+                ? 'bg-amber-500'
+                : 'bg-emerald-500'
+            }`}
+            style={{ width: `${calculatedAsvTravel}%` }}
           />
         </div>
 
-        {/* Slider 2: Rotational Speed */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-600 dark:text-zinc-400">Turbine Driver Speed:</span>
-            <span className="font-bold text-slate-800 dark:text-zinc-200">{speedRpm} RPM ({compMath.speedRatio}%)</span>
-          </div>
-          <input
-            type="range"
-            min="9000"
-            max="11200"
-            step="100"
-            value={speedRpm}
-            onChange={(e) => setSpeedRpm(Number(e.target.value))}
-            className="w-full accent-cyan-600 cursor-pointer"
-          />
-        </div>
-
-        {/* Slider 3: Discharge Pressure */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-600 dark:text-zinc-400">Discharge Pressure (P2):</span>
-            <span className="font-bold text-slate-800 dark:text-zinc-200">{pDischarge} bar</span>
-          </div>
-          <input
-            type="range"
-            min="30"
-            max="80"
-            step="1"
-            value={pDischarge}
-            onChange={(e) => setPDischarge(Number(e.target.value))}
-            className="w-full accent-cyan-600 cursor-pointer"
-          />
+        <div className="flex items-center justify-between text-[9px] text-zinc-500">
+          <span>0% (Fully Closed - Max Process Yield)</span>
+          <span>SCL Trigger: {sclFlow.toLocaleString()} m³/h</span>
+          <span>100% (Full Recycle Dump)</span>
         </div>
       </div>
 
-      {/* 4. Action Bar: Dispatch Setpoints & Audit Proof */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-zinc-400">
-          <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-          <span>DCS Yokogawa Centum VP • Fast-Acting ASV Hydraulic Loop Synchronized</span>
+      {/* Interactive Process Simulator Slider */}
+      <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/90 space-y-2 mb-3">
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-zinc-400 flex items-center gap-1 font-bold">
+            <Sliders className="w-3 h-3 text-cyan-400" />
+            SIMULATE PROCESS FLOW PERTURBATION (SUCTION CHOKE):
+          </span>
+          <span className="text-cyan-400 font-bold">{currentFlow.toLocaleString()} m³/h</span>
         </div>
 
-        <button
-          onClick={handleDispatch}
-          disabled={isDispatched}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shadow-2xs cursor-pointer ${
-            isDispatched
-              ? 'bg-emerald-600 text-white'
-              : 'bg-cyan-600 hover:bg-cyan-700 text-white'
-          }`}
-        >
-          {isDispatched ? (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>TRANSMITTED TO DCS (SHA-256 SEALED)</span>
-            </>
-          ) : (
-            <>
-              <FileCheck className="w-3.5 h-3.5" />
-              <span>Transmit Anti-Surge Tuning to DCS</span>
-            </>
-          )}
-        </button>
+        <input
+          type="range"
+          min={7500}
+          max={20000}
+          step={100}
+          value={currentFlow}
+          onChange={(e) => setCurrentFlow(Number(e.target.value))}
+          className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+        />
+
+        <div className="flex items-center justify-between text-[9px] text-zinc-500">
+          <span>Deep Surge Choke (7,500 m³/h)</span>
+          <span>Design Point ({designFlowM3h.toLocaleString()} m³/h)</span>
+          <span>Over-capacity (20,000 m³/h)</span>
+        </div>
+      </div>
+
+      {/* 4 Engineering Metric Badges */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">SUCTION / DISCH P</div>
+          <div className="text-xs font-bold text-zinc-200 mt-0.5">
+            {suctionPressureBar} / {dischargePressureBar} <span className="text-[9px] text-zinc-500">bar</span>
+          </div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">PRESSURE RATIO</div>
+          <div className="text-xs font-bold text-cyan-400 mt-0.5">
+            {pressureRatio}x <span className="text-[9px] text-zinc-500">r_p</span>
+          </div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">OPERATING SPEED</div>
+          <div className="text-xs font-bold text-zinc-200 mt-0.5">
+            {operatingSpeedRpm.toLocaleString()} <span className="text-[9px] text-zinc-500">RPM</span>
+          </div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-zinc-500 uppercase">SURGE MARGIN</div>
+          <div className={`text-xs font-bold mt-0.5 ${dynamicSurgeMargin < 10 ? 'text-rose-400' : 'text-emerald-400'}`}>
+            +{dynamicSurgeMargin}%
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default CompressorAntiSurgeWidget;
+}

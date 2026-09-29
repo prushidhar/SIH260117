@@ -25,7 +25,7 @@ export default function VoiceCommandButton() {
   const isActive = isListening || isProcessing;
 
   const getButtonClasses = () => {
-    const base = 'relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono font-semibold transition-all cursor-pointer border shadow-xs';
+    const base = 'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-semibold transition-all cursor-pointer border shadow-xs';
 
     if (error) {
       return `${base} bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300`;
@@ -37,7 +37,7 @@ export default function VoiceCommandButton() {
       return `${base} bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-600 text-rose-700 dark:text-rose-300 ring-2 ring-rose-400/30 dark:ring-rose-500/30`;
     }
     if (isModelLoading) {
-      return `${base} bg-violet-50 dark:bg-violet-950/40 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300`;
+      return `${base} bg-sky-50 dark:bg-sky-950/40 border-sky-300 dark:border-sky-700 text-sky-700 dark:text-sky-300`;
     }
     return `${base} bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200`;
   };
@@ -82,9 +82,9 @@ export default function VoiceCommandButton() {
       {/* Audio level ring animation when listening */}
       {isListening && (
         <span
-          className="absolute inset-0 rounded-full border-2 border-rose-400/50 dark:border-rose-500/50 pointer-events-none"
+          className="absolute inset-0 rounded-lg border-2 border-rose-400/50 dark:border-rose-500/50 pointer-events-none"
           style={{
-            transform: `scale(${1 + audioLevel * 0.3})`,
+            transform: `scale(${1 + audioLevel * 0.15})`,
             opacity: 0.3 + audioLevel * 0.7,
             transition: 'transform 50ms ease-out, opacity 50ms ease-out',
           }}
@@ -96,9 +96,9 @@ export default function VoiceCommandButton() {
 
       {/* Model load progress bar */}
       {isModelLoading && (
-        <span className="absolute bottom-0 left-1 right-1 h-0.5 bg-violet-200 dark:bg-violet-800 rounded-full overflow-hidden">
+        <span className="absolute bottom-0 left-1 right-1 h-0.5 bg-sky-200 dark:bg-sky-800 rounded-sm overflow-hidden">
           <span
-            className="h-full bg-violet-500 dark:bg-violet-400 rounded-full transition-all duration-300"
+            className="h-full bg-sky-500 dark:bg-sky-400 rounded-sm transition-all duration-300"
             style={{ width: `${modelLoadProgress}%`, display: 'block' }}
           />
         </span>

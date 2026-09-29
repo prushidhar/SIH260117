@@ -62,21 +62,21 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* AI Doodle Signature Pastel Aurora Glows (Adaptive Light & Dark) */
+/* Industrial Engineering Subtle Precision Background */
 .aurora-bg {
   background: 
-    radial-gradient(circle at 15% 15%, rgba(167, 139, 250, 0.18), transparent 45%),
-    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.15), transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(52, 211, 153, 0.12), transparent 50%),
+    radial-gradient(circle at 15% 15%, rgba(148, 163, 184, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.06), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(52, 211, 153, 0.05), transparent 50%),
     #f8fafc;
 }
 
 .dark .aurora-bg {
   background: 
-    radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.15), transparent 45%),
-    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.10), transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(52, 211, 153, 0.08), transparent 50%),
-    #0a0a0a;
+    radial-gradient(circle at 15% 15%, rgba(30, 41, 59, 0.5), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(15, 23, 42, 0.6), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.04), transparent 50%),
+    #080c14;
 }
 
 .card-glass {
@@ -116,46 +116,63 @@ body {
   box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.25);
 }
 
-/* Industrial HMI Process Flow Animations */
-@keyframes flow-dash {
+.rose-glow {
+  box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.35);
+}
+
+.amber-glow {
+  box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.3);
+}
+
+.cyan-glow {
+  box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.3);
+}
+
+/* DCS Control Room 24/7 High-Contrast Color Coding */
+.dcs-state-safe {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dcs-state-warning {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dcs-state-critical {
+  color: #f43f5e;
+  background-color: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.dcs-state-inference {
+  color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.dcs-state-telemetry {
+  color: #06b6d4;
+  background-color: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+@keyframes processFlowAnimation {
+  from {
+    stroke-dashoffset: 20;
+  }
   to {
-    stroke-dashoffset: -40;
+    stroke-dashoffset: 0;
   }
 }
 
-.animate-flow {
-  animation: flow-dash 1.2s linear infinite;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.98); }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
-}
-
-/* Industrial Dot Matrix Pattern */
-.bg-grid-industrial {
-  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
-  background-size: 16px 16px;
-}
-
-.dark .bg-grid-industrial {
-  background-image: radial-gradient(rgba(71, 85, 105, 0.25) 1px, transparent 1px);
-  background-size: 16px 16px;
-}
-
-/* Control Room Instrument Gauge Glows */
-.gauge-glow-safe {
-  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
-}
-
-.gauge-glow-warn {
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4));
-}
-
-.gauge-glow-danger {
-  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
+@keyframes chevronSlide {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 39.6px 0;
+  }
 }

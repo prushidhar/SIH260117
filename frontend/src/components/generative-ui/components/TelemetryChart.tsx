@@ -1,117 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Play, Pause, Activity, Crosshair, RefreshCw, Layers, Camera, Download, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Play, Pause, Activity, Crosshair, RefreshCw, Layers, BarChart2, Radio } from 'lucide-react';
 import useIndraStore from '@/store/indra-store';
 import { broadcastSyncEvent } from '@/lib/sync/multi-window-sync';
 import type { TelemetryChartProps, TelemetryDataPoint } from '../types';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const FFT_BARS = 15;
-const HISTORY_SECONDS = 60;
-const ANIMATION_HZ = 30; // target fps via rAF
-const MS_PER_FRAME = 1000 / ANIMATION_HZ;
-
-// ─── Channel Configurations ───────────────────────────────────────────────────
-const CHANNEL_CONFIGS = {
-  vibration: {
-    label: 'Vibration Velocity',
-    unit: 'mm/s RMS',
-    min: 0,
-    max: 10,
-    color: '#8b5cf6',
-    stroke: '#8b5cf6',
-    zoneA: 2.3,
-    zoneB: 4.5,
-    zoneC: 7.1,
-    baseVal: 3.2,
-    clampMin: 1.0,
-    clampMax: 8.5,
-    drift: 0.4,
-  },
-  temperature: {
-    label: 'Inboard Bearing Temp',
-    unit: '°C',
-    min: 20,
-    max: 120,
-    color: '#f59e0b',
-    stroke: '#f59e0b',
-    zoneA: 55,
-    zoneB: 75,
-    zoneC: 90,
-    baseVal: 62,
-    clampMin: 40.0,
-    clampMax: 95.0,
-    drift: 1.2,
-  },
-  current: {
-    label: 'Motor Stator Current',
-    unit: 'Amps',
-    min: 0,
-    max: 100,
-    color: '#06b6d4',
-    stroke: '#06b6d4',
-    zoneA: 45,
-    zoneB: 68,
-    zoneC: 85,
-    baseVal: 48,
-    clampMin: 20.0,
-    clampMax: 80.0,
-    drift: 2.0,
-  },
-} as const;
-
-type ChannelKey = keyof typeof CHANNEL_CONFIGS;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function buildInitialSeries(ch: ChannelKey, count = 25): TelemetryDataPoint[] {
-  const cfg = CHANNEL_CONFIGS[ch];
-  const now = Date.now();
-  return Array.from({ length: count }, (_, i) => {
-    const time = new Date(now - (count - 1 - i) * 1500).toLocaleTimeString([], {
-      hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit',
-    });
-    const noise = Math.sin(i * 0.4) * 0.8 + (Math.random() * 0.4 - 0.2);
-    return {
-      timestamp: time,
-      value: Math.max(cfg.clampMin, parseFloat((cfg.baseVal + noise).toFixed(2))),
-      threshold: cfg.zoneB,
-    };
-  });
-}
-
-function nowTimestamp(): string {
-  return new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function fmtElapsed(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  const h = Math.floor(m / 60);
-  if (h > 0) return `${h}h ${m % 60}m`;
-  if (m > 0) return `${m}m ${s % 60}s`;
-  return `${s}s`;
-}
-
-function downloadCSV(points: TelemetryDataPoint[], channel: string): void {
-  const header = 'timestamp,value,threshold,channel\n';
-  const rows = points.map(p =>
-    `${p.timestamp},${p.value},${p.threshold ?? ''},${channel}`
-  ).join('\n');
-  const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `telemetry_${channel}_${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function TelemetryChart({
   tag = 'P-101',
   title = 'Real-Time Vibration Telemetry (ISO 10816-3)',
-  subtitle = 'Tri-Axial Velocity Spectrum & FFT Waveform',
+  subtitle = 'Tri-Axial Velocity Spectrum & 15-Bin FFT Waveform',
   channels: propChannels,
   series: propSeries,
   unit = 'mm/s RMS',
@@ -120,639 +18,351 @@ export default function TelemetryChart({
 }: TelemetryChartProps) {
   const { selectTag } = useIndraStore();
 
-  const initialData = useMemo<TelemetryDataPoint[]>(() => {
-    if (propSeries && propSeries.length > 0) return propSeries;
-    return buildInitialSeries('vibration');
-  }, [propSeries]);
-
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [dataPoints, setDataPoints] = useState<TelemetryDataPoint[]>(initialData);
   const [isPlaying, setIsPlaying] = useState<boolean>(liveUpdate);
-  const [activeChannel, setActiveChannel] = useState<ChannelKey>('vibration');
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const [frozen, setFrozen] = useState<boolean>(false);
-  const [frozenLabel, setFrozenLabel] = useState<string | null>(null);
-  const [liveTime, setLiveTime] = useState<string>(nowTimestamp());
-  const [startTime] = useState<number>(Date.now());
-  const [fftHeights, setFftHeights] = useState<number[]>(() =>
-    Array.from({ length: FFT_BARS }, (_, i) =>
-      Math.max(10, 80 - i * 3 + Math.random() * 25)
-    )
-  );
-  const [historyBuffer, setHistoryBuffer] = useState<number[]>(() =>
-    Array.from({ length: HISTORY_SECONDS }, () => 0.5)
-  );
+  const [viewMode, setViewMode] = useState<'dual' | 'time' | 'fft'>('dual');
+  const [activeChannel, setActiveChannel] = useState<'vibration' | 'temperature' | 'current'>('vibration');
 
-  // ── Refs ───────────────────────────────────────────────────────────────────
-  const rafRef = useRef<number | null>(null);
-  const lastTickRef = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dataRef = useRef<TelemetryDataPoint[]>(dataPoints);
-  const playingRef = useRef<boolean>(isPlaying);
-  const frozenRef = useRef<boolean>(frozen);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const timeOffsetRef = useRef<number>(0);
 
-  // Keep refs in sync
-  useEffect(() => { dataRef.current = dataPoints; }, [dataPoints]);
-  useEffect(() => { playingRef.current = isPlaying; }, [isPlaying]);
-  useEffect(() => { frozenRef.current = frozen; }, [frozen]);
+  // 15-Bin FFT Harmonic Frequencies (Hz / Order)
+  // 1X Running Speed (29.8 Hz), 2X Misalignment (59.6 Hz), 3X, ... 17X Vane Pass (506.6 Hz)
+  const [fftBins, setFftBins] = useState<{ order: string; freqHz: number; amplitude: number; isHarmonic?: boolean }[]>([
+    { order: '0.5X', freqHz: 14.9, amplitude: 0.42 },
+    { order: '1X', freqHz: 29.8, amplitude: 2.35, isHarmonic: true },
+    { order: '1.5X', freqHz: 44.7, amplitude: 0.28 },
+    { order: '2X', freqHz: 59.6, amplitude: 4.12, isHarmonic: true }, // Misalignment peak
+    { order: '2.5X', freqHz: 74.5, amplitude: 0.35 },
+    { order: '3X', freqHz: 89.4, amplitude: 1.45, isHarmonic: true },
+    { order: '4X', freqHz: 119.2, amplitude: 0.62 },
+    { order: '5X', freqHz: 149.0, amplitude: 0.38 },
+    { order: '6X', freqHz: 178.8, amplitude: 0.25 },
+    { order: '7X', freqHz: 208.6, amplitude: 0.18 },
+    { order: '8X', freqHz: 238.4, amplitude: 0.22 },
+    { order: '9X', freqHz: 268.2, amplitude: 0.15 },
+    { order: '10X', freqHz: 298.0, amplitude: 0.29 },
+    { order: '12X', freqHz: 357.6, amplitude: 0.41 },
+    { order: '17X', freqHz: 506.6, amplitude: 2.85, isHarmonic: true }, // Vane pass peak
+  ]);
 
-  const activeCfg = CHANNEL_CONFIGS[activeChannel];
+  // Overall RMS vibration calculated from FFT
+  const currentRms = useMemo(() => {
+    const sumSquares = fftBins.reduce((acc, b) => acc + Math.pow(b.amplitude, 2), 0);
+    return parseFloat(Math.sqrt(sumSquares).toFixed(2));
+  }, [fftBins]);
 
-  // ── rAF animation loop at ~30Hz ────────────────────────────────────────────
-  const tick = useCallback((ts: number) => {
-    rafRef.current = requestAnimationFrame(tick);
+  // ISO 10816-3 Severity Evaluation
+  // Zone A: <= 2.3 mm/s (Good)
+  // Zone B: 2.3 - 4.5 mm/s (Acceptable)
+  // Zone C: 4.5 - 7.1 mm/s (Unsatisfactory)
+  // Zone D: > 7.1 mm/s (Unacceptable / Trip)
+  const severityZone = useMemo(() => {
+    if (currentRms <= 2.3) return { zone: 'Zone A', label: 'GOOD', color: 'text-emerald-400', badge: 'bg-emerald-950/80 border-emerald-700 text-emerald-300' };
+    if (currentRms <= 4.5) return { zone: 'Zone B', label: 'ACCEPTABLE', color: 'text-cyan-400', badge: 'bg-cyan-950/80 border-cyan-700 text-cyan-300' };
+    if (currentRms <= 7.1) return { zone: 'Zone C', label: 'UNSATISFACTORY (ALERT)', color: 'text-amber-400', badge: 'bg-amber-950/80 border-amber-700 text-amber-300' };
+    return { zone: 'Zone D', label: 'UNACCEPTABLE (TRIP LIMIT)', color: 'text-rose-400', badge: 'bg-rose-950/80 border-rose-700 text-rose-300 animate-pulse' };
+  }, [currentRms]);
 
-    // Clock update every second regardless of play state
-    setLiveTime(nowTimestamp());
-
-    const elapsed = ts - lastTickRef.current;
-    if (!playingRef.current || frozenRef.current || elapsed < MS_PER_FRAME * 1.5) {
-      return; // skip data update this frame (but keep clock ticking)
-    }
-    // Only update data every ~1.2 s (1200ms) using elapsed counter
-    if (elapsed < 1200) return;
-    lastTickRef.current = ts;
-
-    const cfg = CHANNEL_CONFIGS[activeChannel];
-
-    setDataPoints(prev => {
-      const last = prev[prev.length - 1];
-      const lastVal = last ? last.value : cfg.baseVal;
-      const drift = (Math.random() - 0.48) * cfg.drift;
-      const nextVal = parseFloat(
-        Math.min(cfg.clampMax, Math.max(cfg.clampMin, lastVal + drift)).toFixed(2)
-      );
-      const nextPoint: TelemetryDataPoint = {
-        timestamp: nowTimestamp(),
-        value: nextVal,
-        threshold: cfg.zoneB,
-      };
-      return [...prev.slice(1), nextPoint];
-    });
-
-    // FFT bar animation — simulate harmonics
-    setFftHeights(() =>
-      Array.from({ length: FFT_BARS }, (_, i) => {
-        const base = Math.max(5, 75 - i * 4);
-        const harmonic = i === 0 ? 30 : i === 1 ? 15 : i % 3 === 0 ? 10 : 0;
-        return parseFloat((base + harmonic + Math.random() * 20).toFixed(1));
-      })
-    );
-
-    // History sparkline: append current value to ring buffer
-    setHistoryBuffer(prev => {
-      const last = dataRef.current[dataRef.current.length - 1]?.value ?? 0;
-      return [...prev.slice(1), last];
-    });
-  }, [activeChannel]);
-
+  // 30Hz Canvas animation loop using requestAnimationFrame
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let lastTime = performance.now();
+    const targetFps = 30;
+    const frameInterval = 1000 / targetFps;
+
+    const render = (now: number) => {
+      animFrameRef.current = requestAnimationFrame(render);
+      const elapsed = now - lastTime;
+      if (elapsed < frameInterval) return;
+      lastTime = now - (elapsed % frameInterval);
+
+      if (isPlaying) {
+        timeOffsetRef.current += 0.08;
+      }
+
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      // Background grid
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+
+      // Horizontal grid lines
+      for (let y = 30; y < height; y += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Center baseline (0 line)
+      const midY = height / 2;
+      ctx.strokeStyle = '#3f3f46';
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(0, midY);
+      ctx.lineTo(width, midY);
+      ctx.stroke();
+
+      // Render Time-Domain Waveform:
+      // y(t) = A1*sin(w1*t) + A2*sin(w2*t) + noise
+      ctx.strokeStyle = '#06b6d4'; // Cyan signal
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      const t = timeOffsetRef.current;
+      for (let x = 0; x < width; x++) {
+        const rad = (x * 0.04) + t;
+        // Composite 1X fundamental + 2X misalignment harmonic + 17X vane pass ripple
+        const val =
+          Math.sin(rad) * 24 +
+          Math.sin(rad * 2.0) * 16 +
+          Math.sin(rad * 5.7) * 5 +
+          (Math.sin(x * 0.7) * 2);
+
+        const y = midY - val;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // ISO 10816 Zone Threshold Dashes
+      // Zone C Alert (+4.5 mm/s) & Zone D Trip (+7.1 mm/s)
+      const alertY = midY - 45;
+      const tripY = midY - 68;
+
+      ctx.strokeStyle = '#f59e0b'; // Amber alert
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, alertY);
+      ctx.lineTo(width, alertY);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#f43f5e'; // Rose trip
+      ctx.beginPath();
+      ctx.moveTo(0, tripY);
+      ctx.lineTo(width, tripY);
+      ctx.stroke();
+      ctx.setLineDash([]);
     };
-  }, [tick]);
 
-  // ── Chart geometry ─────────────────────────────────────────────────────────
-  const width = 520;
-  const height = 180;
-  const gaugeW = 12; // right-side zone gauge width
-  const padding = { top: 20, right: 20 + gaugeW + 6, bottom: 28, left: 36 };
-  const chartW = width - padding.left - padding.right;
-  const chartH = height - padding.top - padding.bottom;
+    animFrameRef.current = requestAnimationFrame(render);
 
-  const minY = activeCfg.min;
-  const maxY = activeCfg.max;
-  const range = maxY - minY || 1;
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [isPlaying]);
 
-  const getX = (index: number) => padding.left + (index / (dataPoints.length - 1 || 1)) * chartW;
-  const getY = (val: number) => padding.top + chartH - ((val - minY) / range) * chartH;
+  // Subtle live drift for FFT harmonic bins when playing
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setFftBins((prev) =>
+        prev.map((b) => {
+          const jitter = (Math.random() - 0.49) * 0.08;
+          return {
+            ...b,
+            amplitude: Math.max(0.1, parseFloat((b.amplitude + jitter).toFixed(2))),
+          };
+        })
+      );
+    }, 500);
 
-  const linePath = useMemo(() => {
-    if (dataPoints.length === 0) return '';
-    return dataPoints
-      .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(pt.value).toFixed(1)}`)
-      .join(' ');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataPoints, minY, maxY, chartW, chartH]);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
-  const areaPath = useMemo(() => {
-    if (dataPoints.length === 0) return '';
-    const bottomY = padding.top + chartH;
-    return `${linePath} L ${getX(dataPoints.length - 1).toFixed(1)} ${bottomY} L ${getX(0).toFixed(1)} ${bottomY} Z`;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linePath, dataPoints.length]);
-
-  // Zone band geometry
-  const zoneRects = useMemo(() => {
-    const yMax = padding.top;
-    const yZoneC = getY(activeCfg.zoneC);
-    const yZoneB = getY(activeCfg.zoneB);
-    const yZoneA = getY(activeCfg.zoneA);
-    const yBase = padding.top + chartH;
-    return [
-      { y: yMax, h: yZoneC - yMax, fill: '#ef4444' },       // Zone D (top)
-      { y: yZoneC, h: yZoneB - yZoneC, fill: '#f97316' },   // Zone C
-      { y: yZoneB, h: yZoneA - yZoneB, fill: '#eab308' },   // Zone B
-      { y: yZoneA, h: yBase - yZoneA, fill: '#22c55e' },    // Zone A (bottom)
-    ];
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCfg, minY, maxY, chartH, padding]);
-
-  // History sparkline geometry
-  const sparkW = 500;
-  const sparkH = 50;
-  const sparkPath = useMemo(() => {
-    const hMin = Math.min(...historyBuffer);
-    const hMax = Math.max(...historyBuffer) || 1;
-    const hRange = hMax - hMin || 1;
-    return historyBuffer
-      .map((v, i) => {
-        const x = (i / (historyBuffer.length - 1)) * sparkW;
-        const y = sparkH - ((v - hMin) / hRange) * (sparkH - 4) - 2;
-        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      })
-      .join(' ');
-  }, [historyBuffer]);
-
-  // Latest value & severity
-  const latestVal = dataPoints[dataPoints.length - 1]?.value ?? 0;
-  const isAlarm = latestVal >= activeCfg.zoneC;
-
-  let severity = 'ZONE A (GOOD)';
-  let severityColor = 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
-  if (latestVal >= activeCfg.zoneC) {
-    severity = 'ZONE D (UNACCEPTABLE)';
-    severityColor = 'text-rose-500 bg-rose-500/10 border-rose-500/40';
-  } else if (latestVal >= activeCfg.zoneB) {
-    severity = 'ZONE C (UNSATISFACTORY)';
-    severityColor = 'text-amber-500 bg-amber-500/10 border-amber-500/40';
-  } else if (latestVal >= activeCfg.zoneA) {
-    severity = 'ZONE B (SATISFACTORY)';
-    severityColor = 'text-sky-500 bg-sky-500/10 border-sky-500/30';
-  }
-
-  // Right-side zone gauge segment positions (for the 8px gauge bar)
-  const gaugeSegments = useMemo(() => {
-    const totalH = chartH;
-    const zCFrac = (activeCfg.zoneC - minY) / range;
-    const zBFrac = (activeCfg.zoneB - minY) / range;
-    const zAFrac = (activeCfg.zoneA - minY) / range;
-    // Segments go bottom (min) to top (max) in SVG coords: top is low y
-    const dH = (1 - zCFrac) * totalH;  // Zone D height
-    const cH = (zCFrac - zBFrac) * totalH;
-    const bH = (zBFrac - zAFrac) * totalH;
-    const aH = zAFrac * totalH;
-    const gx = padding.left + chartW + 6;
-    return [
-      { y: padding.top, h: dH, fill: '#ef4444', label: 'D' },
-      { y: padding.top + dH, h: cH, fill: '#f97316', label: 'C' },
-      { y: padding.top + dH + cH, h: bH, fill: '#eab308', label: 'B' },
-      { y: padding.top + dH + cH + bH, h: aH, fill: '#22c55e', label: 'A' },
-    ].map(s => ({ ...s, gx }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCfg, minY, maxY, chartH, chartW, padding]);
-
-  // Current zone indicator on the gauge
-  const currentFrac = Math.min(1, Math.max(0, (latestVal - minY) / range));
-  const gaugeIndicatorY = padding.top + chartH - currentFrac * chartH;
-
-  // FFT dominant freq simulation
-  const fftDomFreq = useMemo(() => {
-    const base = 24.3 + (latestVal / activeCfg.max) * 24;
-    return `${base.toFixed(1)} Hz (2X running speed)`;
-  }, [latestVal, activeCfg.max]);
-
-  // Elapsed time
-  const elapsedMs = Date.now() - startTime;
-
-  // ── Event handlers ─────────────────────────────────────────────────────────
   const handleLocateTag = () => {
-    if (tag) {
-      selectTag(tag);
-      broadcastSyncEvent({
-        type: 'TAG_SELECTED',
-        tag,
-        metadata: { source: 'TelemetryChart', value: latestVal, unit: activeCfg.unit },
-      });
-    }
+    selectTag(tag);
+    broadcastSyncEvent({
+      type: 'TAG_SELECTED',
+      tag,
+      metadata: { source: 'TelemetryChart', currentRms, zone: severityZone.zone },
+    });
   };
 
-  const handleChannelSwitch = (ch: ChannelKey) => {
-    setActiveChannel(ch);
-    setDataPoints(buildInitialSeries(ch));
-    setHistoryBuffer(Array.from({ length: HISTORY_SECONDS }, () => CHANNEL_CONFIGS[ch].baseVal));
-    setFrozen(false);
-    setFrozenLabel(null);
-  };
-
-  const handleFreezeFrame = () => {
-    if (frozen) {
-      setFrozen(false);
-      setFrozenLabel(null);
-    } else {
-      setFrozen(true);
-      setFrozenLabel(`Frozen @ ${nowTimestamp()}`);
-    }
-  };
-
-  const handleExportCSV = () => {
-    downloadCSV(dataPoints, activeChannel);
-  };
-
-  const hoveredPoint = hoverIndex !== null ? dataPoints[hoverIndex] : null;
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div
-      className={`p-4 rounded-2xl bg-white dark:bg-zinc-900 border shadow-sm transition-all text-slate-800 dark:text-zinc-200 ${
-        isAlarm
-          ? 'border-rose-500 ring-2 ring-rose-500 animate-pulse'
-          : 'border-slate-200 dark:border-zinc-800'
-      }`}
-    >
-      {/* ── Header ── */}
-      <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/80 gap-2">
+    <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl font-mono text-xs text-zinc-200 select-none">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-zinc-800/80 gap-2">
         <div className="flex items-center gap-2">
           {tag && (
             <button
               onClick={handleLocateTag}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 font-mono text-xs font-bold transition-all cursor-pointer group"
-              title="Center camera on P&ID schematic"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-700/80 text-cyan-300 font-bold transition-all cursor-pointer group"
+              title="Locate tag on P&ID"
             >
-              <Crosshair className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 group-hover:rotate-45 transition-transform" />
+              <Crosshair className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-45 transition-transform" />
               <span>{tag}</span>
             </button>
           )}
           <div>
-            <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <span>{title}</span>
-            </h4>
-            <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
-              {subtitle} • {isoClass}
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-zinc-100 tracking-wider">{title}</h4>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 text-[9px] font-bold">
+                {isoClass}
+              </span>
             </div>
+            <div className="text-[10px] text-zinc-400">{subtitle}</div>
           </div>
         </div>
 
-        {/* Live badge + clock + controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${severityColor}`}>
-            <Activity className="w-3 h-3 animate-pulse" />
-            <span>{severity}</span>
-          </span>
-
-          {/* Live clock */}
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-[10px] font-mono text-slate-600 dark:text-zinc-300">
-            <Clock className="w-3 h-3" />
-            <span>{liveTime}</span>
-            {isPlaying && !frozen && (
-              <span className="text-emerald-500 font-bold ml-1">+{fmtElapsed(elapsedMs)}</span>
-            )}
+        {/* Real-Time Severity Pill & Controls */}
+        <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${severityZone.badge}`}>
+            <Activity className="w-3.5 h-3.5" />
+            <span>{currentRms} {unit} • {severityZone.zone} ({severityZone.label})</span>
           </div>
 
-          {/* Freeze Frame */}
-          <button
-            onClick={handleFreezeFrame}
-            className={`p-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              frozen
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
-            }`}
-            title={frozen ? 'Unfreeze chart' : 'Freeze current frame'}
-          >
-            <Camera className="w-3 h-3" />
-            <span className="text-[10px] hidden sm:inline">{frozen ? 'FROZEN' : 'FREEZE'}</span>
-          </button>
-
-          {/* Export CSV */}
-          <button
-            onClick={handleExportCSV}
-            className="p-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400"
-            title="Download current data as CSV"
-          >
-            <Download className="w-3 h-3" />
-            <span className="text-[10px] hidden sm:inline">CSV</span>
-          </button>
-
-          {/* Play/Pause */}
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`p-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              isPlaying
-                ? 'bg-violet-600 text-white shadow-xs shadow-violet-500/20'
-                : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
-            }`}
-            title={isPlaying ? 'Pause live stream' : 'Resume live stream'}
-          >
-            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            <span className="text-[10px] hidden sm:inline">{isPlaying ? 'LIVE' : 'PAUSED'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Frozen timestamp label */}
-      {frozenLabel && (
-        <div className="mt-1.5 px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-[10px] font-mono font-bold">
-          📸 {frozenLabel}
-        </div>
-      )}
-
-      {/* ── Channel Switcher ── */}
-      <div className="flex items-center gap-1.5 mt-3 text-xs font-mono">
-        <span className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1">
-          <Layers className="w-3 h-3" />
-          <span>Channel:</span>
-        </span>
-        {(Object.keys(CHANNEL_CONFIGS) as ChannelKey[]).map((ch) => {
-          const cfg = CHANNEL_CONFIGS[ch];
-          const isActive = activeChannel === ch;
-          return (
+          {/* View Mode Toggle */}
+          <div className="flex rounded-lg border border-zinc-800 bg-zinc-900 p-0.5">
             <button
-              key={ch}
-              onClick={() => handleChannelSwitch(ch)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold shadow-xs'
-                  : 'bg-slate-100 dark:bg-zinc-800/80 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              onClick={() => setViewMode('dual')}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                viewMode === 'dual' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-zinc-400'
               }`}
             >
-              {cfg.label}
+              Dual
             </button>
-          );
-        })}
+            <button
+              onClick={() => setViewMode('time')}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                viewMode === 'time' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-zinc-400'
+              }`}
+            >
+              Waveform
+            </button>
+            <button
+              onClick={() => setViewMode('fft')}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                viewMode === 'fft' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-zinc-400'
+              }`}
+            >
+              FFT
+            </button>
+          </div>
+
+          {/* Pause/Play Stream */}
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 transition-colors cursor-pointer"
+            title={isPlaying ? 'Pause 30Hz telemetry stream' : 'Resume 30Hz stream'}
+          >
+            {isPlaying ? <Pause className="w-3.5 h-3.5 text-amber-400" /> : <Play className="w-3.5 h-3.5 text-emerald-400" />}
+          </button>
+        </div>
       </div>
 
-      {/* ── Main SVG Chart ── */}
-      <div
-        ref={containerRef}
-        className="relative mt-2 w-full select-none"
-        onMouseLeave={() => setHoverIndex(null)}
-      >
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-44 overflow-visible"
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const relX = e.clientX - rect.left;
-            const frac = Math.max(0, Math.min(1,
-              (relX - (padding.left / width) * rect.width) / ((chartW / width) * rect.width)
-            ));
-            const index = Math.round(frac * (dataPoints.length - 1));
-            setHoverIndex(index);
-          }}
-        >
-          <defs>
-            {/* Area gradient */}
-            <linearGradient id={`areaGrad-${activeChannel}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={activeCfg.stroke} stopOpacity="0.35" />
-              <stop offset="100%" stopColor={activeCfg.stroke} stopOpacity="0.0" />
-            </linearGradient>
-            {/* Clip to chart area */}
-            <clipPath id="chartClip">
-              <rect x={padding.left} y={padding.top} width={chartW} height={chartH} />
-            </clipPath>
-          </defs>
+      {/* Main Visualizer Area: Time-Domain Canvas & FFT Spectrum */}
+      <div className={`grid gap-3 mb-3 ${viewMode === 'dual' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+        {/* VIEW 1: 30Hz requestAnimationFrame Time-Domain Waveform */}
+        {(viewMode === 'dual' || viewMode === 'time') && (
+          <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 relative">
+            <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5">
+              <span className="font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
+                30Hz DYNAMIC OSCILLOSCOPE (VELOCITY WAVEFORM)
+              </span>
+              <div className="flex items-center gap-2 text-[9px]">
+                <span className="text-amber-400">--- Alert (4.5)</span>
+                <span className="text-rose-400">--- Trip (7.1)</span>
+              </div>
+            </div>
 
-          {/* ── Zone band fills ── */}
-          {zoneRects.map((z, i) => (
-            <rect
-              key={i}
-              x={padding.left}
-              y={z.y}
-              width={chartW}
-              height={Math.max(0, z.h)}
-              fill={z.fill}
-              fillOpacity={0.08}
+            <canvas
+              ref={canvasRef}
+              width={460}
+              height={170}
+              className="w-full h-40 rounded-lg bg-zinc-950 border border-zinc-850"
             />
-          ))}
 
-          {/* Zone threshold lines */}
-          {([activeCfg.zoneA, activeCfg.zoneB, activeCfg.zoneC] as const).map((val, i) => {
-            const colors = ['#22c55e', '#eab308', '#f97316'];
-            const labels = ['Zone A/B', 'Zone B/C', 'Zone C/D'];
-            return (
-              <g key={i}>
-                <line
-                  x1={padding.left} y1={getY(val)}
-                  x2={padding.left + chartW} y2={getY(val)}
-                  stroke={colors[i]} strokeWidth="1" strokeDasharray="4 3"
-                  opacity={0.7}
-                />
-                <text
-                  x={padding.left + chartW - 2} y={getY(val) - 3}
-                  textAnchor="end"
-                  fontSize="7" fontFamily="monospace" fill={colors[i]} fontWeight="bold"
-                >
-                  {labels[i]} ({val} {activeCfg.unit})
-                </text>
-              </g>
-            );
-          })}
+            <div className="flex items-center justify-between text-[9px] text-zinc-500 mt-1">
+              <span>Time Sweep: 0 to 120 ms</span>
+              <span>Sampling: 30 fps (WebCanvas RAF)</span>
+              <span>Centerline: 0.0 mm/s</span>
+            </div>
+          </div>
+        )}
 
-          {/* Grid axes */}
-          <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + chartH}
-            stroke="#e2e8f0" strokeWidth="1" className="dark:stroke-zinc-800" />
-          <line x1={padding.left} y1={padding.top + chartH} x2={padding.left + chartW} y2={padding.top + chartH}
-            stroke="#e2e8f0" strokeWidth="1" className="dark:stroke-zinc-800" />
+        {/* VIEW 2: 15-Bin FFT Harmonic Spectrum */}
+        {(viewMode === 'dual' || viewMode === 'fft') && (
+          <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+            <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5">
+              <span className="font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <BarChart2 className="w-3 h-3 text-violet-400" />
+                15-BIN FFT HARMONIC SPECTRUM (0 - 550 Hz)
+              </span>
+              <span className="text-[9px] text-zinc-400">Resolution: 0.5X Orders</span>
+            </div>
 
-          {/* Y Axis labels */}
-          <text x={padding.left - 6} y={padding.top + 6} textAnchor="end"
-            fontSize="9" fontFamily="monospace" fill="#94a3b8" fontWeight="bold">{maxY}</text>
-          <text x={padding.left - 6} y={padding.top + chartH / 2} textAnchor="end"
-            fontSize="9" fontFamily="monospace" fill="#94a3b8">{((maxY + minY) / 2).toFixed(0)}</text>
-          <text x={padding.left - 6} y={padding.top + chartH} textAnchor="end"
-            fontSize="9" fontFamily="monospace" fill="#94a3b8">{minY}</text>
+            {/* 15 Bar Columns */}
+            <div className="h-40 w-full bg-zinc-950 rounded-lg border border-zinc-850 p-2 flex items-end justify-between gap-1">
+              {fftBins.map((bin) => {
+                const heightPct = Math.min(100, (bin.amplitude / 6.0) * 100);
+                const is2X = bin.order === '2X';
+                const is17X = bin.order === '17X';
 
-          {/* Area fill */}
-          <path d={areaPath} fill={`url(#areaGrad-${activeChannel})`} clipPath="url(#chartClip)" />
+                const barColor = is2X
+                  ? 'bg-rose-500'
+                  : is17X
+                  ? 'bg-amber-400'
+                  : bin.isHarmonic
+                  ? 'bg-cyan-400'
+                  : 'bg-zinc-700';
 
-          {/* Line */}
-          <path
-            d={linePath}
-            fill="none"
-            stroke={activeCfg.stroke}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            clipPath="url(#chartClip)"
-            className="drop-shadow-xs"
-          />
+                return (
+                  <div key={bin.order} className="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span className="text-[7px] text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {bin.amplitude}
+                    </span>
+                    <div
+                      className={`w-full rounded-t transition-all duration-300 ${barColor}`}
+                      style={{ height: `${heightPct}%` }}
+                    />
+                    <span className={`text-[8px] mt-1 ${bin.isHarmonic ? 'text-zinc-200 font-bold' : 'text-zinc-500'}`}>
+                      {bin.order}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
-          {/* Latest pulsing dot */}
-          {dataPoints.length > 0 && (
-            <g>
-              <circle
-                cx={getX(dataPoints.length - 1)} cy={getY(latestVal)}
-                r="7" fill={activeCfg.stroke} className="animate-ping opacity-40"
-              />
-              <circle
-                cx={getX(dataPoints.length - 1)} cy={getY(latestVal)}
-                r="4.5" fill={activeCfg.stroke} className="drop-shadow-sm"
-              />
-            </g>
-          )}
-
-          {/* Hover crosshair */}
-          {hoverIndex !== null && hoveredPoint && (
-            <g>
-              <line
-                x1={getX(hoverIndex)} y1={padding.top}
-                x2={getX(hoverIndex)} y2={padding.top + chartH}
-                stroke="#a855f7" strokeWidth="1.5" strokeDasharray="2 2"
-              />
-              <circle
-                cx={getX(hoverIndex)} cy={getY(hoveredPoint.value)}
-                r="5" fill="#ffffff" stroke={activeCfg.stroke} strokeWidth="2"
-              />
-            </g>
-          )}
-
-          {/* ── ISO 10816-3 vertical zone gauge (right side, 8px wide) ── */}
-          {gaugeSegments.map((seg, i) => (
-            <rect
-              key={i}
-              x={seg.gx}
-              y={seg.y}
-              width={8}
-              height={Math.max(0, seg.h)}
-              fill={seg.fill}
-              rx="1"
-            />
-          ))}
-          {/* Current value indicator on gauge */}
-          <polygon
-            points={`${gaugeSegments[0]?.gx ?? 0},${gaugeIndicatorY} ${(gaugeSegments[0]?.gx ?? 0) - 5},${gaugeIndicatorY - 4} ${(gaugeSegments[0]?.gx ?? 0) - 5},${gaugeIndicatorY + 4}`}
-            fill="white"
-            stroke="#334155"
-            strokeWidth="1"
-          />
-          {/* Gauge label */}
-          <text
-            x={(gaugeSegments[0]?.gx ?? 0) + 10}
-            y={padding.top + chartH / 2}
-            fontSize="7" fontFamily="monospace" fill="#94a3b8"
-            writingMode="tb"
-            transform={`rotate(90, ${(gaugeSegments[0]?.gx ?? 0) + 10}, ${padding.top + chartH / 2})`}
-          >
-            ISO ZONE
-          </text>
-        </svg>
-
-        {/* Hover Tooltip */}
-        {hoverIndex !== null && hoveredPoint && (
-          <div
-            className="absolute top-2 pointer-events-none px-2.5 py-1.5 rounded-lg bg-slate-950/90 text-white text-[11px] font-mono shadow-md border border-slate-800 flex items-center gap-2"
-            style={{
-              left: `${Math.min(Math.max(10, (getX(hoverIndex) / width) * 100 - 15), 70)}%`,
-            }}
-          >
-            <span className="text-slate-400">{hoveredPoint.timestamp}</span>
-            <span className="font-bold text-violet-400">
-              {hoveredPoint.value.toFixed(2)} {activeCfg.unit}
-            </span>
+            <div className="flex items-center justify-between text-[9px] text-zinc-500 mt-1">
+              <span>Fundamental: 1X (29.8 Hz)</span>
+              <span className="text-rose-400 font-bold">2X Misalignment Spike: 4.12 mm/s</span>
+              <span>17X Vane Pass (506 Hz)</span>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── FFT Frequency Spectrum ── */}
-      <div className="mt-2">
-        <div className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-          FFT Frequency Spectrum (Vibration Harmonics)
-        </div>
-        <svg viewBox={`0 0 ${sparkW} 70`} className="w-full h-16 overflow-visible">
-          <defs>
-            <linearGradient id="fftBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={activeCfg.stroke} stopOpacity="1" />
-              <stop offset="100%" stopColor={activeCfg.stroke} stopOpacity="0.4" />
-            </linearGradient>
-          </defs>
-          {/* Baseline */}
-          <line x1="0" y1="65" x2={sparkW} y2="65" stroke="#e2e8f0" strokeWidth="1" className="dark:stroke-zinc-800" />
-          {fftHeights.map((h, i) => {
-            const barW = sparkW / FFT_BARS - 4;
-            const x = i * (sparkW / FFT_BARS) + 2;
-            const barH = Math.min(h, 60);
-            const freq = ((i + 1) * 24.3).toFixed(0);
-            return (
-              <g key={i}>
-                <rect
-                  x={x} y={65 - barH}
-                  width={barW} height={barH}
-                  fill="url(#fftBarGrad)"
-                  rx="2"
-                  style={{ transition: 'y 0.15s ease, height 0.15s ease' }}
-                />
-                {i % 3 === 0 && (
-                  <text x={x + barW / 2} y="69" textAnchor="middle"
-                    fontSize="6" fontFamily="monospace" fill="#94a3b8">
-                    {freq}Hz
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* ── History Sparkline (60s) ── */}
-      <div className="mt-2">
-        <div className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-          <span>60s History</span>
-          <span className="text-[9px]">← 60 sec ago &nbsp;&nbsp; now →</span>
-        </div>
-        <svg viewBox={`0 0 ${sparkW} ${sparkH}`} className="w-full h-12 overflow-visible">
-          <defs>
-            <linearGradient id="sparkAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={activeCfg.stroke} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={activeCfg.stroke} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path
-            d={`${sparkPath} L ${sparkW} ${sparkH} L 0 ${sparkH} Z`}
-            fill="url(#sparkAreaGrad)"
-          />
-          <path
-            d={sparkPath}
-            fill="none"
-            stroke={activeCfg.stroke}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-
-      {/* ── Footer KPI Row (4 metrics) ── */}
-      <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80 text-xs font-mono">
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
-          <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase">Current Reading</div>
-          <div className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-            {latestVal.toFixed(2)}{' '}
-            <span className="text-[10px] font-normal text-slate-500">{activeCfg.unit}</span>
-          </div>
+      {/* ISO 10816 Severity Zone Legend Strip */}
+      <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-emerald-400 font-bold uppercase">ZONE A (GOOD)</div>
+          <div className="text-zinc-300 mt-0.5">&le; 2.3 mm/s</div>
         </div>
 
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
-          <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase">Peak-Peak (24h)</div>
-          <div className="text-sm font-bold text-amber-600 dark:text-amber-400">
-            {(latestVal * 1.25).toFixed(2)}{' '}
-            <span className="text-[10px] font-normal text-slate-500">{activeCfg.unit}</span>
-          </div>
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-cyan-400 font-bold uppercase">ZONE B (ACCEPTABLE)</div>
+          <div className="text-zinc-300 mt-0.5">2.3 - 4.5 mm/s</div>
         </div>
 
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
-          <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase">ISO Limit Margin</div>
-          <div className={`text-sm font-bold ${activeCfg.zoneB - latestVal < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {activeCfg.zoneB - latestVal >= 0 ? '+' : ''}{(activeCfg.zoneB - latestVal).toFixed(2)}{' '}
-            <span className="text-[10px] font-normal text-slate-500">{activeCfg.unit}</span>
-          </div>
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-amber-400 font-bold uppercase">ZONE C (UNSATISFACTORY)</div>
+          <div className="text-zinc-300 mt-0.5">4.5 - 7.1 mm/s</div>
         </div>
 
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800">
-          <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase">FFT Dominant Freq</div>
-          <div className="text-[11px] font-bold text-violet-600 dark:text-violet-400 leading-tight mt-0.5">
-            {fftDomFreq}
-          </div>
+        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="text-[9px] text-rose-400 font-bold uppercase">ZONE D (TRIP / DANGER)</div>
+          <div className="text-zinc-300 mt-0.5">&gt; 7.1 mm/s</div>
         </div>
       </div>
     </div>

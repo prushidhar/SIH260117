@@ -252,6 +252,7 @@ export interface IndraState {
   loadSession: (sessionId: string) => void;
   deleteSession: (sessionId: string) => void;
   clearAllSessions: () => void;
+  forkSession: (fromMessageId?: string) => string;
   syncHistoryWithBackend: () => Promise<void>;
 
   // Toast Notifications & Connection Alerts
@@ -275,7 +276,6 @@ export interface IndraState {
   }) => Promise<{ success: boolean; message?: string }>;
   sendMessage: (content: string, attachments?: { id?: string; name: string; type: string; size: string; url?: string }[]) => Promise<void>;
   addDeliverable: (deliverable: Deliverable) => void;
-  clearDeliverables: () => void;
   addNetworkEvent: (event: NetworkEvent) => void;
   incrementBlockedCount: () => void;
   setDetectedTags: (tags: string[]) => void;
@@ -539,6 +539,57 @@ export const useIndraStore = create<IndraState>()(
         }
       },
 
+      forkSession: (fromMessageId?: string) => {
+        get().saveCurrentSession();
+        const { messages, deliverables, sessions, currentSessionId } = get();
+
+        let forkedMessages = [...messages];
+        if (fromMessageId) {
+          const idx = messages.findIndex((m) => m.id === fromMessageId);
+          if (idx !== -1) {
+            forkedMessages = messages.slice(0, idx + 1);
+          }
+        }
+
+        const currentSession = sessions.find((s) => s.id === currentSessionId);
+        const baseTitle = currentSession?.title || 'Engineering Session';
+        const forkedId = `session-fork-${Date.now()}`;
+        const forkedTitle = `[What-If Fork] ${baseTitle}`;
+
+        const nowIso = new Date().toISOString();
+        const newSession: ConversationSession = {
+          id: forkedId,
+          title: forkedTitle,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+          messages: forkedMessages,
+          deliverables: [...deliverables],
+          ragSources: [],
+          detectedTags: [],
+        };
+
+        const updatedSessions = [newSession, ...sessions];
+        set({
+          sessions: updatedSessions,
+          currentSessionId: forkedId,
+          messages: forkedMessages,
+          deliverables: [...deliverables],
+          isAgentWorking: false,
+        });
+
+        saveSessionToDB(newSession).catch((err) => {
+          console.warn('[IndexedDB] forkSession save error:', err);
+        });
+
+        get().addToast({
+          type: 'success',
+          title: 'What-If Session Forked',
+          message: `Branched scenario into parallel sandbox: "${forkedTitle}"`,
+        });
+
+        return forkedId;
+      },
+
       clearAllSessions: () => {
         if (taskWs) {
           taskWs.close();
@@ -610,11 +661,6 @@ export const useIndraStore = create<IndraState>()(
             ...state.deliverables.filter((d) => d.filename !== deliverable.filename),
           ],
         }));
-        get().saveCurrentSession();
-      },
-
-      clearDeliverables: () => {
-        set({ deliverables: [] });
         get().saveCurrentSession();
       },
 
@@ -757,128 +803,6 @@ export const useIndraStore = create<IndraState>()(
       runOfflineSimulation: async (messageId: string, prompt?: string) => {
         const promptText = prompt || 'Analyze Heat Exchanger HX-4201 and verify ASME B31.3 compliance';
         const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-        const promptLower = promptText.toLowerCase();
-
-        const isHydraulic = /darcy|friction|hydraulic|pressure drop|reynolds|l-101|pipeline/i.test(promptLower);
-        const isPID = /blueprint|isa-5\.1|schematic|cdu-104|spatial|tag local/i.test(promptLower);
-        const isCavitation = /cavitation|npsh|api 610|suction margin|spillback/i.test(promptLower);
-        const isTema = /tema|exchanger|fouling|lmtd|heat duty|e-101|thermal rating/i.test(promptLower);
-        const isVibration = /vibration|harmonics|tri-axial|iso 10816|unbalance|rpm|bearing/i.test(promptLower);
-        const isRCA = /rca|root cause|failure|troubleshoot|fishbone|5-why|fault tree/i.test(promptLower);
-        const isConsensus = /consensus|debate|tri-agent|tri-model|peer-review|multi-agent/i.test(promptLower);
-        const isAlarm = /alarm|flood|isa-18\.2|first-out|eemua/i.test(promptLower);
-        const isDigitalTwin = /digital twin|digitaltwin|refinery|mass balance|crude switch|cdu\/vdu|fractionation|distillation/i.test(promptLower);
-        const isHazop = /hazop|lopa|sil|iec 61511|protection layer|sif|tmef|rrf/i.test(promptLower);
-        const isFlare = /flare|radiation|emission|dispersion|plume|smokeless|api 521/i.test(promptLower);
-        const isTurnaround = /turnaround|cpm|shutdown|gantt|critical path|loto|blind list|tar/i.test(promptLower);
-
-        // 1. Determine Initial Agent Steps
-        let initialSteps: AgentStep[] = [];
-        if (isHydraulic) {
-          initialSteps = [
-            { id: 'off-1', label: 'Flow Spec Ingestion: Line L-101 (16" NPS Sch 60 Crude Transfer)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API 14E & Crane TP-410 Piping Fluid Dynamics Standards', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic Darcy-Weisbach & Colebrook-White Friction Solver', status: 'pending' },
-            { id: 'off-4', label: 'Validate Reynolds Velocity (Re=422,803, v=2.83 m/s) & Head Loss', status: 'pending' },
-            { id: 'off-5', label: 'Compile Statutory Hydraulic Calculation Workbook & Deliverable', status: 'pending' },
-          ];
-        } else if (isPID) {
-          initialSteps = [
-            { id: 'off-1', label: 'Vector CAD Blueprint Ingestion: Crude Distillation Unit (CDU-104)', status: 'in-progress' },
-            { id: 'off-2', label: 'Match ISA-5.1 Instrumentation Loops & Control Valves (FV-101, PSV-101)', status: 'pending' },
-            { id: 'off-3', label: 'Compute Topology Flow Graph & Coordinate Localization', status: 'pending' },
-            { id: 'off-4', label: 'Synchronize Multi-Window Digital Twin Canvas State', status: 'pending' },
-            { id: 'off-5', label: 'Generate P&ID Blueprint Verification Report', status: 'pending' },
-          ];
-        } else if (isCavitation) {
-          initialSteps = [
-            { id: 'off-1', label: 'Local Sensor Telemetry: Extract P-101 Suction & Discharge Pressure', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API 610 12th Ed. Centrifugal Pump Hydraulics Standard', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic NPSHa vs NPSHr Margin Calculation', status: 'pending' },
-            { id: 'off-4', label: 'Cavitation Risk Assessment: Margin = +1.85m (> 1.0m Statutory Minimum)', status: 'pending' },
-            { id: 'off-5', label: 'Compile API 610 Pump Fitness Certificate & Word Note', status: 'pending' },
-          ];
-        } else if (isTema) {
-          initialSteps = [
-            { id: 'off-1', label: 'Thermal Process Data Ingestion: E-101 Crude Pre-Heat Exchanger Bank', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve TEMA Class R Shell & Tube Heat Exchanger Standard', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic Thermal Duty Q = m·Cp·ΔT = 5.28 MW Solver', status: 'pending' },
-            { id: 'off-4', label: 'Calculate Log Mean Temperature Difference (LMTD) & Fouling Factor Rf', status: 'pending' },
-            { id: 'off-5', label: 'Compile TEMA Class R Statutory Certification & Calculation Sheet', status: 'pending' },
-          ];
-        } else if (isVibration) {
-          initialSteps = [
-            { id: 'off-1', label: 'Vibration Historian Ingestion: Tri-Axial Velocity Spectra for P-101', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve ISO 10816-3 Class II Rigid Rotating Machine Standard', status: 'pending' },
-            { id: 'off-3', label: 'Execute FFT Harmonics Decomposition (1X Unbalance, 2X Misalignment)', status: 'pending' },
-            { id: 'off-4', label: 'Triage Severity: Dynamic Rotor Unbalance (Zone B, 4.2 mm/s RMS)', status: 'pending' },
-            { id: 'off-5', label: 'Compile Autonomous Vibration Diagnostics & Setpoint Deck', status: 'pending' },
-          ];
-        } else if (isRCA) {
-          initialSteps = [
-            { id: 'off-1', label: 'Telemetry Historian: Extract Trip Excursion Logs for P-101 (TI-101A, dP-101)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API 682 4th Ed. Mechanical Seals & OSHA 1910.119 PSM Guidelines', status: 'pending' },
-            { id: 'off-3', label: 'Execute Bayesian Fault Tree Synthesis (FTA) & Multi-Factor 5-Whys Deep-Dive', status: 'pending' },
-            { id: 'off-4', label: 'Correlate Suction Strainer Mesh Degradation with Orifice Choking Proofs', status: 'pending' },
-            { id: 'off-5', label: 'Formulate Corrective and Preventive Actions (CAPA) with 1-Click DCS Dispatch', status: 'pending' },
-          ];
-        } else if (isConsensus) {
-          initialSteps = [
-            { id: 'off-1', label: 'Initialize Tri-Model Personas: Alpha (Process), Beta (Materials), Gamma (Safety)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve Multi-Standard Knowledge Base: ASME B31.3, API 14E, and IEC 61511', status: 'pending' },
-            { id: 'off-3', label: 'Execute 3-Round Autonomous Peer-Review Cross-Examination & Debate', status: 'pending' },
-            { id: 'off-4', label: 'Evaluate Mathematical Equilibrium & Risk Reduction Factor (RRF=1,250)', status: 'pending' },
-            { id: 'off-5', label: 'Generate Tri-Signed Consensus Merkle Leaf & Forward to Plant Superintendent', status: 'pending' },
-          ];
-        } else if (isAlarm) {
-          initialSteps = [
-            { id: 'off-1', label: 'DCS Alarm Historian Ingestion: Capture Millisecond Sequence of Events (SOE)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve ANSI/ISA-18.2-2016 & EEMUA 191 Alarm Management Standards', status: 'pending' },
-            { id: 'off-3', label: 'Execute First-Out Causality Filter & Dynamic Flood Suppression Algorithms', status: 'pending' },
-            { id: 'off-4', label: 'Isolate Root Trip Alarm (PS-101LL) & Collapse 9 Consequential Sympathetic Alarms', status: 'pending' },
-            { id: 'off-5', label: 'Compile ISA-18.2 Audit Compliance Proof & Emergency Acknowledge Certificate', status: 'pending' },
-          ];
-        } else if (isDigitalTwin) {
-          initialSteps = [
-            { id: 'off-1', label: 'Refinery Train Ingestion: Extract Process Flow Architecture (CDU/VDU)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API Technical Data Book & GPSA Section 13 Standards', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic Mass & Energy Balance (Nelson-Farrar / Souders-Brown)', status: 'pending' },
-            { id: 'off-4', label: 'Verify Column Flooding Margins (+20.2%) & Pinch HEN Recovery (72.5%)', status: 'pending' },
-            { id: 'off-5', label: 'Compile Autonomous Refinery Digital Twin Schedule & Executive Deck', status: 'pending' },
-          ];
-        } else if (isHazop) {
-          initialSteps = [
-            { id: 'off-1', label: 'Functional Safety Ingestion: Node 01 Crude Charge Overpressure Deviation', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve IEC 61508 / IEC 61511 & CCPS LOPA Guidelines', status: 'pending' },
-            { id: 'off-3', label: 'Evaluate Initiating Frequency (0.1/yr) vs Cumulative PFD across 4 IPLs', status: 'pending' },
-            { id: 'off-4', label: 'Compute Required RRF (10,000:1) & Verify Target SIL Allocation (SIL 3/4)', status: 'pending' },
-            { id: 'off-5', label: 'Seal IEC 61511 Safety Case into Cryptographic Merkle Audit Ledger', status: 'pending' },
-          ];
-        } else if (isFlare) {
-          initialSteps = [
-            { id: 'off-1', label: 'Relief Header Ingestion: Flaring Event Telemetry (45.0 kg/s Hydrocarbon)', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API 521 7th Ed. Pressure-Relieving Standards & EPA 40 CFR', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic Flare Radiation & Tip Mach No. Solver (Ma=0.334)', status: 'pending' },
-            { id: 'off-4', label: 'Calculate Smokeless Steam Demand (15.75 kg/s) & Gaussian Plume Dispersion', status: 'pending' },
-            { id: 'off-5', label: 'Generate API 521 Environmental Relief Clearance Certificate', status: 'pending' },
-          ];
-        } else if (isTurnaround) {
-          initialSteps = [
-            { id: 'off-1', label: 'Turnaround Scope Ingestion: CDU Major Overhaul & Internal Trays Inspection', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve OSHA 1910.119 PSM & OSHA 1910.147 LOTO Positive Isolation Codes', status: 'pending' },
-            { id: 'off-3', label: 'Execute Critical Path Method (CPM) Forward/Backward Pass (5.9 Days)', status: 'pending' },
-            { id: 'off-4', label: 'Verify 8 Positive Isolation Blinds & Financial Downtime Risk ($0 Delay)', status: 'pending' },
-            { id: 'off-5', label: 'Compile Turnaround Master Gantt Schedule & Safe Work Permit', status: 'pending' },
-          ];
-        } else {
-          initialSteps = [
-            { id: 'off-1', label: 'Local Vision OCR: Scan Inspection_Report_HX-4201.pdf', status: 'in-progress' },
-            { id: 'off-2', label: 'Retrieve API-570 & ASME B31.3 Standards', status: 'pending' },
-            { id: 'off-3', label: 'Execute Deterministic Python Sandbox Math', status: 'pending' },
-            { id: 'off-4', label: 'Cross-Reference P&ID Tags (TI-4201, FV-3102, PI-3104)', status: 'pending' },
-            { id: 'off-5', label: 'Compile Statutory Approval Deliverable', status: 'pending' },
-          ];
-        }
 
         set((s) => ({
           isAgentWorking: true,
@@ -890,7 +814,13 @@ export const useIndraStore = create<IndraState>()(
                   isError: false,
                   errorDetails: undefined,
                   modelUsed: 'Qwen2.5-Coder-32B (Air-Gapped Sandbox)',
-                  agentSteps: initialSteps,
+                  agentSteps: [
+                    { id: 'off-1', label: 'Local Vision OCR: Scan Inspection_Report_HX-4201.pdf', status: 'in-progress' },
+                    { id: 'off-2', label: 'Retrieve API-570 & ASME B31.3 Standards', status: 'pending' },
+                    { id: 'off-3', label: 'Execute Deterministic Python Sandbox Math', status: 'pending' },
+                    { id: 'off-4', label: 'Cross-Reference P&ID Tags (TI-4201, FV-3102, PI-3104)', status: 'pending' },
+                    { id: 'off-5', label: 'Compile Statutory Approval Deliverable', status: 'pending' },
+                  ],
                   content: '',
                 }
               : m
@@ -899,19 +829,7 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 1: OCR & Tag recognition
         await new Promise((r) => setTimeout(r, 600));
-        let detected: string[] = [];
-        if (isHydraulic) detected = ['L-101', 'P-101', 'FIC-101', 'PI-101'];
-        else if (isPID) detected = ['CDU-104', 'FV-101', 'PSV-101', 'TI-101', 'P-101'];
-        else if (isCavitation) detected = ['P-101', 'FV-101', 'PIT-101', 'PI-102'];
-        else if (isTema) detected = ['E-101', 'TIC-101', 'TIC-102', 'PI-103'];
-        else if (isVibration) detected = ['P-101', 'MT-101', 'VFD-101', 'FV-101'];
-        else if (isDigitalTwin) detected = ['CDU-104', 'F-101', 'T-101', 'E-101', 'V-101'];
-        else if (isHazop) detected = ['PSV-101', 'PAH-104', 'SIS-101', 'CDU-104'];
-        else if (isFlare) detected = ['FL-101', 'PSV-101', 'KOD-101', 'FIC-101'];
-        else if (isTurnaround) detected = ['CDU-104', 'T-101', 'P-101', 'F-101', 'BLIND-01'];
-        else detected = ['CDU-Pipe-104', 'HX-4201', 'TI-4201', 'FV-3102', 'PI-3104'];
-
-        set({ detectedTags: detected });
+        set({ detectedTags: ['HX-4201', 'TI-4201', 'FV-3102', 'PI-3104'] });
         set((s) => ({
           messages: s.messages.map((m) =>
             m.id === messageId
@@ -927,237 +845,8 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 2: RAG Sources
         await new Promise((r) => setTimeout(r, 600));
-        let ragList: RAGSource[] = [];
-        if (isHydraulic) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'API-14E-Piping-Design.pdf',
-              documentName: 'API-14E-Piping-Design.pdf',
-              section: 'Section 2.3 (Erosional Velocity & Pressure Drop Limits)',
-              relevance: 98,
-              snippet: 'Darcy-Weisbach head loss: h_f = f * (L/D) * (v^2 / 2g). Liquid velocity must stay below erosional velocity limit v_e = c / sqrt(rho).',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'Crane-TP-410-Fluid-Flow.pdf',
-              documentName: 'Crane-TP-410-Fluid-Flow.pdf',
-              section: 'Chapter 1 (Friction Factors for Clean Commercial Steel)',
-              relevance: 95,
-              snippet: 'Colebrook-White equation for turbulent transition: 1/sqrt(f) = -2*log10( (eps / 3.7D) + (2.51 / (Re*sqrt(f))) ). Roughness eps = 0.0457mm.',
-            },
-          ];
-        } else if (isPID) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'ISA-5.1-Instrumentation-Symbols.pdf',
-              documentName: 'ISA-5.1-Instrumentation-Symbols.pdf',
-              section: 'Table 1 (Identification Letters & Loop Numbering)',
-              relevance: 99,
-              snippet: 'First letter designates measured process variable (F=Flow, T=Temperature, P=Pressure, L=Level). Succeeding letters designate readout/control function.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'ASME-B31.3-Process-Piping.pdf',
-              documentName: 'ASME-B31.3-Process-Piping.pdf',
-              section: 'Appendix F (Precautionary Considerations)',
-              relevance: 92,
-              snippet: 'Control valve bypass manifolds must incorporate full-flow isolation valves and equalizing drains for on-line maintenance.',
-            },
-          ];
-        } else if (isCavitation) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'API-610-12th-Ed-Centrifugal-Pumps.pdf',
-              documentName: 'API-610-12th-Ed-Centrifugal-Pumps.pdf',
-              section: 'Section 6.1.10 (NPSH Margin Criteria)',
-              relevance: 99,
-              snippet: 'NPSH available (NPSHa) must exceed NPSH required (NPSHr) by a minimum margin of 1.0 m (3.3 ft) or 1.10 times NPSHr across operating range.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'Hydraulic-Institute-Standards-9.6.1.pdf',
-              documentName: 'Hydraulic-Institute-Standards-9.6.1.pdf',
-              section: 'NPSH Margin Guidelines for Hydrocarbon Applications',
-              relevance: 94,
-              snippet: 'NPSHa = h_atm + h_static - h_friction - h_vap. Cavitation damage acceleration occurs rapidly when NPSHa approaches NPSHr.',
-            },
-          ];
-        } else if (isTema) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'TEMA-Standards-Class-R.pdf',
-              documentName: 'TEMA-Standards-Class-R.pdf',
-              section: 'Section 5 (Fouling Resistances & Thermal Rating)',
-              relevance: 98,
-              snippet: 'TEMA Class R for petroleum refinery service specifies standard fouling resistances: crude oil Rf = 0.00035 m2-K/W, cooling water Rf = 0.00017 m2-K/W.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'ASME-Section-VIII-Div-1.pdf',
-              documentName: 'ASME-Section-VIII-Div-1.pdf',
-              section: 'Part UG (General Requirements for Heat Exchanger Shells)',
-              relevance: 93,
-              snippet: 'Calculated tube bundle thermal expansion differential must not exceed tubesheet joint allowable shear stresses.',
-            },
-          ];
-        } else if (isVibration) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'ISO-10816-3-Evaluation-Machinery-Vibration.pdf',
-              documentName: 'ISO-10816-3-Evaluation-Machinery-Vibration.pdf',
-              section: 'Clause 4 (Zone Boundary Limits for Class II Rotating Assets)',
-              relevance: 99,
-              snippet: 'Zone A: < 1.4 mm/s RMS (Newly commissioned). Zone B: 1.4 - 2.8 mm/s RMS (Unrestricted). Zone C: 2.8 - 4.5 mm/s RMS (Restricted). Zone D: > 4.5 mm/s RMS (Stop machine).',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'API-670-Machinery-Protection-Systems.pdf',
-              documentName: 'API-670-Machinery-Protection-Systems.pdf',
-              section: 'Section 4.1 (Vibration Transducer Mounting & Frequency Response)',
-              relevance: 94,
-              snippet: 'Tri-axial accelerometer mounting must capture sub-synchronous (0.4X) oil whirl and super-synchronous (2X, 3X) blade pass harmonics.',
-            },
-          ];
-        } else if (isRCA) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'API-682-Shaft-Seals.pdf',
-              documentName: 'API-682-Shaft-Seals.pdf',
-              section: 'Piping Plan 11 (Recirculation from Discharge through Orifice to Seal)',
-              relevance: 99,
-              snippet: 'Plan 11 delivers recirculation from pump discharge through a restriction orifice to seal chamber. Orifice bore must not be smaller than 3.0 mm to prevent solids plugging.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'OSHA-1910-119-Process-Safety-Management.pdf',
-              documentName: 'OSHA-1910-119-Process-Safety-Management.pdf',
-              section: 'Clause (j) Mechanical Integrity & Incident Investigation',
-              relevance: 96,
-              snippet: 'Employers shall investigate each incident resulting in equipment trip or loss of containment using structured root cause analysis with tracked corrective actions.',
-            },
-          ];
-        } else if (isConsensus) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'IEC-61511-Functional-Safety.pdf',
-              documentName: 'IEC-61511-Functional-Safety.pdf',
-              section: 'Clause 9.2 (Multi-Discipline Safety Integrity Level Allocation)',
-              relevance: 99,
-              snippet: 'Safety instrumented functions (SIF) require independent verification across operational, mechanical, and safety disciplines to satisfy SIL-2 target failure measures.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'ASME-B31.3-Process-Piping.pdf',
-              documentName: 'ASME-B31.3-Process-Piping.pdf',
-              section: 'Clause 302.2.4 (Allowances for Pressure & Temperature Variations)',
-              relevance: 96,
-              snippet: 'Occasional variations above design pressure are permissible up to 20% for not more than 100 hours/year or 33% for not more than 10 hours/year.',
-            },
-          ];
-        } else if (isAlarm) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'ANSI-ISA-18.2-Alarm-Management.pdf',
-              documentName: 'ANSI-ISA-18.2-Alarm-Management.pdf',
-              section: 'Clause 8.4 (Alarm Rationalization & Consequential Alarm Suppression)',
-              relevance: 99,
-              snippet: 'Alarm flood suppression logic shall suppress lower-priority alarms that are direct physical consequences of a higher-priority first-out trip.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'EEMUA-Publication-191.pdf',
-              documentName: 'EEMUA-Publication-191.pdf',
-              section: 'Section 4.3 (Target Operator Alarm Rates)',
-              relevance: 95,
-              snippet: 'In flood conditions following plant trip, average alarm presentation rate to the operator should not exceed 10 alarms in the first 10 minutes.',
-            },
-          ];
-        } else if (isDigitalTwin) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'API-Technical-Data-Book-Refining.pdf',
-              documentName: 'API-Technical-Data-Book-Refining.pdf',
-              section: 'Chapter 3 (Petroleum Fractions Characterization & True Boiling Point Curves)',
-              relevance: 99,
-              snippet: 'Nelson-Farrar crude assay models correlate API gravity and mid-boiling points to distillate cut yields: Offgas/LPG, Light & Heavy Naphtha, Kerosene, Diesel, and Residue.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'GPSA-Engineering-Data-Book-Sec13.pdf',
-              documentName: 'GPSA-Engineering-Data-Book-Sec13.pdf',
-              section: 'Section 13 (Separation & Fractionation Columns)',
-              relevance: 95,
-              snippet: 'Souders-Brown vapor velocity limit v_max = K * sqrt((rho_L - rho_V) / rho_V). Operating velocity must not exceed 85% of flooding limit to prevent liquid carryover.',
-            },
-          ];
-        } else if (isHazop) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'IEC-61511-Functional-Safety-Process.pdf',
-              documentName: 'IEC-61511-Functional-Safety-Process.pdf',
-              section: 'Clause 9 (Quantification of Risk Reduction & SIL Assignment)',
-              relevance: 99,
-              snippet: 'Demand mode Safety Instrumented Functions (SIFs): SIL 1 (10 <= RRF < 100), SIL 2 (100 <= RRF < 1000), SIL 3 (1000 <= RRF < 10000), SIL 4 (RRF >= 10000). Total PFD = product of active independent protection layers.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'CCPS-LOPA-Layer-of-Protection-Analysis.pdf',
-              documentName: 'CCPS-LOPA-Layer-of-Protection-Analysis.pdf',
-              section: 'Chapter 5 (Criteria for Independent Protection Layers)',
-              relevance: 96,
-              snippet: 'An IPL must be independent of the initiating event and any other protection layer. Qualifying IPLs: BPCS trip loops (PFD=0.10), operator intervention with alarm (PFD=0.10), ASME PSV (PFD=0.01), dedicated SIS (PFD=0.005).',
-            },
-          ];
-        } else if (isFlare) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'API-521-Pressure-Relieving-Systems.pdf',
-              documentName: 'API-521-Pressure-Relieving-Systems.pdf',
-              section: 'Section 5.7 (Design of Flare Disposal Systems)',
-              relevance: 99,
-              snippet: 'Brzustowski and Sommer method calculates flame center displacement under crosswind. Radial heat intensity K must not exceed 1.58 kW/m2 for continuous personnel occupancy.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'EPA-40-CFR-60-18-Flare-Control.pdf',
-              documentName: 'EPA-40-CFR-60-18-Flare-Control.pdf',
-              section: 'Standard Requirements for Smokeless Operation',
-              relevance: 96,
-              snippet: 'Flares must operate with no visible emissions (smokeless). Steam-to-hydrocarbon ratio of 0.25 to 0.40 ensures complete combustion without soot formation.',
-            },
-          ];
-        } else if (isTurnaround) {
-          ragList = [
-            {
-              id: 'rag-off-1',
-              document: 'OSHA-1910-119-Process-Safety-Management.pdf',
-              documentName: 'OSHA-1910-119-Process-Safety-Management.pdf',
-              section: 'Paragraph (f) (Operating Procedures & Turnaround Readiness)',
-              relevance: 98,
-              snippet: 'Positive physical isolation using spectacle blinds or slip plates is mandatory prior to vessel confined space entry. Critical path milestones govern turnaround restart safety.',
-            },
-            {
-              id: 'rag-off-2',
-              document: 'PMI-Practice-Standard-CPM-Scheduling.pdf',
-              documentName: 'PMI-Practice-Standard-CPM-Scheduling.pdf',
-              section: 'Critical Path Method Network Analysis',
-              relevance: 94,
-              snippet: 'Activities with zero total float form the critical path. Duration delays directly impact total turnaround duration and financial plant downtime.',
-            },
-          ];
-        } else {
-          ragList = [
+        set({
+          ragSources: [
             {
               id: 'rag-off-1',
               document: 'ASME-B31.3-Process-Piping.pdf',
@@ -1174,10 +863,8 @@ export const useIndraStore = create<IndraState>()(
               relevance: 94,
               snippet: 'Remaining Life = (t_actual - t_required) / Corrosion_Rate. Minimum allowable structural thickness must satisfy API 570 Table 1.',
             },
-          ];
-        }
-
-        set({ ragSources: ragList });
+          ],
+        });
         set((s) => ({
           messages: s.messages.map((m) =>
             m.id === messageId
@@ -1193,63 +880,9 @@ export const useIndraStore = create<IndraState>()(
 
         // Step 3: Tool Execution (Python Sandbox)
         await new Promise((r) => setTimeout(r, 700));
-        let pythonCode = '';
-        let pythonOutput = '';
-        let toolName = 'engineering_sandbox';
+        const pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
 
-        if (isHydraulic) {
-          toolName = 'darcy_weisbach_hydraulic_solver';
-          pythonCode = `import math\n# Darcy-Weisbach Hydraulic Pipeline Friction Drop\nQ_gpm = 450.0\nrho = 880.0  # kg/m3 (crude oil)\nmu = 0.0032  # Pa.s dynamic viscosity\nD_m = 0.3874 # 16-inch Sch 60 inside diameter (m)\nL_m = 120.0  # pipeline length (m)\n\nQ_m3s = Q_gpm * 0.00006309\narea = math.pi * (D_m / 2)**2\nvelocity = Q_m3s / area\nRe = (rho * velocity * D_m) / mu\neps = 0.0000457 # commercial steel roughness (m)\n# Swamee-Jain approximation for Colebrook friction factor\nf = 0.25 / (math.log10(eps / (3.7 * D_m) + 5.74 / (Re**0.9)))**2\ndelta_p_pa = f * (L_m / D_m) * (rho * velocity**2) / 2\ndelta_p_kpa = delta_p_pa / 1000.0\n\nprint(f"Velocity: {velocity:.3f} m/s")\nprint(f"Reynolds Number: {Re:.1f} (Fully Turbulent)")\nprint(f"Darcy Friction Factor: {f:.5f}")\nprint(f"Pressure Drop: {delta_p_kpa:.2f} kPa ({delta_p_kpa * 0.145038:.2f} psi)")\nprint("STATUS: API 14E VELOCITY CRITERIA SATISFIED")`;
-          pythonOutput = `Velocity: 2.829 m/s\nReynolds Number: 422803.6 (Fully Turbulent)\nDarcy Friction Factor: 0.01648\nPressure Drop: 43.89 kPa (6.37 psi)\nSTATUS: API 14E VELOCITY CRITERIA SATISFIED`;
-        } else if (isPID) {
-          toolName = 'isa_5_1_topology_grapher';
-          pythonCode = `import json\n# ISA-5.1 CAD Vector Tag Parser & Topology Mapper\nblueprint = "PID-001_Heat_Exchanger_Unit_Spec.txt"\nvalves = ["FV-101", "PSV-101", "HCV-102", "XV-104"]\ninstruments = ["TI-101", "PI-101", "FIC-101", "TT-102"]\n\ntopology = {\n  "unit": "CDU-104",\n  "loops": [{"loop": "Crude Charge", "controller": "FIC-101", "valve": "FV-101", "status": "NOMINAL"}],\n  "identified_tags": valves + instruments,\n  "compliance": "ISA-5.1 / IEC 62424 Compliant"\n}\nprint(json.dumps(topology, indent=2))`;
-          pythonOutput = `{\n  "unit": "CDU-104",\n  "loops": [\n    {\n      "loop": "Crude Charge",\n      "controller": "FIC-101",\n      "valve": "FV-101",\n      "status": "NOMINAL"\n    }\n  ],\n  "identified_tags": [\n    "FV-101",\n    "PSV-101",\n    "HCV-102",\n    "XV-104",\n    "TI-101",\n    "PI-101",\n    "FIC-101",\n    "TT-102"\n  ],\n  "compliance": "ISA-5.1 / IEC 62424 Compliant"\n}`;
-        } else if (isCavitation) {
-          toolName = 'api_610_pump_hydraulics_solver';
-          pythonCode = `# API 610 12th Ed. NPSH Margin & Cavitation Risk Assessment\nP_suct_psig = 14.5\nP_disc_psig = 78.4\nSG = 0.88\nP_vap_psia = 12.2\nZ_suct_ft = 6.5\nh_f_ft = 2.1\n\nP_suct_psia = P_suct_psig + 14.7\nhead_suct_ft = (P_suct_psia * 2.31) / SG\nhead_vap_ft = (P_vap_psia * 2.31) / SG\nNPSHa_ft = head_suct_ft - head_vap_ft + Z_suct_ft - h_f_ft\nNPSHa_m = NPSHa_ft * 0.3048\nNPSHr_m = 3.20 # Pump curve rating at 450 GPM\nmargin_m = NPSHa_m - NPSHr_m\n\nprint(f"Operating Head: {(P_disc_psig - P_suct_psig) * 2.31 / SG:.1f} ft")\nprint(f"NPSH Available (NPSHa): {NPSHa_m:.2f} m")\nprint(f"NPSH Required (NPSHr): {NPSHr_m:.2f} m")\nprint(f"Net Cavitation Margin: +{margin_m:.2f} m")\nprint("STATUS: SAFE PER API 610 (Margin > 1.0m Statutory Minimum)")`;
-          pythonOutput = `Operating Head: 167.7 ft\nNPSH Available (NPSHa): 5.05 m\nNPSH Required (NPSHr): 3.20 m\nNet Cavitation Margin: +1.85 m\nSTATUS: SAFE PER API 610 (Margin > 1.0m Statutory Minimum)`;
-        } else if (isTema) {
-          toolName = 'tema_thermal_rating_calculator';
-          pythonCode = `import math\n# TEMA Class R Shell & Tube Heat Exchanger Rating\nm_dot = 220000.0 / 3600.0 # kg/s (61.11 kg/s)\nCp = 2.25 # kJ/kg.K (crude oil)\nT_in = 140.0 # C\nT_out = 185.0 # C\n\nQ_kw = m_dot * Cp * (T_out - T_in) # 61.11 * 2.25 * 45 = 6187 kW\nQ_mw = Q_kw / 1000.0\n# LMTD counter-current calculation (Steam: 240 C in, 210 C out)\ndT1 = 240.0 - 185.0 # 55 C\ndT2 = 210.0 - 140.0 # 70 C\nLMTD = (dT2 - dT1) / math.log(dT2 / dT1)\nRf_measured = 0.00032 # m2.K/W (TEMA max allowable = 0.00035)\n\nprint(f"Exchanger Thermal Duty Q: {Q_mw:.2f} MW")\nprint(f"Log Mean Temp Difference (LMTD): {LMTD:.1f} °C")\nprint(f"Measured Fouling Resistance: {Rf_measured:.5f} m²·K/W")\nprint(f"TEMA Class R Limit: 0.00035 m²·K/W")\nprint("STATUS: SATISFACTORY THERMAL PERFORMANCE - FOULING ACCEPTABLE")`;
-          pythonOutput = `Exchanger Thermal Duty Q: 6.19 MW\nLog Mean Temp Difference (LMTD): 62.2 °C\nMeasured Fouling Resistance: 0.00032 m²·K/W\nTEMA Class R Limit: 0.00035 m²·K/W\nSTATUS: SATISFACTORY THERMAL PERFORMANCE - FOULING ACCEPTABLE`;
-        } else if (isVibration) {
-          toolName = 'iso_10816_vibration_analyzer';
-          pythonCode = `# ISO 10816-3 Tri-Axial Vibration Triage\nrms_velocity = 4.2 # mm/s RMS (Drive End)\nrunning_speed_rpm = 2950 # 49.17 Hz\nharmonics = {\n  "1X_unbalance": 2.85,\n  "2X_misalignment": 1.10,\n  "3X_looseness": 0.25\n}\nstatus = "ZONE B (Satisfactory for Continued Service)" if rms_velocity < 4.5 else "ZONE C"\nprint(f"1X Peak (Unbalance): {harmonics['1X_unbalance']} mm/s")\nprint(f"2X Peak (Misalignment): {harmonics['2X_misalignment']} mm/s")\nprint(f"Total Overall RMS: {rms_velocity} mm/s")\nprint(f"Classification: {status}")\nprint("RECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND")`;
-          pythonOutput = `1X Peak (Unbalance): 2.85 mm/s\n2X Peak (Misalignment): 1.10 mm/s\nTotal Overall RMS: 4.2 mm/s\nClassification: ZONE B (Satisfactory for Continued Service)\nRECOMMENDATION: DYNAMIC ROTOR BALANCING AT NEXT TURNAROUND`;
-        } else if (isRCA) {
-          toolName = 'bayesian_fault_tree_evaluator';
-          pythonCode = `# Bayesian Root Cause & Fault Tree Analysis\n# Incident: P-101 Seal Flush Interruption & High Temp Trip\np_prior_orifice_choke = 0.65\np_evidence_temp = 0.95  # TI-101A measured 188.4°C\np_evidence_dp = 0.90    # dP-101 differential surged to 2.4 bar\n\nlikelihood = p_prior_orifice_choke * p_evidence_temp * p_evidence_dp\nnormalizer = likelihood + (0.35 * 0.15 * 0.10)\nposterior_prob = (likelihood / normalizer) * 100.0\n\nprint(f"Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking")\nprint(f"Bayesian Posterior Probability: {posterior_prob:.1f}%")\nprint(f"5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119")\nprint(f"CAPA Remediation Status: 3 Actions Formulated (1 Dispatched)")`;
-          pythonOutput = `Primary Root Cause: Suction Strainer Mesh Rupture with Plan 11 Orifice Choking\nBayesian Posterior Probability: 99.1%\n5-Whys Causal Chain: 5 Levels Resolved per OSHA 1910.119\nCAPA Remediation Status: 3 Actions Formulated (1 Dispatched)`;
-        } else if (isConsensus) {
-          toolName = 'tri_model_consensus_engine';
-          pythonCode = `# Tri-Model Autonomous Multi-Agent Consensus Algorithm\n# Debaters: Alpha (Process), Beta (Materials), Gamma (Safety)\np_alpha = 510.0 # psig (Process throughput target)\np_beta = 455.0  # psig (ASME B31.3 structural limit)\np_gamma = 465.0 # psig (IEC 61511 SIL-2 trip setpoint)\n\n# Multi-objective optimization with safety constraints\np_consensus = min(p_alpha * 0.912, max(p_beta, p_gamma))\nrrf = 1250 # Risk Reduction Factor\nagreement_index = 100.0 - (abs(p_consensus - p_gamma) / p_gamma * 100.0)\n\nprint(f"Optimal Consensus Operating Pressure: {p_consensus:.1f} psig")\nprint(f"Surge Recirculation Margin: 14.5% via FV-101")\nprint(f"Convergence Agreement Score: {agreement_index:.1f}%")\nprint(f"Risk Reduction Factor: {rrf}:1 (SIL-2 / IEC 61508 Certified)")\nprint("STATUS: TRI-SIGNED CRYPTOGRAPHIC CONSENSUS REACHED")`;
-          pythonOutput = `Optimal Consensus Operating Pressure: 465.0 psig\nSurge Recirculation Margin: 14.5% via FV-101\nConvergence Agreement Score: 98.4%\nRisk Reduction Factor: 1250:1 (SIL-2 / IEC 61508 Certified)\nSTATUS: TRI-SIGNED CRYPTOGRAPHIC CONSENSUS REACHED`;
-        } else if (isAlarm) {
-          toolName = 'isa_18_2_alarm_rationalization_engine';
-          pythonCode = `# ISA-18.2 / EEMUA 191 Real-Time Alarm Rationalization\nraw_alarms_count = 10\ntrip_timestamp = "14:32:00.104"\nroot_tag = "PS-101LL"\n\n# First-Out Sequence of Events (SOE) Detection\nconsequential_count = raw_alarms_count - 1\nnoise_reduction_pct = (consequential_count / raw_alarms_count) * 100.0\nflood_rate_10m = 1.0 # Alarms per 10 mins (EEMUA 191 limit = 10)\n\nprint(f"First-Out Root Cause Tag: {root_tag} (Suction Low-Low Trip)")\nprint(f"Timestamp: {trip_timestamp} (Millisecond Accuracy)")\nprint(f"Consequential Alarms Suppressed: {consequential_count}")\nprint(f"Alarm Noise Reduced: {noise_reduction_pct:.1f}%")\nprint(f"Rationalized Rate: {flood_rate_10m:.1f} / 10 mins (EEMUA Compliant)")`;
-          pythonOutput = `First-Out Root Cause Tag: PS-101LL (Suction Low-Low Trip)\nTimestamp: 14:32:00.104 (Millisecond Accuracy)\nConsequential Alarms Suppressed: 9\nAlarm Noise Reduced: 90.0%\nRationalized Rate: 1.0 / 10 mins (EEMUA Compliant)`;
-        } else if (isDigitalTwin) {
-          toolName = 'refinery_mass_energy_balance_engine';
-          pythonCode = `# API Technical Data Book Refinery Mass & Energy Balance\napi = 33.4 # Arab Light\nbpd = 100000.0\nsg = 141.5 / (131.5 + api)\nmass_tonne_day = (bpd * 0.1589873 * sg * 999.0) / 1000.0\ncuts = [\n  {"cut": "LPG / Offgas", "pct": 4.5, "bpd": 4500},\n  {"cut": "Light Naphtha", "pct": 9.5, "bpd": 9500},\n  {"cut": "Heavy Naphtha", "pct": 14.8, "bpd": 14800},\n  {"cut": "Kerosene / Jet A-1", "pct": 14.5, "bpd": 14500},\n  {"cut": "Ultra-Low Sulfur Diesel", "pct": 27.2, "bpd": 27200},\n  {"cut": "Atmospheric Residue", "pct": 29.5, "bpd": 29500}\n]\nfurnace_duty_mw = 80.81\nflooding_margin_pct = 20.2\nhen_recovery_pct = 72.5\nprint(f"Crude Feed Throughput: {bpd:,.0f} BPD ({mass_tonne_day:,.0f} Tonnes/Day)")\nprint(f"Charge Heater F-101 Duty: {furnace_duty_mw} MW")\nprint(f"Column Tray Flooding Margin: {flooding_margin_pct}% (Safe)")\nprint(f"Pinch HEN Heat Recovery: {hen_recovery_pct}%")\nprint("STATUS: 100.0% CLOSED MASS & ENERGY BALANCE CONVERGED")`;
-          pythonOutput = `Crude Feed Throughput: 100,000 BPD (13,639 Tonnes/Day)\nCharge Heater F-101 Duty: 80.81 MW\nColumn Tray Flooding Margin: 20.2% (Safe)\nPinch HEN Heat Recovery: 72.5%\nSTATUS: 100.0% CLOSED MASS & ENERGY BALANCE CONVERGED`;
-        } else if (isHazop) {
-          toolName = 'iec_61511_hazop_lopa_engine';
-          pythonCode = `# IEC 61508 / IEC 61511 Quantitative LOPA Risk Solver\nf_init = 0.1 # Initiating frequency (1 in 10 years)\ntmef = 1.0e-5 # Catastrophic risk target (1 in 100,000 years)\npfd_total = 0.10 * 0.10 * 0.01 * 0.005 # 4 Active IPLs\nf_mitigated = f_init * pfd_total\nrequired_rrf = f_init / tmef\nsil_target = "SIL 3 / SIL 4"\nprint(f"Initiating Event Frequency: {f_init} events/year")\nprint(f"Target Mitigated Frequency (TMEF): {tmef} events/year")\nprint(f"Active Protection Layers PFD: {pfd_total:.2e}")\nprint(f"Mitigated Frequency: {f_mitigated:.2e} events/year")\nprint(f"Required Risk Reduction Factor: {required_rrf:,.0f}:1")\nprint(f"SIL Target Allocation: {sil_target}")\nprint("STATUS: RISK COMPLIANT WITH ALARP TOLERABILITY CRITERIA")`;
-          pythonOutput = `Initiating Event Frequency: 0.1 events/year\nTarget Mitigated Frequency (TMEF): 1e-05 events/year\nActive Protection Layers PFD: 5.00e-07\nMitigated Frequency: 5.00e-08 events/year\nRequired Risk Reduction Factor: 10,000:1\nSIL Target Allocation: SIL 3 / SIL 4\nSTATUS: RISK COMPLIANT WITH ALARP TOLERABILITY CRITERIA`;
-        } else if (isFlare) {
-          toolName = 'api_521_flare_radiation_solver';
-          pythonCode = `# API 521 7th Ed. Thermal Radiation & Dispersion Engine\nm_dot = 45.0 # kg/s relieved hydrocarbon flow\nh_stack = 45.0 # m\nu_wind = 5.0 # m/s\nlhv = 46.5 # MJ/kg\nheat_release_mw = m_dot * lhv\nq_rad_kw = heat_release_mw * 1000.0 * 0.25 # Radiant fraction = 0.25\n\n# Tip Mach number check\nmach_no = 0.334 # Exit velocity v = 112 m/s, c = 335 m/s\n# Ground Radiation Intensity at 30m grade radius\nr = (30**2 + h_stack**2)**0.5\nk_30m = (0.85 * q_rad_kw) / (4.0 * 3.14159 * r**2)\nsteam_req_kgs = m_dot * 0.35 # Smokeless injection\n\nprint(f"Total Heat Release: {heat_release_mw:.1f} MW")\nprint(f"Flare Tip Mach Number: {mach_no:.3f} (Permitted <= 0.50)")\nprint(f"Radiation Flux at 30m: {k_30m:.2f} kW/m² (Escape Permitted)")\nprint(f"Smokeless Steam Required: {steam_req_kgs:.2f} kg/s")\nprint("STATUS: API 521 RADIATION & MACH COMPLIANCE CONFIRMED")`;
-          pythonOutput = `Total Heat Release: 2092.5 MW\nFlare Tip Mach Number: 0.334 (Permitted <= 0.50)\nRadiation Flux at 30m: 3.82 kW/m² (Escape Permitted)\nSmokeless Steam Required: 15.75 kg/s\nSTATUS: API 521 RADIATION & MACH COMPLIANCE CONFIRMED`;
-        } else if (isTurnaround) {
-          toolName = 'turnaround_cpm_scheduler_solver';
-          pythonCode = `# OSHA 1910.119 / PMI CPM Turnaround Scheduling Engine\nplanned_days = 14\ncpm_critical_tasks = [\n  {"id": "T01", "dur": 8}, {"id": "T02", "dur": 16}, {"id": "T03", "dur": 12},\n  {"id": "T04", "dur": 6}, {"id": "T05", "dur": 24}, {"id": "T06", "dur": 36},\n  {"id": "T07", "dur": 12}, {"id": "T08", "dur": 18}, {"id": "T09", "dur": 10}\n]\ntotal_critical_hrs = sum(t["dur"] for t in cpm_critical_tasks)\ncpm_days = total_critical_hrs / 24.0\nvariance = cpm_days - planned_days\ndelay_exposure = max(0.0, variance * 24.0 * 42500.0)\n\nprint(f"Total Critical Path Hours: {total_critical_hrs} hrs")\nprint(f"Calculated CPM Duration: {cpm_days:.1f} Days")\nprint(f"Target Shutdown Window: {planned_days} Days")\nprint(f"Schedule Buffer Float: {abs(variance):.1f} Days Ahead")\nprint(f"Financial Delay Exposure: USD {delay_exposure:,.2f}")\nprint("STATUS: TURNAROUND ON SCHEDULE - LOTO BLINDS VERIFIED")`;
-          pythonOutput = `Total Critical Path Hours: 142 hrs\nCalculated CPM Duration: 5.9 Days\nTarget Shutdown Window: 14 Days\nSchedule Buffer Float: 8.1 Days Ahead\nFinancial Delay Exposure: $0.00\nSTATUS: TURNAROUND ON SCHEDULE - LOTO BLINDS VERIFIED`;
-        } else {
-          toolName = 'asme_b31_3_deterministic_sandbox';
-          pythonCode = `import numpy as np\n# ASME B31.3 Deterministic Calculation\nP = 450.0  # Design Pressure (psig)\nD = 8.625  # Outside Diameter (inches)\nS = 20000.0 # Allowable Stress (psi, A106 Grade B)\nE = 1.0    # Quality Factor\nY = 0.4    # Temperature Coefficient\nc = 0.0625 # Corrosion Allowance (inches)\n\nt_min = (P * D) / (2 * (S * E + P * Y)) + c\nt_actual = 0.485 # Measured ultrasonic thickness\ncorrosion_rate = 0.00725 # in/yr\nremaining_life = (t_actual - t_min) / corrosion_rate\n\nprint(f"Required t_min: {t_min:.4f} in")\nprint(f"Current t_actual: {t_actual:.4f} in")\nprint(f"Safety Margin: {t_actual - t_min:.4f} in")\nprint(f"Calculated Remaining Life: {remaining_life:.1f} years")\nprint("STATUS: SAFE FOR CONTINUED REFINERY SERVICE")`;
-          pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED REFINERY SERVICE`;
-        }
+        const pythonOutput = `Required t_min: 0.1582 in\nCurrent t_actual: 0.4850 in\nSafety Margin: 0.3268 in\nCalculated Remaining Life: 45.1 years\nSTATUS: SAFE FOR CONTINUED REFINERY SERVICE`;
 
         set((s) => ({
           messages: s.messages.map((m) =>
@@ -1260,7 +893,7 @@ export const useIndraStore = create<IndraState>()(
                     code: pythonCode,
                     output: pythonOutput,
                     language: 'python',
-                    toolName: toolName,
+                    toolName: 'asme_b31_3_deterministic_sandbox',
                   },
                   agentSteps: m.agentSteps?.map((st) =>
                     st.id === 'off-3' ? { ...st, status: 'completed' as const } : st.id === 'off-4' ? { ...st, status: 'in-progress' as const } : st
@@ -1270,7 +903,7 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // Step 4: Verification & Tag mapping
+        // Step 4: P&ID cross reference
         await new Promise((r) => setTimeout(r, 600));
         set((s) => ({
           messages: s.messages.map((m) =>
@@ -1285,252 +918,793 @@ export const useIndraStore = create<IndraState>()(
           ),
         }));
 
-        // Step 5: Deliverables Trinity
-        const primaryTagForDel = detected[0] || 'CDU-Pipe-104';
+        // 1. Word Report
         const docxDeliverable: Deliverable = {
           id: `del-docx-${Date.now()}`,
-          name: `Statutory_Plant_Approval_Note_${primaryTagForDel}.docx`,
-          filename: `Statutory_Plant_Approval_Note_${primaryTagForDel}.docx`,
+          name: 'Statutory_Plant_Approval_Note_HX4201.docx',
+          filename: 'Statutory_Plant_Approval_Note_HX4201.docx',
           type: 'docx',
           size: '37.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: `Air-Gapped Statutory Plant Fitness Certification for ${primaryTagForDel}`,
-          url: `http://localhost:8000/api/deliverables/sample/docx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
-          download_url: `http://localhost:8000/api/deliverables/sample/docx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
+          description: 'Air-Gapped ASME B31.3 & API-570 Statutory Plant Fitness Certification',
+          url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
+          download_url: 'http://localhost:8000/files/current/artifacts/Statutory_Plant_Approval_Note_HX4201.docx',
           hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         };
         get().addDeliverable(docxDeliverable);
 
+        // 2. Excel Calculation Sheet
         const xlsxDeliverable: Deliverable = {
           id: `del-xlsx-${Date.now() + 1}`,
-          name: `${primaryTagForDel}_Calculations.xlsx`,
-          filename: `${primaryTagForDel}_Calculations.xlsx`,
+          name: 'HX4201_ASME_B313_Calculations.xlsx',
+          filename: 'HX4201_ASME_B313_Calculations.xlsx',
           type: 'xlsx',
           size: '7.2 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
-          description: `Deterministic Engineering Workbook with verified telemetry, calculations, and formulas for ${primaryTagForDel}`,
-          url: `http://localhost:8000/api/deliverables/sample/xlsx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
-          download_url: `http://localhost:8000/api/deliverables/sample/xlsx?equipment_tag=${encodeURIComponent(primaryTagForDel)}`,
+          description: 'Deterministic Engineering Workbook with verified telemetry, calculations, and formulas',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_ASME_B313_Calculations.xlsx',
           hash: '7a91b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1',
         };
         get().addDeliverable(xlsxDeliverable);
 
+        // 3. Executive PowerPoint Presentation
         const pptxDeliverable: Deliverable = {
           id: `del-pptx-${Date.now() + 2}`,
-          name: `${primaryTagForDel}_Executive_Board_Review.pptx`,
-          filename: `${primaryTagForDel}_Executive_Board_Review.pptx`,
+          name: 'HX4201_Executive_Board_Review.pptx',
+          filename: 'HX4201_Executive_Board_Review.pptx',
           type: 'pptx',
           size: '38.6 KB',
           generatedAt: nowTime,
           timestamp: nowTime,
           description: 'Executive 16:9 Widescreen Deck with KPI Dashboard and Dual-Key Sign-Off Certificate',
-          url: 'http://localhost:8000/api/sih/pitch-deck',
-          download_url: 'http://localhost:8000/api/sih/pitch-deck',
+          url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
+          download_url: 'http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx',
           hash: 'c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1',
         };
         get().addDeliverable(pptxDeliverable);
 
-        // Step 6: Generative UI synthesis
+        const isCompressorAntiSurgeQuery = /anti[\s_-]?surge|compressor[\s_-]?map|scl|sll|asv|k-102\s*surge/i.test(promptText);
+        const isSteamTurbineCogenQuery = /cogen|steam\s*turbine|ptc\s*6|tg-201|extraction|condensation|mwe|mwth|ssc/i.test(promptText);
+        const isCathodicCuiQuery = /cathodic|cui|nace|pl-104|pipe-to-soil|sweating\s*zone|anode/i.test(promptText);
+        const isCoolingTowerQuery = /cooling\s*tower|psychrometric|ct-301|atc\s*105|stull|wet[\s_-]?bulb|cycles\s*of\s*concentration|coc/i.test(promptText);
+        const isTegQuery = /teg|glycol|dehydration|v-204|reboiler|dew[\s_-]?point|stripping\s*gas/i.test(promptText);
+        const isReliefValveQuery = /relief\s*valve|psv|psv-101|api\s*520|api\s*526|choked\s*flow|accumulation/i.test(promptText);
+        const isRcaQuery = /rca|root\s*cause|5[\s_-]?why|bowtie|bow[\s_-]?tie|fishbone|ishikawa|fault\s*tree|fta/i.test(promptText);
+        const isSensorDriftQuery = /sensor[\s_-]?drift|fdd|iso\s*13374|vdi\s*2888|tt-101|calibration|voting\s*comparator/i.test(promptText);
+        const isHazopQuery = /hazop|pha|process\s*hazard|iec\s*61882|r-401|guide[\s_-]?word|deviation\s*matrix/i.test(promptText);
+        const isArcFlashQuery = /arc[\s_-]?flash|ieee[\s_-]?1584|nfpa[\s_-]?70e|incident\s*energy|shock\s*hazard|electrical\s*safety|arcflash/i.test(promptText);
+        const isAcidDewPointQuery = /acid[\s_-]?dew[\s_-]?point|ptc[\s_-]?4\.?3|aph-101|air[\s_-]?preheater|cold[\s_-]?end|sulfuric\s*acid\s*condensation/i.test(promptText);
+        const isCompressorTrainQuery = /compressor[\s_-]?train|api[\s_-]?617[\s_-]?train|k-103|multi[\s_-]?stage[\s_-]?compressor|stage[\s_-]?casing|intercooler\s*duty/i.test(promptText);
+        const isFunctionalSafetyQuery = /functional\s*safety|iso\s*13849|iec\s*62061|performance\s*level|mttfd|diagnostic\s*coverage|common\s*cause|ccf|pfhd/i.test(promptText);
+        const isFlareAivQuery = /flare[\s_-]?aiv|aiv|acoustical[\s_-]?vibration|sound\s*power\s*level|eemua\s*158|carucci[\s_-]?mueller|psv-101\s*tailpipe|psv\s*tailpipe|tailpipe\s*mach/i.test(promptText);
+        const isProximityProbeQuery = /proximity[\s_-]?probe|api\s*670|shaft[\s_-]?orbit|bently[\s_-]?nevada|2oo2|journal\s*bearing|vt-101|eddy\s*current|keyphasor|dc\s*gap\s*voltage/i.test(promptText);
+        const isPipingFlexibilityQuery = /piping[\s_-]?flexibility|expansion[\s_-]?loop|asme\s*b31\.?3\s*(§|sec(tion)?)?\s*319|thermal[\s_-]?expansion|exp-pipe|anchor[\s_-]?thrust|stress[\s_-]?range|displacement[\s_-]?stress/i.test(promptText);
+        const isFinFanQuery = /fin[\s_-]?fan|air[\s_-]?cooler|api\s*661|afc-101|air[\s_-]?cooled|induced[\s_-]?draft|forced[\s_-]?draft|tube[\s_-]?bundle\s*gradient|ambient\s*dry[\s_-]?bulb/i.test(promptText);
+        const isHazardousAreaDispersionQuery = /dispersion|contour|iec\s*60079-10|api\s*(rp\s*)?505|hac|hac-cell|zone\s*[012]|gas\s*group|t-class|leak\s*hole|operating\s*pressure.*ventilation|flammable\s*gas\s*mixture/i.test(promptText);
+        const isRgdSealQuery = /rgd|explosive[\s_-]?decompression|norsok[\s_-]?m[\s_-]?710|iso\s*23936|rgd-seal|gent[\s_-]?lindley|cavitation\s*stress|elastomer\s*seal|void\s*nucleation|ffkm\s*90|decompression\s*rate/i.test(promptText);
+        const isApi618RecipQuery = /api[\s_-]?618|reciprocating|piston[\s_-]?compressor|k-201.*(recip|double[\s_-]?acting|bottle|crosshead|suction\s*pressure)|dampener\s*bottle|volumetric\s*efficiency/i.test(promptText);
+        const isBoilerCirculationQuery = /asme[\s_-]?sec(tion)?[\s_-]?1|boiler[\s_-]?circulation|thermosiphon|dnbr|departure\s*from\s*nucleate|b-101|hrsg-102|downcomer\s*height|steam\s*drum\s*pressure/i.test(promptText);
+        const isApi530CreepQuery = /api[\s_-]?530|heater[\s_-]?tube|tube[\s_-]?creep|larson[\s_-]?miller|creep[\s_-]?rupture|f-101|radiant[\s_-]?coil|tmt|tube\s*metal\s*temp|cumulative\s*creep/i.test(promptText);
+        const isApi676PumpQuery = /api[\s_-]?676|screw[\s_-]?pump|twin[\s_-]?screw|rotary[\s_-]?pump|positive[\s_-]?displacement|p-801|vacuum\s*residue|bitumen|slip\s*leakage|viscous\s*shear/i.test(promptText);
+        const isBlowdownQuery = /blowdown|depressur|cryogenic|bdv-201|ucs-66|mdmt|brittle\s*fracture/i.test(promptText);
+        const isRotordynamicsQuery = /rotordynamic|campbell|critical\s*speed|tg-502|turbine|misalignment\s*ratio/i.test(promptText);
+        const isHazardousAreaQuery = /hazardous\s*area|explosion\s*proof|ex\s*d|jb-101|iec\s*60079|flameproof/i.test(promptText);
+        const isAlarmTriageQuery = /alarm|triage|rationalization|eemua|isa\s*18\.2|chattering|first[\s_-]?out/i.test(promptText);
+        const isHammerQuery = /hammer|joukowsky|surge|acoustic|b31\.4|pl-204/i.test(promptText);
+        const isOrificeQuery = /orifice|iso\s*5167|aga\s*3|flowmeter|metering|fe-101|vena\s*contracta/i.test(promptText);
+        const isRbiQuery = /rbi|risk[\s_-]?matrix|api\s*580|api\s*581|v-301|inspection\s*mandate/i.test(promptText);
+        const isWeibullQuery = /weibull|rul|k-102|prognostics|cox\s*phm/i.test(promptText);
+        const isPinchQuery = /pinch|exergy|hen|linnhoff|heat\s*exchanger\s*network/i.test(promptText);
+        const isFatigueQuery = /fatigue|miner|palmgren|goodman|damage\s*fraction/i.test(promptText);
+        const isPumpQuery = /pump|p-101|vibration|telemetry|gauge|setpoint|speed|form/i.test(promptText);
+
         let finalMarkdown = '';
-        if (isHydraulic) {
-          finalMarkdown = `### Sovereign Darcy-Weisbach Hydraulic Pipeline Evaluation (Line L-101)
+        if (isCompressorAntiSurgeQuery) {
+          finalMarkdown = `### API 617 Centrifugal Compressor Anti-Surge & ASV Response
 
-The sovereign neural agent has calculated fluid velocity, Reynolds number, Colebrook friction factor, and frictional pressure drop across **Line L-101 (16" NPS Sch 60 Crude Transfer Header)** per API 14E and Crane TP-410 standards.
-
-#### 1. Interactive Darcy-Weisbach Hydraulic Solver Sandbox
-Modify flow rate or pipe roughness live in the sandbox below to observe instantaneous changes in friction factor and pressure drop:
+Sovereign aerodynamic evaluation of operating point versus Surge Limit Line (SLL) and Surge Control Line (SCL) for **K-102**.
 
 \`\`\`gen-ui
 {
-  "component": "DynamicSandboxWidget",
+  "component": "CompressorAntiSurgeWidget",
   "props": {
-    "title": "API 14E / Darcy-Weisbach Hydraulic Solver",
-    "domain": "hydraulic_pipeline",
-    "tag": "L-101"
+    "assetTag": "K-102",
+    "title": "API 617 CENTRIFUGAL COMPRESSOR ANTI-SURGE MAP & ASV RESPONSE"
   }
 }
 \`\`\`
 
-#### 2. Line Differential Pressure Gauge
+- **Surge Margin:** Current operating point provides safe margin (+14.2% above SLL). Anti-surge valve is armed for fast-opening stroke (< 1.2s).`;
+        } else if (isSteamTurbineCogenQuery) {
+          finalMarkdown = `### ASME PTC 6 Extraction-Condensing Cogeneration Heat Balance
+
+Combined heat and power evaluation for **TG-201** with controlled 12.5 bar extraction and vacuum condensation.
+
 \`\`\`gen-ui
 {
-  "component": "IndustrialGauge",
+  "component": "SteamTurbineCogenWidget",
   "props": {
-    "tag": "PI-101",
-    "title": "Line L-101 Frictional Pressure Drop",
-    "value": 43.9,
-    "min": 0,
-    "max": 100,
-    "unit": "kPa",
-    "thresholds": { "normal": 60, "warning": 80, "critical": 95 },
-    "status": "optimal",
-    "subtitle": "Crude Distillation Unit 1 • Transfer Header"
+    "assetTag": "TG-201",
+    "title": "ASME PTC 6 EXTRACTION-CONDENSING STEAM TURBINE COGEN BALANCE"
   }
 }
 \`\`\`
 
-#### 3. Asset Integrity & Flow Capacity
+- **Performance Verification:** Generating 42.5 MWe electrical output and delivering 68.4 MWth process heat at 4.18 kg/kWh specific steam consumption.`;
+        } else if (isCathodicCuiQuery) {
+          finalMarkdown = `### NACE SP0169 Cathodic Protection & API 581 CUI Sweating Zone
+
+Corrosion protection and thermal insulation condensation evaluation for pipeline **PL-104**.
+
 \`\`\`gen-ui
 {
-  "component": "EquipmentHealthCard",
+  "component": "CathodicProtectionCuiWidget",
   "props": {
-    "tag": "L-101",
-    "name": "Crude Oil Transfer Header",
-    "type": "16-inch NPS Sch 60 Carbon Steel (A106 Gr B)",
-    "healthScore": 92,
-    "mtbfHours": 40000,
-    "operatingHours": 18200,
-    "lastInspectionDate": "2026-08-15"
+    "assetTag": "PL-104",
+    "title": "NACE SP0169 CATHODIC PROTECTION & API 581 CUI SWEATING ZONE"
   }
 }
 \`\`\`
 
-- **Hydraulic Verification:** Fluid velocity \`2.829 m/s\` is well below the erosional velocity threshold (\`v_e = 4.65 m/s\`).
-- **Statutory Decision:** **ADEQUATE FOR UNRESTRICTED CRUDE PUMPING** (Pressure drop: \`43.89 kPa / 6.37 psi\`).`;
-        } else if (isPID) {
-          finalMarkdown = `### Sovereign P&ID Blueprint & ISA-5.1 Tag Localization
+- **Corrosion Control:** Polarized potential at -945 mV CSE satisfies the NACE -850 mV criterion. Thermal sweating zone at 88°C requires targeted PEC inspection.`;
+        } else if (isCoolingTowerQuery) {
+          finalMarkdown = `### CTI ATC-105 Cooling Tower Psychrometric & Thermal Approach
 
-The sovereign agent has ingested the process topology for the **Crude Distillation Unit (CDU-104)**, cross-referencing piping instrumentation loops against ISA-5.1 standards.
-
-#### 1. Interactive P&ID Schematic Diagram
-Inspect the dynamic process flows, valve alignments, and live process lines below:
+Empirical Stull wet-bulb estimation and cycles of concentration chemistry for **CT-301**.
 
 \`\`\`gen-ui
 {
-  "component": "InteractivePIDWidget",
+  "component": "CoolingTowerPsychrometricWidget",
   "props": {
-    "title": "CDU-104 Crude Distillation Unit P&ID Topology",
-    "initialLoop": "crude",
-    "tag": "CDU-104"
+    "assetTag": "CT-301",
+    "title": "CTI ATC-105 COOLING TOWER PSYCHROMETRIC & THERMAL APPROACH"
   }
 }
 \`\`\`
 
-#### 2. DCS Loop Control & Flow Trim
+- **Psychrometric Balance:** Wet-bulb temperature computed at 27.2°C; tower approach at 4.0°C satisfies design thermal guarantees.`;
+        } else if (isTegQuery) {
+          finalMarkdown = `### GPSA Sec 20 Glycol (TEG) Dehydration & Reboiler Duty
+
+Counter-current mass transfer and reboiler thermal duty analysis for contactor **V-204**.
+
 \`\`\`gen-ui
 {
-  "component": "ParameterControlForm",
+  "component": "TegDehydrationWidget",
   "props": {
-    "tag": "FV-101",
-    "title": "Control Valve FV-101 Loop Trim",
-    "subtitle": "Feed Flow Control Loop FIC-101",
-    "equipmentMode": "AUTO",
-    "requireHITL": true
+    "assetTag": "V-204",
+    "title": "GPSA SEC 20 TEG GLYCOL DEHYDRATION & REBOILER DUTY"
   }
 }
 \`\`\`
 
-- **ISA-5.1 Compliance:** All 8 active instrumentation tags verified against P&ID spatial coordinates.
-- **Topology Integrity:** Bypass line and emergency relief valve \`PSV-101\` verified online.`;
-        } else if (isCavitation) {
-          finalMarkdown = `### Sovereign API 610 Centrifugal Pump NPSH & Cavitation Assessment
+- **Pipeline Custody Spec:** Treated gas water content at 3.6 lbs/MMSCF meets custody transfer limit (< 4.0 lbs/MMSCF). Reboiler operating at 204°C with stripping gas.`;
+        } else if (isReliefValveQuery) {
+          finalMarkdown = `### API 520 / API 526 Pressure Relief Valve (PSV) Sizing
 
-The sovereign agent has evaluated **Slurry Feed Pump P-101** for cavitation risk under current suction conditions per API 610 (12th Edition) and Hydraulic Institute standards.
+Overpressure relief capacity and choked flow verification for safety relief valve **PSV-101**.
 
-#### 1. Real-Time Process Loop with Cavitation Simulation
 \`\`\`gen-ui
 {
-  "component": "InteractivePIDWidget",
+  "component": "ReliefValveSizingWidget",
   "props": {
-    "title": "Slurry Pump P-101 Cavitation & Suction Schematic",
-    "initialLoop": "crude",
-    "tag": "P-101"
+    "assetTag": "PSV-101",
+    "title": "API 520 / API 526 PRESSURE RELIEF VALVE SIZING & CHOKED FLOW"
   }
 }
 \`\`\`
 
-#### 2. Pump Discharge Pressure Gauge
+- **Orifice Selection:** API 526 Orifice 'J' (1.287 in²) exceeds required area (0.985 in²) with +30.7% capacity margin. Flow regime verified as critical choked flow.`;
+        } else if (isRcaQuery) {
+          finalMarkdown = `### Industrial Root Cause Analysis (RCA) Multi-Methodology Suite
+
+Comprehensive incident investigation for **K-102** incorporating Fault Tree Analysis, 5-Why Chain, Bow-Tie Barrier Model, and Ishikawa Fishbone Diagram.
+
 \`\`\`gen-ui
 {
-  "component": "IndustrialGauge",
+  "component": "RootCauseAnalysisWidget",
   "props": {
-    "tag": "P-101",
-    "title": "P-101 Discharge Pressure",
-    "value": 78.4,
-    "min": 0,
-    "max": 100,
-    "unit": "psig",
-    "thresholds": { "normal": 70, "warning": 85, "critical": 95 },
-    "status": "warning",
-    "subtitle": "Crude Distillation Unit 1 • Header A"
+    "assetTag": "K-102",
+    "title": "INDUSTRIAL ROOT CAUSE ANALYSIS (RCA) MULTI-METHODOLOGY SUITE"
   }
 }
 \`\`\`
 
-#### 3. Equipment Reliability & NPSH Health
+- **Root Cause Confirmed:** MOC field inspection sign-off bypassed for piping insulation weather-jacketing following turnaround, causing spring hanger saturation and casing thermal misalignment.`;
+        } else if (isSensorDriftQuery) {
+          finalMarkdown = `### ISO 13374 / VDI 2888 Condition Monitoring, Sensor Drift & Fault Diagnostics
+
+Condition monitoring and dual-channel redundancy adjudication for **TT-101** on CDU-104. Drift velocity sparkline and statutory tolerance limits (±2.0% span) verified.
+
 \`\`\`gen-ui
 {
-  "component": "EquipmentHealthCard",
+  "component": "SensorDriftFddCard",
   "props": {
-    "tag": "P-101",
-    "name": "Crude Slurry Charge Pump",
-    "type": "API 610 BB2 Heavy-Duty Centrifugal",
-    "healthScore": 78,
-    "mtbfHours": 18000,
-    "operatingHours": 12400,
-    "lastInspectionDate": "2026-09-10"
-  }
-}
-\`\`\`
-
-- **NPSH Evaluation:** Net Positive Suction Head Available (\`NPSHa = 5.05 m\`) exceeds Required (\`NPSHr = 3.20 m\`) by **+1.85 m**.
-- **Statutory Decision:** **COMPLIANT PER API 610** (Safety margin exceeds 1.0 m minimum requirement; no cavitation inception).`;
-        } else if (isTema) {
-          finalMarkdown = `### Sovereign TEMA Class R Thermal Exchanger Rating & Fouling Assessment
-
-The sovereign agent has completed the thermal duty and fouling resistance analysis for **Crude Pre-Heat Exchanger E-101** per TEMA Class R refinery standards.
-
-#### 1. Interactive TEMA Thermal Rating Sandbox
-\`\`\`gen-ui
-{
-  "component": "DynamicSandboxWidget",
-  "props": {
-    "title": "TEMA Class R Thermal Duty & Fouling Rating",
-    "domain": "heat_exchanger",
-    "tag": "E-101"
-  }
-}
-\`\`\`
-
-#### 2. Exchanger Crude Outlet Temperature
-\`\`\`gen-ui
-{
-  "component": "IndustrialGauge",
-  "props": {
-    "tag": "TIC-102",
-    "title": "E-101 Crude Outlet Temperature",
-    "value": 185.0,
-    "min": 50,
-    "max": 250,
+    "assetTag": "CDU-104",
+    "sensorTag": "TT-101",
+    "redundantTag": "TT-101B",
+    "title": "ISO 13374 / VDI 2888 — CONDITION MONITORING, SENSOR DRIFT & FAULT DIAGNOSTICS",
+    "spanMin": 0,
+    "spanMax": 300,
     "unit": "°C",
-    "thresholds": { "normal": 190, "warning": 215, "critical": 235 },
-    "status": "optimal",
-    "subtitle": "Shell & Tube Exchanger Bank A"
+    "statutoryLimitPct": 2.0
   }
 }
 \`\`\`
 
-#### 3. Exchanger Health & Thermal Efficiency
+- **FDD Diagnosis:** Dual-channel redundancy comparison confirmed. Statistical drift velocity at +0.28 °C/sample indicates progressive thermocouple decalibration.`;
+        } else if (isHazopQuery) {
+          finalMarkdown = `### Autonomous IEC 61882 Process Hazard Analysis (HAZOP) Study
+
+Comprehensive deviation matrix for Reactor **R-401** evaluated across standard guide words per IEC 61882:2016 and OSHA 1910.119 PSM compliance.
+
 \`\`\`gen-ui
 {
-  "component": "EquipmentHealthCard",
+  "component": "HazopMatrixWidget",
   "props": {
-    "tag": "E-101",
-    "name": "Crude Pre-Heat Exchanger Bank A",
-    "type": "Shell & Tube Exchanger (TEMA Class R)",
-    "healthScore": 89,
-    "mtbfHours": 24000,
-    "operatingHours": 15800,
-    "lastInspectionDate": "2026-09-05"
+    "assetTag": "R-401",
+    "title": "AUTONOMOUS IEC 61882 HAZOP DEVIATION MATRIX",
+    "standard": "IEC 61882:2016 / OSHA 1910.119 PSM",
+    "studyId": "HAZOP-2026-R401-REV3"
   }
 }
 \`\`\`
 
-- **Thermal Duty:** Calculated duty **Q = 6.19 MW** with an LMTD of **62.2 °C**.
-- **Fouling Factor:** Measured fouling resistance \`Rf = 0.00032 m²·K/W\` is within the TEMA Class R limit (\`0.00035 m²·K/W\`).`;
-        } else if (isVibration) {
+- **HAZOP Summary:** 9 deviation nodes evaluated. 4 Critical/High risk scenarios identified requiring mandatory independent SIS trips and API 521 flare header capacity verification.`;
+        } else if (isArcFlashQuery) {
+          finalMarkdown = `### IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety Study
+
+Comprehensive arc flash hazard assessment and shock boundary analysis for **SWGR-6.6KV-01** (6.6 kV Medium Voltage Substation) per IEEE 1584-2018 and NFPA 70E Standard for Electrical Safety in the Workplace (2024 Edition).
+
+\`\`\`gen-ui
+{
+  "component": "ArcFlashHazardCard",
+  "props": {
+    "assetTag": "SWGR-6.6KV-01",
+    "location": "6.6 kV MV SUBSTATION",
+    "title": "IEEE 1584-2018 ARC FLASH & NFPA 70E ELECTRICAL SAFETY",
+    "systemVoltageKv": 6.6,
+    "boltedFaultCurrentKa": 25.0,
+    "clearingTimeSec": 0.20,
+    "workingDistanceMm": 914,
+    "electrodeConfig": "VCB"
+  }
+}
+\`\`\`
+
+- **Electrical Safety Assessment:** Arcing current computed at 23.8 kA with 14.8 cal/cm² incident energy at 914 mm (36") working distance. PPE Category 3 flash suit and Class 2 dielectric gloves mandatory within 4,213 mm Arc Flash Boundary.`;
+        } else if (isAcidDewPointQuery) {
+          finalMarkdown = `### ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity Assessment
+
+Verhoff-Banchero thermodynamic correlation and sulfuric acid ($H_2SO_4$) condensation evaluation for **F-101 / APH-101** (Fired Heater / Rotary Air Preheater Cold-End) per ASME PTC 4.3 Air Heaters standard.
+
+\`\`\`gen-ui
+{
+  "component": "AcidDewPointMeter",
+  "props": {
+    "assetTag": "F-101 / APH-101",
+    "equipmentName": "Fired Heater / Rotary Air Preheater",
+    "title": "ASME PTC 4.3 FLUE GAS ACID DEW POINT & COLD-END INTEGRITY",
+    "fuelSulfurWtPct": 2.2,
+    "flueGasO2Pct": 3.5,
+    "coldEndMetalTempC": 155.0,
+    "flueGasMoisturePct": 12.0
+  }
+}
+\`\`\`
+
+- **Cold-End Integrity Diagnosis:** Acid dew point computed at 149.7 °C with 28.4 ppmv SO3. Current cold-end metal temperature (155.0 °C) provides a +5.3 °C safety margin (MARGINAL_RISK). Recommend SCAPH steam coil modulation or O2 trim to maintain recommended T_dew + 15 °C buffer.`;
+        } else if (isCompressorTrainQuery) {
+          finalMarkdown = `### API 617 Multi-Stage Centrifugal Compressor Train Performance Assessment
+
+Three-stage centrifugal flash gas compressor train evaluation for **K-103 FLASH GAS** per API 617 8th Edition / ISO 10439 standards, covering thermodynamic polytropic balance, interstage cooling, and discharge thermal limits.
+
+\`\`\`gen-ui
+{
+  "component": "CompressorTrainCard",
+  "props": {
+    "assetTag": "K-103",
+    "trainName": "K-103 FLASH GAS",
+    "title": "API 617 MULTI-STAGE COMPRESSOR TRAIN PERFORMANCE",
+    "suctionPressureBar": 2.2,
+    "dischargePressureBar": 15.4,
+    "massFlowTh": 42.5,
+    "intercoolerOutletTempC": 40.0,
+    "polytropicEfficiencyPct": 82.0
+  }
+}
+\`\`\`
+
+- **Train Performance Summary:** Overall pressure ratio 7.00:1 (average stage ratio 1.91:1) across 3 stages with total polytropic head of 218.4 kJ/kg and 3.42 MW shaft power demand. Maximum discharge temperature is 98.2 °C (PASS: well below API 617 135.0 °C statutory limit with +36.8 °C safety margin). Total intercooler thermal duty is 2.15 MWth.`;
+        } else if (isFunctionalSafetyQuery) {
+          finalMarkdown = `### ISO 13849-1 Machinery Functional Safety & PL Verification
+
+Comprehensive Category 4 / SIL 3 safety instrumented function assessment for **SIS-ESDV-401** (High-High Pressure Emergency Shutdown Loop) per EN ISO 13849-1:2023 and IEC 62061:2021 standards.
+
+\`\`\`gen-ui
+{
+  "component": "FunctionalSafetyCard",
+  "props": {
+    "assetTag": "SIS-ESDV-401",
+    "safetyFunction": "High-High Pressure Emergency Shutdown Loop",
+    "title": "ISO 13849-1 MACHINERY FUNCTIONAL SAFETY INTEGRITY",
+    "architectureCategory": "4",
+    "mttfdYearsCh1": 48.0,
+    "mttfdYearsCh2": 42.0,
+    "diagnosticCoveragePct": 99.0,
+    "ccfScorePoints": 75,
+    "requiredPl": "e"
+  }
+}
+\`\`\`
+
+- **Safety Integrity Assessment:** Dual-channel Category 4 architecture verified. Symmetrized MTTFd computed at 45.0 Years (HIGH), Diagnostic Coverage DCavg at 99.0% (HIGH), and Annex F CCF score at 75/100 (PASS ≥ 65). Achieved Performance Level: **PL e** with PFHd = 2.47e-08 /hr (IEC 62061 SIL 3 claim equivalent).`;
+        } else if (isFlareAivQuery) {
+          finalMarkdown = `### API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV) Assessment
+
+Comprehensive high-frequency acoustic fatigue screening for **PSV-101 Tailpipe** per API 520 Part II, EEMUA 158, and Carucci-Mueller acoustic power methodologies.
+
+\`\`\`gen-ui
+{
+  "component": "FlareAivCard",
+  "props": {
+    "assetTag": "PSV-101",
+    "location": "PSV-101 TAILPIPE",
+    "title": "API 520 PART II & EEMUA 158 FLARE ACOUSTICAL VIBRATION (AIV)",
+    "massFlowTh": 65.0,
+    "upstreamPressureBar": 35.0,
+    "backpressureBar": 2.5,
+    "gasMolecularWeight": 22.0,
+    "specificHeatRatio": 1.28,
+    "gasTempC": 60.0,
+    "pipeNpsInches": "10\"",
+    "pipeSchedule": "Sch 40"
+  }
+}
+\`\`\`
+
+- **Acoustical Vibration Assessment:** Computed Sound Power Level is 158.3 dB (MODERATE AIV FATIGUE RISK). Radiated acoustic energy is 6.76 kW into the pipe wall. Tailpipe gas velocity is 168.5 m/s (Mach 0.43, compliant with API 520 statutory 0.70 Mach limit). EEMUA 158 integrity requires 360° welded wrap-around wear pads at pipe clamps and sweepolet contoured branch fittings.`;
+        } else if (isProximityProbeQuery) {
+          finalMarkdown = `### API Standard 670 Machinery Protection & Proximity Probes
+
+Comprehensive radial shaft vibration, DC gap voltage diagnostic health, and 2-out-of-2 (2oo2) trip voting assessment for **K-101 Journal Bearing** per API 670 5th Edition and ISO 7919-3 standards.
+
+\`\`\`gen-ui
+{
+  "component": "ProximityProbeCard",
+  "props": {
+    "assetTag": "K-101",
+    "bearingLocation": "K-101 JOURNAL BEARING",
+    "title": "API STANDARD 670 MACHINERY PROTECTION & PROXIMITY PROBES",
+    "probeXTag": "VT-101X",
+    "probeYTag": "VT-101Y",
+    "dcGapVoltageX": -10.2,
+    "dcGapVoltageY": -10.1,
+    "vibrationPkPkX": 32.5,
+    "vibrationPkPkY": 28.0,
+    "phaseAngleXDeg": 48,
+    "phaseAngleYDeg": 138,
+    "alarmThresholdUm": 45.0,
+    "tripThresholdUm": 65.0,
+    "bearingClearanceUm": 150.0,
+    "shaftSpeedRpm": 8500
+  }
+}
+\`\`\`
+
+- **API 670 Health & Trip Assessment:** Dual eddy-current proximity probes VT-101X (-10.20V DC) and VT-101Y (-10.10V DC) operating in the calibrated linear range (-9V to -11V, 51.0 mils gap). Filtered 1X shaft precession orbit indicates stable elliptical trajectory (major axis: 33.1 µm, eccentricity: 0.58). Radial vibration amplitudes remain below API 670 Alarm (45 µm) and Trip (65 µm) limits: 2oo2 system verdict: **NORMAL_ROTATING_STABILITY** (ESD trip solenoid energized).`;
+        } else if (isPipingFlexibilityQuery) {
+          finalMarkdown = `### ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Analysis
+
+Comprehensive thermal displacement stress range, guided expansion U-loop sizing, and anchor reaction thrust evaluation for **EXP-PIPE-101** (Superheated Steam Expansion Loop) per ASME B31.3 Chapter II § 319 and Appendix X.
+
+\`\`\`gen-ui
+{
+  "component": "PipingFlexibilityCard",
+  "props": {
+    "pipeLineTag": "EXP-PIPE-101",
+    "serviceName": "SUPERHEATED STEAM EXPANSION LOOP",
+    "title": "ASME B31.3 § 319 / APPENDIX X PIPING FLEXIBILITY ANALYSIS",
+    "operatingTempC": 350.0,
+    "ambientTempC": 20.0,
+    "loopHeightM": 5.0,
+    "loopWidthM": 3.5,
+    "pipeRunLengthM": 80.0,
+    "pipeNpsInches": "12\"",
+    "pipeSchedule": "Sch 40",
+    "materialGrade": "ASTM A106 Grade B"
+  }
+}
+\`\`\`
+
+- **Flexibility & Stress Range Assessment:** Thermal expansion across 80.0m straight run is 356.4 mm at 350.0°C. Symmetrical U-expansion loop (H=5.0m, W=3.5m) absorbs thermal expansion with actual displacement stress range SE = 184.2 MPa, well below allowable stress range SA = 242.0 MPa (76.1% utilization, +57.8 MPa safety margin: **COMPLIANT**). Anchor reaction thrust force is 38.4 kN at Anchor A1 and A2.`;
+        } else if (isFinFanQuery) {
+          finalMarkdown = `### API Standard 661 7th Ed. / ISO 13706 Air-Cooled Heat Exchanger Rating
+
+Comprehensive thermal rating, crossflow tube bundle aerodynamic matrix, and ambient sensitivity evaluation for **AFC-101** (Diesel Hydrotreater Stripper Overhead Condenser) per API Standard 661 7th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "FinFanCoolerCard",
+  "props": {
+    "exchangerTag": "AFC-101",
+    "serviceName": "DIESEL HYDROTREATER STRIPPER OVERHEAD CONDENSER",
+    "title": "API STANDARD 661 7TH ED. AIR-COOLED HEAT EXCHANGER (FIN-FAN)",
+    "processInletTempC": 125.0,
+    "processOutletTempC": 45.0,
+    "ambientTempC": 32.0,
+    "processMassFlowTh": 45.0,
+    "heatDutyMw": 8.45,
+    "numberOfBays": 2,
+    "fansPerBay": 1,
+    "fanDiameterM": 4.27,
+    "tubePasses": 4,
+    "tubeRows": 6,
+    "finType": "Extruded Aluminum High-Fin (10 FPI)"
+  }
+}
+\`\`\`
+
+- **API 661 Performance Rating:** Operating at 8.45 MWth thermal duty across 2 bays. Dual 14-ft induced-draft axial fans deliver 245.0 m³/s total airflow with 74.4 kWe total electric power (37.2 kW/fan). Effective crossflow LMTD is 42.6°C. At design ambient 32.0°C, thermal approach is 13.0°C with +15.2% cooling capacity safety margin (**PASS_API661_THERMAL_CAPACITY_CONFIRMED**).`;
+        } else if (isHazardousAreaDispersionQuery) {
+          finalMarkdown = `### IEC 60079-10-1 / API RP 505 Hazardous Area Classification & Gas Dispersion
+          
+Quantitative flammable gas release and dispersion contour analysis for compressor cell **HAC-CELL-101** per IEC 60079-10-1:2020 and API RP 505.
+
+\`\`\`gen-ui
+{
+  "component": "HazardousAreaCard",
+  "props": {
+    "enclosureTag": "HAC-CELL-101",
+    "gasMixture": "Hydrogen / Methane Mix (70/30 mol%)",
+    "title": "IEC 60079-10-1 / API RP 505 HAZARDOUS AREA CLASSIFICATION",
+    "operatingPressureBarG": 24.0,
+    "leakHoleSizeMm": 3.0,
+    "ventilationVelocityMs": 0.65,
+    "operatingTempC": 35.0,
+    "releaseGrade": "Secondary",
+    "enclosureVolumeM3": 240.0,
+    "standardCode": "IEC 60079-10-1:2020 / API RP 505 / NFPA 497"
+  }
+}
+\`\`\`
+
+- **Area Classification Verdict:** Choked sonic release rate $W_g = 13.92\\text{ g/s}$ ($50.1\\text{ kg/h}$). In a ventilated enclosure cell ($u_w = 0.65\\text{ m/s}$, $18.5\\text{ ACH}$), hazardous boundary distance to $20\\%\\text{ LEL}$ is $r_z = 3.82\\text{ m}$. Secondary grade release with medium dilution yields **Zone 2** (NEC / API RP 505 equivalent: **Class I, Division 2 / Class I, Zone 2**). Electrical apparatus specification mandate: **Group IIC, T4 Gb** (IP66).`;
+        } else if (isRgdSealQuery) {
+          finalMarkdown = `### NORSOK M-710 Rev 3 / ISO 23936-2 Rapid Gas Decompression (RGD) Seal Assessment
+          
+Finite-difference dissolved gas diffusion and Gent-Lindley internal cavitation stress modeling for high-pressure gas seal **RGD-SEAL-101** (**FFKM 90 Shore A**) per NORSOK M-710 Rev 3 and ISO 23936-2.
+
+\`\`\`gen-ui
+{
+  "component": "RgdSealCard",
+  "props": {
+    "sealTag": "RGD-SEAL-101",
+    "elastomerCompound": "FFKM 90 Shore A",
+    "title": "NORSOK M-710 / ISO 23936-2 RAPID GAS DECOMPRESSION (RGD) SEAL INTEGRITY",
+    "systemPressureBar": 150.0,
+    "decompressionRateBarMin": 35.0,
+    "testTemperatureC": 100.0,
+    "oringSectionDiameterMm": 5.33,
+    "gasComposition": "100% CO2 (Supercritical)",
+    "standardCode": "NORSOK M-710 Rev 3 / ISO 23936-2"
+  }
+}
+\`\`\`
+
+- **RGD Qualification Verdict:** At 150.0 bar g system pressure and 35.0 bar/min decompression rate (100% CO2), internal gas cavitation stress is $\\sigma_{\\text{cav}} = 8.84\\text{ MPa}$, remaining below the Gent-Lindley bubble nucleation limit $P_{\\text{crit}} = 12.00\\text{ MPa}$ ($1.36\\times$ safety margin). Evaluated cross-sections confirm NORSOK M-710 damage rating **'1000'** with compliant micro-voids ($< 0.1\\times$ cross-section). **PASS_NORSOK_M710_CONFIRMED**.`;
+        } else if (isApi618RecipQuery) {
+          finalMarkdown = `### API Standard 618 5th Ed. / ISO 13707 Reciprocating Compressor Rating
+          
+Thermodynamic performance, double-acting volumetric efficiency (ηv), and pulsation dampener bottle sizing for **K-201** per API Standard 618 5th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api618ReciprocatingCompressorCard",
+  "props": {
+    "compressorTag": "K-201",
+    "serviceDescription": "Two-Cylinder Double-Acting Hydrogen / Hydrocarbon Gas Compressor",
+    "title": "API STANDARD 618 5TH ED. RECIPROCATING COMPRESSOR PERFORMANCE",
+    "suctionPressureBarA": 3.5,
+    "dischargePressureBarA": 9.8,
+    "crankshaftSpeedRpm": 450,
+    "gasMolecularWeight": 18.5,
+    "installedDampenerBottleM3": 0.65,
+    "suctionTempC": 40.0,
+    "standardCode": "API Standard 618 (5th Edition) / ISO 13707"
+  }
+}
+\`\`\`
+
+- **API 618 Performance Verdict:** Operating at compression ratio $r_p = 2.80:1$ with $450\text{ RPM}$ crankshaft speed. Volumetric efficiency is $\eta_v = 80.2\%$, delivering $1,706\text{ m}^3/\text{h}$ ($4.24\text{ t/h}$) gas capacity with $193.1\text{ kW}$ indicated power ($205.4\text{ kW}$ brake power). Discharge temperature is $131.8^\circ\text{C}$, comfortably below the API 618 statutory threshold of $150.0^\circ\text{C}$ for hydrogen-rich gas (**PASS_API618_DISCHARGE_TEMP_CONFIRMED**). Installed $0.65\text{ m}^3$ pulsation dampener bottle provides $1.71\times$ required volume, keeping residual acoustic ripple below $\pm 1.6\%\text{ pk-pk}$.`;
+        } else if (isBoilerCirculationQuery) {
+          finalMarkdown = `### ASME Section I & EN 12952-4 Natural Circulation & DNB Margin Analysis
+
+Thermosiphon driving head, two-phase riser hydrodynamics, and Departure from Nucleate Boiling Ratio (DNBR) for **B-101 / HRSG-102** High-Pressure Power Boiler.
+
+\`\`\`gen-ui
+{
+  "component": "AsmeSec1BoilerCirculationCard",
+  "props": {
+    "boilerTag": "B-101 / HRSG-102",
+    "serviceDescription": "High-Pressure Natural Circulation Power Boiler",
+    "title": "ASME SECTION I & EN 12952-4 BOILER NATURAL CIRCULATION & DNB MARGIN",
+    "drumPressureBarg": 95.0,
+    "steamProductionTph": 120.0,
+    "avgHeatFluxKwm2": 145.0,
+    "downcomerHeightM": 22.0,
+    "standardCode": "ASME Section I Rules for Construction of Power Boilers / EN 12952-4"
+  }
+}
+\`\`\`
+
+- **ASME Section I Circulation Verdict:** At $95.0\\text{ barg}$ drum pressure and $120.0\\text{ t/h}$ steam generation, thermosiphon available driving head is $\\Delta P_{\\text{drive}} = 55.4\\text{ kPa}$, driving $776.4\\text{ t/h}$ total loop circulation. Achieved circulation ratio is $CR = 6.47$ (well above the ASME Sec I min limit of $4.0$). Top riser void fraction is $\\alpha = 0.603$ ($60.3\\% < 80.0\\%$) ensuring continuous liquid wall wetting. Critical heat flux margin $DNBR = 2.12$ confirms continuous nucleate boiling with zero risk of film boiling or wall dryout (**PASS_ASME_SEC1_CIRCULATION_CONFIRMED**).`;
+        } else if (isApi530CreepQuery) {
+          finalMarkdown = `### API Standard 530 7th Ed. / ISO 13704 Heater Tube Creep & Rupture Analysis
+
+Creep rupture life prediction, Larson-Miller Parameter (LMP), and cumulative creep damage evaluation for **F-101-RAD-01** (Atmospheric Crude Heater Radiant Coil) per API Standard 530 7th Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api530HeaterTubeCreepCard",
+  "props": {
+    "heaterTag": "F-101-RAD-01",
+    "serviceDescription": "Atmospheric Crude Heater Radiant Coil",
+    "title": "API STANDARD 530 7TH ED. HEATER TUBE CREEP & RUPTURE INTEGRITY",
+    "tubeMetalTempC": 580.0,
+    "designPressurePsig": 450.0,
+    "operatingLifeTargetHours": 100000,
+    "heatFluxDensityKwM2": 42.0,
+    "tubeOdMm": 168.3,
+    "nominalWallThicknessMm": 8.5,
+    "corrosionAllowanceMm": 2.0,
+    "tubeMaterial": "ASTM A335 Grade P9 (9Cr-1Mo)",
+    "standardCode": "API Standard 530 (7th Edition) / ISO 13704"
+  }
+}
+\`\`\`
+
+- **API 530 Creep Assessment Verdict:** At $580.0^\circ\text{C}$ ($1,076.0^\circ\text{F}$) Maximum Tube Metal Temperature (TMT) and $450.0\text{ psig}$ ($3.103\text{ MPa}$) coil design pressure, mean diameter hoop stress is $\sigma_{\text{hoop}} = 38.62\text{ MPa}$ ($5.60\text{ ksi}$) on a $6.50\text{ mm}$ corroded wall. Under $42.0\text{ kW/m}^2$ firebox radiant heat flux, the radial temperature gradient across the wall is $\Delta T = 9.75^\circ\text{C}$, yielding an effective operating stress $\sigma_{\text{eff}} = 41.25\text{ MPa}$. Using the API 530 Larson-Miller parameter ($LMP = 36.62$), predicted mean creep rupture life is $t_{\text{rupture}} = 224,500\text{ hours}$ ($25.6\text{ years}$). Cumulative creep damage for the $100,000\text{ h}$ target is $D_{\text{creep}} = 0.445$, well below the statutory retirement limit $D_{\text{creep}} \le 0.800$ (**PASS_API530_CREEP_LIFE_CONFIRMED**). Remaining creep life margin is $124,500\text{ hours}$ ($14.2\text{ years}$).`;
+        } else if (isApi676PumpQuery) {
+          finalMarkdown = `### API Standard 676 3rd Ed. / ISO 14847 Twin-Screw Pump Performance Analysis
+
+Rotary positive displacement hydraulics, internal clearance slip leakage, and NPSH cavitation evaluation for **P-801** (Heavy Vacuum Residue / Bitumen Twin-Screw Pump) per API Standard 676 3rd Edition.
+
+\`\`\`gen-ui
+{
+  "component": "Api676ScrewPumpCard",
+  "props": {
+    "pumpTag": "P-801",
+    "serviceDescription": "Heavy Vacuum Residue / Bitumen Twin-Screw Positive Displacement Pump",
+    "title": "API STANDARD 676 3RD ED. TWIN-SCREW PUMP PERFORMANCE & CAVITATION",
+    "operatingViscosityCst": 450.0,
+    "differentialPressureBar": 28.0,
+    "operatingSpeedRpm": 1450,
+    "suctionPressureBarg": 2.5,
+    "displacementPerRevL": 0.95,
+    "fluidDensityKgM3": 980.0,
+    "vaporPressureBara": 0.05,
+    "standardCode": "API Standard 676 (3rd Edition) / ISO 14847"
+  }
+}
+\`\`\`
+
+- **API 676 Hydraulic Verdict:** At $1,450\text{ RPM}$ and $450.0\text{ cSt}$ operating viscosity, theoretical displacement is $Q_{\text{th}} = 82.65\text{ m}^3/\text{h}$. Viscous radial clearance slip under $28.0\text{ bar}$ differential pressure is $Q_{\text{slip}} = 4.85\text{ m}^3/\text{h}$, yielding an actual delivered flow $Q_{\text{act}} = 77.80\text{ m}^3/\text{h}$ ($342.5\text{ GPM}$) with $\eta_v = 94.1\%$ volumetric efficiency. Total driver power is $83.5\text{ kW}$ ($112.0\text{ HP}$) comprised of $60.5\text{ kW}$ hydraulic work, $18.5\text{ kW}$ viscous shear friction, and $4.5\text{ kW}$ mechanical/timing gear losses. Under $2.5\text{ bar g}$ suction, available $NPSHA = 36.00\text{ m}$ comfortably exceeds the viscosity-corrected $NPSHR = 3.56\text{ m}$ by $+32.44\text{ m}$ (**PASS_API676_CAVITATION_MARGIN_CONFIRMED**).`;
+        } else if (isBlowdownQuery) {
+          finalMarkdown = `### API 521 Emergency Depressuring & ASME UCS-66 MDMT Assessment
+
+Simulation analysis for **BDV-201** blowdown valve loop. Joule-Thomson expansion curves and metal wall transient thermal conduction have been computed.
+
+\`\`\`gen-ui
+{
+  "component": "CryogenicBlowdownCard",
+  "props": {
+    "assetTag": "BDV-201",
+    "title": "API 521 EMERGENCY DEPRESSURING & ASME UCS-66 MDMT BRITTLE FRACTURE",
+    "initialPressureBar": 85.0,
+    "finalPressureBar": 0.9,
+    "target15MinPressureBar": 42.5,
+    "minFluidTempC": -52.4,
+    "minWallTempC": -20.1,
+    "vesselMdmtC": -29.0,
+    "materialSpec": "ASTM A516 Gr 70 Normalized",
+    "asmeCurve": "Curve B"
+  }
+}
+\`\`\`
+
+- **Safety Margin:** Minimum wall temperature $-20.1^\\circ\\text{C}$ remains **$+8.9^\\circ\\text{C}$** above design MDMT ($-29.0^\\circ\\text{C}$).
+- **Statutory Status:** **PASS** (Exempt from impact testing per ASME Section VIII Div 1 UCS-66 Curve B).`;
+        } else if (isRotordynamicsQuery) {
+          finalMarkdown = `### API 684 / API 617 Rotordynamics & Lateral Campbell Diagram
+
+Modal Campbell resonance evaluation and separation margin clearance for **TG-502 (48 MW Turbine)**.
+
+\`\`\`gen-ui
+{
+  "component": "RotorDynamicsCard",
+  "props": {
+    "assetTag": "TG-502 (48 MW Turbine)",
+    "title": "API 684 / API 617 ROTORDYNAMICS & CAMPBELL RESONANCE DIAGRAM",
+    "operatingSpeedRpm": 5400,
+    "firstCriticalSpeedRpm": 2450,
+    "secondCriticalSpeedRpm": 7800,
+    "misalignmentRatio2X1X": 0.40,
+    "bearingDerateFactor": 0.98
+  }
+}
+\`\`\`
+
+- **Operating Clearance:** Rated speed 5,400 RPM is centered in the safe operating window with nominal 2X/1X alignment ratio (0.40).`;
+        } else if (isHazardousAreaQuery) {
+          finalMarkdown = `### IEC 60079 / API RP 500 Hazardous Area Integrity Verification
+
+Flameproof Ex d joint clearance, T-class temperature limits, and auto-ignition safety envelope for **JB-101 (Zone 1 Group IIC)**.
+
+\`\`\`gen-ui
+{
+  "component": "HazardousAreaExCard",
+  "props": {
+    "assetTag": "JB-101 (Zone 1 Group IIC)",
+    "title": "IEC 60079 / API RP 500 HAZARDOUS AREA INTEGRITY",
+    "measuredJointGapMm": 0.12,
+    "allowableJointGapMm": 0.15,
+    "measuredSurfaceTempC": 118.5,
+    "tClassLimitTempC": 135.0,
+    "tClassRating": "T4",
+    "hydrogenAitC": 560.0
+  }
+}
+\`\`\`
+
+- **Certification Status:** **ATEX / IECEx Ex d IIC T4 Gb PASS** (Flameproof gap 0.12 mm &le; 0.15 mm allowable limit).`;
+        } else if (isAlarmTriageQuery) {
+          finalMarkdown = `### ANSI/ISA-18.2 & EEMUA 191 Control Room Alarm Rationalization
+
+Real-time alarm flood suppression, cascade de-duplication, and first-out initiator analysis.
+
+\`\`\`gen-ui
+{
+  "component": "AlarmTriageWidget",
+  "props": {
+    "title": "ANSI/ISA-18.2 & EEMUA 191 CONTROL ROOM ALARM RATIONALIZATION",
+    "currentAlarmRate10Min": 14.0,
+    "firstOutTag": "K-102",
+    "firstOutDescription": "Compressor High-High Lube Oil Pressure Trip"
+  }
+}
+\`\`\`
+
+- **Root Cause Identified:** **Tag K-102** triggered first-out trip; 2 downstream cascade alarms suppressed, 4 chattering alarms stabilized.`;
+        } else if (isHammerQuery) {
+          finalMarkdown = `### Joukowsky Transient Acoustic Surge Analysis (ASME B31.4 § 404.3.4)
+
+The sovereign neural agent has modeled the transient fluid column momentum and acoustic reflection wave for **PL-204 (24-inch NPS Crude Pipeline, 12.5 km)** following emergency shutdown valve trip.
+
+\`\`\`gen-ui
+{
+  "component": "WaterHammerCard",
+  "props": {
+    "assetTag": "PL-204 (24-inch NPS Crude Pipeline, 12.5 km)",
+    "title": "JOUKOWSKY WATER HAMMER & TRANSIENT ACOUSTIC SURGE",
+    "standard": "ASME B31.4 § 404.3.4",
+    "steadyPressureBar": 38.5,
+    "peakSurgePressureBar": 62.57,
+    "allowableSurgeCeilingBar": 70.4,
+    "initialClosureTimeSec": 3.5,
+    "criticalPipePeriodSec": 21.2,
+    "accumulatorVolumeM3": 2.55,
+    "kineticEnergyMJ": 8.12,
+    "recommendedClosureSec": 31.8
+  }
+}
+\`\`\`
+
+- **Surge Margin:** Current rapid closure yields peak pressure of **62.57 bar** (+11.1% margin below the 70.4 bar ASME B31.4 permissible ceiling).
+- **Acoustic Wave Period:** Critical pipe period $2L/a = 21.2\\text{ s}$. Valve closure duration $\\le 21.2\\text{ s}$ generates maximum Joukowsky shock.`;
+        } else if (isOrificeQuery) {
+          finalMarkdown = `### ISO 5167-2 / AGA 3 Custody Transfer Orifice Metrology
+
+Differential pressure verification across concentric square-edged orifice run **FE-101** under Class 300 RF flange tappings.
+
+\`\`\`gen-ui
+{
+  "component": "OrificeFlowmeterCard",
+  "props": {
+    "assetTag": "FE-101",
+    "title": "ISO 5167-2 / AGA 3 ORIFICE FLOW METERING",
+    "standard": "Custody Transfer Metrology",
+    "differentialPressureMbar": 250.0,
+    "massFlowRateTph": 162.42,
+    "massFlowRateKgs": 45.116,
+    "volumetricFlowM3h": 196.87,
+    "dischargeCoefficient": 0.6094,
+    "pipeReynoldsNumber": 224708,
+    "permanentHeadLossKpa": 16.23,
+    "powerDissipationKw": 0.89,
+    "orificeBoreMm": 117.566,
+    "pipeDiameterMm": 202.7,
+    "diameterRatioBeta": 0.5800,
+    "flangeRating": "Class 300 RF"
+  }
+}
+\`\`\`
+
+- **Metrology Verification:** Reader-Harris/Gallagher (1998) discharge coefficient $C_d = 0.6094$.
+- **Reynolds Number:** $Re_D = 224,708$ (Fully Turbulent, $Re > 5,000$ compliance satisfied).`;
+        } else if (isRbiQuery) {
+          finalMarkdown = `### API 580 / API 581 Quantitative Risk-Based Inspection (RBI)
+
+Quantitative POF × COF multi-mechanism damage factor calculation and statutory NDT strategy for **V-301 (Hydrocracker High-Pressure Separator)**.
+
+\`\`\`gen-ui
+{
+  "component": "RbiRiskMatrixCard",
+  "props": {
+    "assetTag": "V-301 (Hydrocracker High-Pressure Separator)",
+    "title": "API 580 / API 581 QUANTITATIVE RISK-BASED INSPECTION (RBI)",
+    "standard": "API 581 3rd Edition",
+    "activePofCategory": 3,
+    "activeCofCategory": "D",
+    "multiMechanismDamageFactor": 21.1,
+    "thinningDamageFactor": 5.1,
+    "h2sSourDamageFactor": 15.0,
+    "cuiDamageFactor": 1.0,
+    "flammableReleaseAreaM2": 7986.8,
+    "financialConsequenceUsd": 2190000,
+    "expectedAnnualizedLossUsd": 1201.72,
+    "targetIntervalYears": 3.0,
+    "nextPmWindow": "Q3 2029",
+    "mandatoryMitigationTechnique": "ONSTREAM EXTERNAL PEC & PHASED ARRAY ULTRASONIC GRID"
+  }
+}
+\`\`\`
+
+- **Risk Ranking:** Operating coordinate **Cell 3D** (Medium-High Risk).
+- **Mandatory Mitigation:** Targeted NDT grid focusing on H₂S Sour SCC and localized thinning.`;
+        } else if (isWeibullQuery) {
+          finalMarkdown = `### IEC 61649 / ISO 13381-1 Weibull Fault Prognostics & RUL
+
+\`\`\`gen-ui
+{
+  "component": "WeibullRulCard",
+  "props": {
+    "assetTag": "K-102",
+    "title": "WEIBULL FAULT PROGNOSTICS & RUL",
+    "standard": "IEC 61649 / ISO 13381-1"
+  }
+}
+\`\`\``;
+        } else if (isPinchQuery) {
+          finalMarkdown = `### Linnhoff Pinch Analysis & Heat Exchanger Network Synthesis
+
+\`\`\`gen-ui
+{
+  "component": "PinchNetworkCard",
+  "props": {
+    "assetTag": "HEN-400",
+    "title": "LINNHOFF PINCH ANALYSIS & HEAT EXCHANGER NETWORK",
+    "standard": "TEMA / 2nd-Law Exergy"
+  }
+}
+\`\`\``;
+        } else if (isFatigueQuery) {
+          finalMarkdown = `### ASME Section VIII Div 2 Palmgren-Miner Cumulative Fatigue
+
+\`\`\`gen-ui
+{
+  "component": "FatigueMinerCard",
+  "props": {
+    "assetTag": "V-204",
+    "title": "ASME SEC VIII DIV 2 PALMGREN-MINER FATIGUE INTEGRITY",
+    "standard": "ASME Sec VIII Div 2 Part 5.5"
+  }
+}
+\`\`\``;
+        } else if (isPumpQuery) {
           finalMarkdown = `### Sovereign Equipment Status & Telemetry (P-101)
 
 The sovereign neural agent has retrieved live telemetry for **Slurry Feed Pump P-101** from the local SCADA historian. Real-time vibration spectra and discharge pressure have been synthesized into interactive micro-frontends below.
@@ -1587,343 +1761,6 @@ Use the control deck below to adjust VFD speed, modulate minimum flow recirculat
 
 - **P&ID Cross-Reference:** Equipment tag \`P-101\` and recirculation valve \`FV-101\` highlighted on schematic.
 - **Compliance Status:** ISO 10816-3 Class II compliant; bearing lube temperature nominal at 64°C.`;
-        } else if (isRCA) {
-          finalMarkdown = `### Sovereign Root Cause Analysis (RCA) & Bayesian Fault Tree
-The sovereign neural agent has completed a rigorous root cause failure investigation for **Crude Feed Pump P-101** following the thermal trip excursion. Evidence from SCADA telemetry (\`TI-101A\`, \`dP-101\`) and inspection records have been correlated.
-
-\`\`\`gen-ui
-{
-  "component": "RootCauseAnalysisWidget",
-  "props": {
-    "tag": "P-101",
-    "title": "P-101 Bayesian Failure Tree & CAPA Matrix",
-    "incidentTitle": "Mechanical Seal Flush Disruption & High Temperature Trip",
-    "incidentTime": "${nowTime} UTC",
-    "confidenceScore": 99.1,
-    "topEvent": "Seal Barrier Fluid Vaporization & Secondary O-Ring Degradation"
-  }
-}
-\`\`\`
-
-#### Equipment Health Index & Reliability Degradation
-\`\`\`gen-ui
-{
-  "component": "EquipmentHealthCard",
-  "props": {
-    "tag": "P-101",
-    "name": "Crude Slurry Charge Pump",
-    "type": "API 610 BB2 Between-Bearing Centrifugal Pump",
-    "healthScore": 48,
-    "mtbfHours": 18000,
-    "operatingHours": 14200,
-    "lastInspectionDate": "2026-09-20"
-  }
-}
-\`\`\`
-
-#### Executive Incident Review Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "P-101",
-    "title": "Incident Root Cause Review: P-101 Trip",
-    "domain": "root_cause_analysis",
-    "filename": "P-101_RCA_Board_Review.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5"
-  }
-}
-\`\`\`
-
-- **Primary Root Cause:** Suction Strainer \`ST-101-A\` mesh breach allowed 250μm particulates to choke the 3.2mm Plan 11 restriction orifice, eliminating seal convective cooling.
-- **Statutory Compliance:** Full PSM investigation logged to Merkle ledger with dual-key approval pending.`;
-        } else if (isConsensus) {
-          finalMarkdown = `### Sovereign Tri-Model Peer-Review & Consensus Convergence
-The sovereign system has completed a 3-round autonomous engineering peer-review debate across 3 specialized on-device models. The agents have reconciled operational throughput, ASME B31.3 wall stress limits, and IEC 61511 functional safety interlocks.
-
-\`\`\`gen-ui
-{
-  "component": "MultiAgentConsensusWidget",
-  "props": {
-    "tag": "CDU-Pipe-104",
-    "title": "CDU-Pipe-104 Tri-Model Peer-Review & Consensus Engine",
-    "targetParameter": "Maximum Allowable Operating Pressure (MAOP) & Recirculation Trip",
-    "consensusValue": "465.0 psig (with 14.5% FV-101 bypass)",
-    "agreementScore": 98.4,
-    "riskReductionFactor": 1250
-  }
-}
-\`\`\`
-
-#### Interactive Wall Thickness & Safety Margin (ASME B31.3)
-\`\`\`gen-ui
-{
-  "component": "ASMEComplianceCard",
-  "props": {
-    "tag": "CDU-Pipe-104",
-    "title": "ASME B31.3 Evaluator at Consensus Pressure (465 psig)",
-    "initialPressure": 465,
-    "diameter": 8.625,
-    "allowableStress": 20000,
-    "corrosionAllowance": 0.0625,
-    "actualThickness": 0.4850
-  }
-}
-\`\`\`
-
-#### Executive Peer-Review Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "CDU-Pipe-104",
-    "title": "Tri-Model Engineering Consensus Review: CDU-Pipe-104",
-    "domain": "pipe_thickness",
-    "filename": "CDU-Pipe-104_Consensus_Board_Review.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:44b9e28fa10c3b88...c7a1"
-  }
-}
-\`\`\`
-
-- **Consensus Decision:** **APPROVED AT 465.0 PSIG** (Agreement Score: \`98.4%\`, RRF = \`1,250:1\`).
-- **Tri-Key Seal:** Cryptographic Merkle leaf generated with signatures from Agent Alpha, Beta, and Gamma.`;
-        } else if (isAlarm) {
-          finalMarkdown = `### Sovereign Alarm Flood Rationalization (ISA-18.2 / EEMUA 191)
-The sovereign AI alarm management engine has intercepted a sudden plant trip cascade on **Crude Distillation Unit CDU-104**. Using millisecond-precision Sequence of Events (SOE) correlation, 9 consequential alarms have been suppressed into a single First-Out root cause.
-
-\`\`\`gen-ui
-{
-  "component": "AlarmRationalizationWidget",
-  "props": {
-    "tag": "P-101",
-    "title": "CDU-104 ISA-18.2 Alarm Flood Rationalization",
-    "initialMode": "RATIONALIZED"
-  }
-}
-\`\`\`
-
-#### Root Cause Failure Investigation (RCA)
-\`\`\`gen-ui
-{
-  "component": "RootCauseAnalysisWidget",
-  "props": {
-    "tag": "P-101",
-    "title": "First-Out Incident Root Cause & Bayesian Fault Tree",
-    "incidentTitle": "P-101 Suction Pressure Low-Low Trip (PS-101LL)",
-    "incidentTime": "${nowTime} UTC",
-    "confidenceScore": 99.1,
-    "topEvent": "Suction Strainer Mesh Rupture & Restriction Orifice Choking"
-  }
-}
-\`\`\`
-
-#### Interactive P&ID Process Schematic
-\`\`\`gen-ui
-{
-  "component": "InteractivePIDWidget",
-  "props": {
-    "title": "Crude Pump P-101 Tripped Loop Alignment",
-    "initialLoop": "crude",
-    "tag": "P-101"
-  }
-}
-\`\`\`
-
-- **First-Out Root Cause:** Tag \`PS-101LL\` (Suction Pressure Low-Low) initiated emergency trip at \`14:32:00.104\`.
-- **EEMUA 191 Compliance:** Operator presentation rate reduced from \`48.2\` to \`1.0\` alarm/10min (90% noise elimination).`;
-        } else if (isDigitalTwin) {
-          finalMarkdown = `### Sovereign Refinery Plant Digital Twin & Mass-Energy Balance
-The sovereign AI digital twin has synthesized a real-time mass and energy balance for **Refinery Train 1 (CDU-104 / VDU-201)** per the API Technical Data Book and Nelson-Farrar distillation models.
-
-\`\`\`gen-ui
-{
-  "component": "PlantDigitalTwinWidget",
-  "props": {
-    "plantName": "Refinery Train 1 — CDU / VDU Digital Twin",
-    "initialCrudeApi": 33.4,
-    "initialFeedBpd": 100000,
-    "initialFurnaceTempC": 365
-  }
-}
-\`\`\`
-
-#### Interactive P&ID Process Schematic
-\`\`\`gen-ui
-{
-  "component": "InteractivePIDWidget",
-  "props": {
-    "title": "CDU-104 Fractionation Flow Topology",
-    "initialLoop": "crude",
-    "tag": "CDU-104"
-  }
-}
-\`\`\`
-
-#### Executive Refinery Operations Review Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "CDU-104",
-    "title": "Refinery Plant Digital Twin & Mass Balance Review",
-    "domain": "plant_digital_twin",
-    "filename": "Refinery_Digital_Twin_Board_Review.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:77a8b9c0d1e2f3a4...e5f6"
-  }
-}
-\`\`\`
-
-- **Closed Mass Balance:** Mass in (\`13,639 T/D\`) matches total cut yields with \`0.00%\` discrepancy.
-- **Flooding Check:** Column tray vapor velocity complies with Souders-Brown criteria (\`+20.2%\` safety margin).`;
-        } else if (isHazop) {
-          finalMarkdown = `### Sovereign Automated HAZOP & LOPA SIL Functional Safety Engine
-The sovereign functional safety engine has evaluated **Node 01: Crude Feed to Charge Furnace F-101** under the **MORE PRESSURE** deviation per IEC 61508 / IEC 61511 and CCPS LOPA standards.
-
-\`\`\`gen-ui
-{
-  "component": "HazopLopaWorkbench",
-  "props": {
-    "initialNodeId": "NODE-01_CDU_FEED",
-    "initialDeviation": "HIGH_PRESSURE",
-    "initialSeverity": "CATASTROPHIC",
-    "initialInitiatingFreq": 0.1
-  }
-}
-\`\`\`
-
-#### Safety Relief Valve Health & Integrity Index
-\`\`\`gen-ui
-{
-  "component": "EquipmentHealthCard",
-  "props": {
-    "tag": "PSV-101",
-    "name": "Pressure Safety Relief Valve",
-    "type": "API 526 Flanged Spring-Loaded Relief Valve",
-    "healthScore": 96,
-    "mtbfHours": 50000,
-    "operatingHours": 14200,
-    "lastInspectionDate": "2026-08-30"
-  }
-}
-\`\`\`
-
-#### Executive Functional Safety Case Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "PSV-101",
-    "title": "IEC 61511 Safety Case: Node 01 High-Pressure LOPA",
-    "domain": "hazop_lopa",
-    "filename": "IEC_61511_Safety_Case_Node_01.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:99a8b7c6d5e4f3a2...b1c0"
-  }
-}
-\`\`\`
-
-- **Target SIL Allocation:** Safety Instrumented Function verified at \`SIL 3\` with \`RRF = 10,000:1\`.
-- **ALARP Tolerability:** Cumulative PFD (\`5.00 × 10⁻⁷\`) satisfies corporate risk criteria for catastrophic scenarios.`;
-        } else if (isFlare) {
-          finalMarkdown = `### Sovereign API 521 Flare Radiation & Emission Dispersion
-The sovereign environmental relief engine has modeled the emergency atmospheric flaring event on stack **FL-101 (45m elevation)** per API Standard 521 (7th Edition) and EPA / CPCB air quality regulations.
-
-\`\`\`gen-ui
-{
-  "component": "FlareNetworkEmissionWidget",
-  "props": {
-    "flareTag": "FL-101",
-    "initialRelievedFlowKgS": 45.0,
-    "initialWindSpeedMS": 5.0,
-    "initialFlareHeightM": 45.0
-  }
-}
-\`\`\`
-
-#### Relief Valve Health & Setpoint Verification
-\`\`\`gen-ui
-{
-  "component": "EquipmentHealthCard",
-  "props": {
-    "tag": "PSV-101",
-    "name": "Atmospheric Flare Header Relief Valve",
-    "type": "API 526 Spring-Loaded Safety Relief Valve",
-    "healthScore": 94,
-    "mtbfHours": 50000,
-    "operatingHours": 12800,
-    "lastInspectionDate": "2026-08-25"
-  }
-}
-\`\`\`
-
-#### Executive Environmental Relief Review Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "FL-101",
-    "title": "API 521 Environmental Relief & Flaring Dispersion Review",
-    "domain": "flare_network",
-    "filename": "API521_Flare_Emission_Review.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:11a2b3c4d5e6f7a8...c9d0"
-  }
-}
-\`\`\`
-
-- **Mach Number Compliance:** Exit velocity (\`112.4 m/s\`) is well within the \`Ma <= 0.50\` API 521 sonic threshold (\`0.334 Ma\`).
-- **Smokeless Operation:** Steam injection at \`15.75 kg/s\` (0.35 ratio) guarantees soot-free combustion.`;
-        } else if (isTurnaround) {
-          finalMarkdown = `### Sovereign Refinery Turnaround (TAR) & CPM Schedule Optimization
-The sovereign planning agent has synthesized an OSHA 1910.119 compliant Turnaround Critical Path Method (CPM) schedule for **Crude Distillation Unit (CDU-104)** major overhaul and tray replacement.
-
-\`\`\`gen-ui
-{
-  "component": "TurnaroundSchedulerWidget",
-  "props": {
-    "initialShutdownId": "TAR-2026-CDU1",
-    "initialPlannedDays": 14,
-    "initialHourlyCost": 42500.0
-  }
-}
-\`\`\`
-
-#### Column T-101 Turnaround Health & Inspection Index
-\`\`\`gen-ui
-{
-  "component": "EquipmentHealthCard",
-  "props": {
-    "tag": "CDU-104",
-    "name": "Crude Distillation Atmospheric Column",
-    "type": "ASME Sec VIII / API 510 Fractionation Column (47 Trays)",
-    "healthScore": 88,
-    "mtbfHours": 60000,
-    "operatingHours": 24800,
-    "lastInspectionDate": "2026-09-01"
-  }
-}
-\`\`\`
-
-#### Executive Turnaround Strategy Deck
-\`\`\`gen-ui
-{
-  "component": "ExecutivePresentationWidget",
-  "props": {
-    "tag": "CDU-104",
-    "title": "CDU Turnaround Execution Plan & Positive Blinding Master",
-    "domain": "turnaround_scheduler",
-    "filename": "CDU_Turnaround_Master_Schedule.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
-    "hash": "SHA256:88b7c6d5e4f3a2b1...09c8"
-  }
-}
-\`\`\`
-
-- **Critical Path Duration:** Forward pass establishes a \`5.9 Day\` critical path duration vs the 14-day planned window (\`+8.1 Days\` buffer float).
-- **Zero Cost Exposure:** Financial downtime risk is \`$0.00\` with all 8 positive isolation blinds verified online.`;
         } else {
           finalMarkdown = `### Sovereign Engineering Analysis Completed (Offline Simulation Mode)
 
@@ -1934,7 +1771,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "ASMEComplianceCard",
   "props": {
-    "tag": "CDU-Pipe-104",
+    "tag": "HX-4201",
     "title": "ASME B31.3 §304.1.2 Interactive Wall Thickness Evaluator",
     "initialPressure": 450,
     "diameter": 8.625,
@@ -1951,14 +1788,14 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
   "component": "IndustrialGauge",
   "props": {
     "tag": "PI-3104",
-    "title": "CDU-Pipe-104 Operating Pressure",
+    "title": "HX-4201 Shell Operating Pressure",
     "value": 310.5,
     "min": 0,
     "max": 600,
     "unit": "psig",
     "thresholds": { "normal": 400, "warning": 480, "critical": 550 },
     "status": "optimal",
-    "subtitle": "High Pressure Steam Pre-Heater Spool"
+    "subtitle": "High Pressure Steam Pre-Heater"
   }
 }
 \`\`\`
@@ -1968,9 +1805,9 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "EquipmentHealthCard",
   "props": {
-    "tag": "CDU-Pipe-104",
-    "name": "Crude Unit Transfer Line Spool",
-    "type": "ASTM A106 Gr B Seamless Steel Piping",
+    "tag": "HX-4201",
+    "name": "Crude Pre-Heat Exchanger Bank A",
+    "type": "Shell & Tube Exchanger (TEMA Class R)",
     "healthScore": 94,
     "mtbfHours": 22000,
     "operatingHours": 14200,
@@ -1988,11 +1825,11 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
 {
   "component": "ExecutivePresentationWidget",
   "props": {
-    "tag": "CDU-Pipe-104",
-    "title": "Executive Asset Integrity Review: CDU-Pipe-104",
+    "tag": "HX-4201",
+    "title": "Executive Asset Integrity Review: HX-4201",
     "domain": "pipe_thickness",
-    "filename": "CDU-Pipe-104_Executive_Board_Review.pptx",
-    "downloadUrl": "http://localhost:8000/api/sih/pitch-deck",
+    "filename": "HX4201_Executive_Board_Review.pptx",
+    "downloadUrl": "http://localhost:8000/files/current/artifacts/HX4201_Executive_Board_Review.pptx",
     "hash": "SHA256:c8f1e2d3b4a5968778a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1"
   }
 }
@@ -2017,7 +1854,7 @@ Drag the parameter sensitivity controls below to evaluate design margin under va
         get().addToast({
           type: 'success',
           title: 'Offline Simulation Completed',
-          message: 'Full deterministic engineering calculation & statutory certificate generated in zero-egress sandbox.',
+          message: 'Full ASME B31.3 calculation & statutory certificate generated in zero-egress sandbox.',
         });
       },
 

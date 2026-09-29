@@ -1,32 +1,33 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import LeftPane from '@/components/left-pane/LeftPane';
 import ToastContainer from '@/components/common/ToastContainer';
 import { useIndraStore } from '@/store/indra-store';
 import { useApprovalsQuery, useModelsQuery } from '@/lib/queries';
 import { useNativeBridge } from '@/hooks/useNativeBridge';
 import { sendNativeNotification } from '@/lib/native-bridge';
-import {
-  PanelLeft,
+import { 
+  PanelLeft, 
   PanelRight,
-  X,
-  Lock,
-  ShieldCheck,
-  Sun,
+  X, 
+  Lock, 
+  ShieldCheck, 
+  Sun, 
   Moon,
   Presentation,
+  Clock,
+  Download,
+  AlertTriangle,
+  Cpu,
+  Server,
+  Search,
   Volume2,
   VolumeX,
-  Bot,
-  Network,
-  Database,
-  Circle,
-  Radio,
+  Keyboard
 } from 'lucide-react';
-import { isSoundEnabled, toggleSound, playSuccessChirp } from '@/lib/sound/sovereign-audio';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,10 +36,15 @@ import VoiceTranscriptOverlay from '@/components/voice/VoiceTranscriptOverlay';
 import { useVoiceCommandContext } from '@/providers/VoiceCommandProvider';
 import { useCrossWindowSync } from '@/hooks/useCrossWindowSync';
 import { multiWindowSync } from '@/lib/sync/multi-window-sync';
+import { useAirGapTelemetry } from '@/hooks/useAirGapTelemetry';
+import UniversalAssetSearchModal from '@/components/common/UniversalAssetSearchModal';
+import { useControlRoomShortcuts } from '@/hooks/useControlRoomShortcuts';
+import { sovereignAudio } from '@/lib/audio/sound-effects';
 
 const navLabels: Record<string, string> = {
   workbench: 'Agent Workbench',
-  canvas: 'Spatial 2D Reasoning Canvas',
+  canvas: 'Spatial P&ID Canvas',
+  knowledge: 'Knowledge Base (RAG)',
   kb: 'Knowledge Base (RAG)',
   audit: 'Merkle Audit Ledger',
 };
@@ -49,9 +55,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { data: pendingApprovals = [] } = useApprovalsQuery();
   const { data: loadedModels = [] } = useModelsQuery();
 
-  const {
-    isSidebarOpen,
-    toggleSidebar,
+  const { 
+    isSidebarOpen, 
+    toggleSidebar, 
     isRightPaneOpen,
     toggleRightPane,
     deliverables,
@@ -69,29 +75,45 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     initLocalDB,
   } = useIndraStore();
 
-  const [soundOn, setSoundOn] = useState(true);
-
-  // ── NEW: Live UTC clock ────────────────────────────────────────────────────
-  const [utcTime, setUtcTime] = useState('');
-  useEffect(() => {
-    const tick = () =>
-      setUtcTime(new Date().toUTCString().slice(17, 25));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // ── NEW: Recording mode toggle ─────────────────────────────────────────────
-  const [isRecording, setIsRecording] = useState(false);
-
-  useEffect(() => {
-    setSoundOn(isSoundEnabled());
-  }, []);
-
   const { isNative, appInfo } = useNativeBridge();
   const voiceCommand = useVoiceCommandContext();
   useCrossWindowSync();
   const prevApprovalsCount = useRef(pendingApprovals.length);
+
+  // Control Room Keyboard Shortcuts & Universal Asset Search State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+
+  useEffect(() => {
+    setIsAudioMuted(sovereignAudio.getMuted());
+  }, []);
+
+  const handleToggleAudio = () => {
+    const nextMuted = sovereignAudio.toggleMuted();
+    setIsAudioMuted(nextMuted);
+  };
+
+  useControlRoomShortcuts({
+    onOpenSearch: () => setIsSearchOpen(true),
+    isSearchOpen,
+    onCloseSearch: () => setIsSearchOpen(false),
+  });
+
+  // DCS Air-Gap Telemetry, Synchronized 1Hz UTC Clock & Audit Recording Engine
+  const {
+    utcTime,
+    apiLatencyMs,
+    isApiAlive,
+    merkleRootPreview,
+    merkleRootRaw,
+    gpuLoad,
+    isRecording,
+    recordingDuration,
+    eventCount,
+    toggleRecording,
+    exportAuditLog,
+    recordAuditEvent,
+  } = useAirGapTelemetry();
 
   // Trigger Native Desktop Notification when new pending approvals arrive
   useEffect(() => {
@@ -107,18 +129,38 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     prevApprovalsCount.current = pendingApprovals.length;
   }, [pendingApprovals]);
 
+  // Record UI navigation events in active DCS Session Audit
+  useEffect(() => {
+    recordAuditEvent({
+      category: 'UI_NAVIGATION',
+      action: 'ROUTE_CHANGED',
+      route: pathname,
+      payload: { pathname },
+    });
+  }, [pathname, recordAuditEvent]);
+
+  // Record active model changes in DCS Session Audit
+  useEffect(() => {
+    recordAuditEvent({
+      category: 'PARAMETER_CHANGE',
+      action: 'ACTIVE_MODEL_SWITCHED',
+      route: pathname,
+      payload: { activeModel },
+    });
+  }, [activeModel, pathname, recordAuditEvent]);
+
   // Determine active navigation segment from current pathname
-  const activeNav: 'workbench' | 'canvas' | 'kb' | 'audit' = pathname.startsWith('/kb')
+  const activeNav: 'workbench' | 'canvas' | 'kb' | 'audit' = pathname.startsWith('/canvas')
+    ? 'canvas'
+    : pathname.startsWith('/knowledge') || pathname.startsWith('/kb')
     ? 'kb'
     : pathname.startsWith('/audit')
     ? 'audit'
-    : pathname.startsWith('/canvas')
-    ? 'canvas'
     : 'workbench';
 
   // Synchronize store activeNav with current route for backward compatibility
   useEffect(() => {
-    setActiveNav(activeNav);
+    setActiveNav(activeNav === 'canvas' ? 'workbench' : activeNav);
   }, [activeNav, setActiveNav]);
 
   useEffect(() => {
@@ -134,65 +176,155 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-800 dark:text-zinc-100 select-none">
-      {/* 1. Top Sovereign Header Bar - Modern Glassmorphic AI Doodle Style */}
-      <header className="h-16 bg-white dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between px-5 text-xs z-50">
-        {/* Left: App Title & Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-            <img
-              src="/logo.png"
-              alt="INDRA"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 dark:text-zinc-100 tracking-wider text-base">INDRA</span>
-              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/50 font-semibold">
-                SYSTEM ONLINE
-              </span>
+      {/* 1. Top DCS Sovereign Header Bar */}
+      <header className="h-16 bg-white dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between px-4 sm:px-5 text-xs z-50">
+        {/* Left: App Title, Logo & Live Synchronized UTC Clock */}
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="INDRA" 
+                className="w-full h-full object-contain" 
+              />
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-zinc-400">Industrial Neural Decision &amp; Reasoning Assistant</div>
-          </div>
-        </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 dark:text-zinc-100 tracking-wider text-base group-hover:text-emerald-500 transition-colors">
+                  INDRA
+                </span>
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/50 font-semibold font-mono">
+                  DCS ONLINE
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Industrial Neural Decision & Reasoning Assistant
+              </div>
+            </div>
+          </Link>
 
-        {/* Centre: Live UTC Clock */}
-        <div className="flex items-center gap-1.5 font-mono text-xs text-slate-400 dark:text-slate-500 select-none">
-          <span className="text-slate-300 dark:text-slate-400">{utcTime}</span>
-          <span className="text-slate-500">UTC</span>
-        </div>
-
-        {/* Right: System Health + Recording + Theme + Audio + Voice + Status */}
-        <div className="flex items-center gap-3 text-xs">
-
-          {/* System Health Indicator */}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-            <span className="flex items-center gap-1 text-[10px] font-mono">
-              <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500" />
-              <span className="text-slate-500 dark:text-zinc-500">API</span>
-            </span>
-            <span className="flex items-center gap-1 text-[10px] font-mono">
-              <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500" />
-              <span className="text-slate-500 dark:text-zinc-500">DB</span>
-            </span>
-            <span className="flex items-center gap-1 text-[10px] font-mono">
-              <Circle className="w-2 h-2 fill-amber-400 text-amber-400" />
-              <span className="text-slate-500 dark:text-zinc-500">GPU</span>
-            </span>
-          </div>
-
-          {/* Recording mode toggle */}
-          <button
-            onClick={() => setIsRecording((r) => !r)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
-              isRecording
-                ? 'bg-rose-600 text-white animate-pulse'
-                : 'bg-zinc-800 text-slate-400 hover:text-white'
-            }`}
+          {/* Synchronized 1Hz UTC SCADA Clock */}
+          <div 
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-black border border-slate-800 text-slate-100 font-mono text-xs shadow-inner"
+            title="DCS Control Room Synchronized UTC Reference Clock (1Hz IEEE 1588 Standard)"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-white' : 'bg-slate-500'}`} />
-            {isRecording ? 'REC' : 'IDLE'}
+            <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="tracking-widest font-semibold font-mono text-emerald-400">
+              {utcTime.hours}
+              <span className={`inline-block transition-opacity duration-150 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
+              {utcTime.minutes}
+              <span className={`inline-block transition-opacity duration-150 ${utcTime.pulse ? 'opacity-100 text-white' : 'opacity-20 text-emerald-600'}`}>:</span>
+              {utcTime.seconds}
+            </span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700">
+              UTC
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Session Audit Recording Mode, Theme, Voice & System Actions */}
+        <div className="flex items-center gap-3 text-xs">
+          {/* Session Audit Recording Mode (REC / IDLE) */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                const nowRecording = toggleRecording(pathname);
+                if (!nowRecording && eventCount > 0) {
+                  exportAuditLog();
+                }
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-semibold transition-all cursor-pointer select-none ${
+                isRecording
+                  ? 'bg-red-950/80 hover:bg-red-900 border-red-700 text-red-200 shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-850 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300'
+              }`}
+              title={isRecording ? 'Click to STOP and export session audit log (.jsonl)' : 'Click to START recording session audit log'}
+            >
+              {isRecording ? (
+                <>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                  <span className="font-bold text-red-300">REC [{recordingDuration}]</span>
+                  <span className="text-[10px] text-red-400/90 px-1.5 py-0.2 rounded bg-red-900/60">
+                    {eventCount} evts
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-slate-400 dark:bg-zinc-500" />
+                  <span>REC / IDLE</span>
+                </>
+              )}
+            </button>
+
+            {isRecording && (
+              <button
+                onClick={() => exportAuditLog()}
+                className="px-2.5 py-1.5 rounded-lg bg-red-900/60 hover:bg-red-800/80 border border-red-700/80 text-red-200 text-xs font-mono transition-colors cursor-pointer"
+                title="Export current session audit records (.jsonl)"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Universal Asset Search Trigger [Ctrl + K] */}
+          <button
+            onClick={() => {
+              sovereignAudio.playClick(0.08);
+              setIsSearchOpen(true);
+            }}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer font-mono text-xs"
+            title="Open Universal Asset & Standards Search (Ctrl+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            <span className="hidden lg:inline text-[11px]">Search Assets</span>
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded font-semibold border border-slate-300 dark:border-zinc-700">
+              Ctrl+K
+            </kbd>
           </button>
+
+          {/* Synthesized Sovereign Audio Ergonomics (Mute / Unmute) */}
+          <button
+            onClick={handleToggleAudio}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-mono font-semibold ${
+              isAudioMuted
+                ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300'
+            }`}
+            title={isAudioMuted ? 'Acoustic Ergonomics: MUTED (Click to unmute SCADA synthesizer)' : 'Acoustic Ergonomics: ACTIVE (Click to mute)'}
+          >
+            {isAudioMuted ? (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                <span className="hidden xl:inline text-[10px] text-rose-600 dark:text-rose-400">MUTED</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="hidden xl:inline text-[10px] text-emerald-600 dark:text-emerald-400">AUDIO ON</span>
+              </>
+            )}
+          </button>
+
+          {/* Control Room Shortcuts Pill */}
+          <div 
+            className="hidden 2xl:flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-slate-900/5 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 font-mono text-[10px] text-slate-500 dark:text-zinc-400 select-none"
+            title="DCS Control Room Ergonomic Keybindings"
+          >
+            <Keyboard className="w-3 h-3 text-slate-400 dark:text-zinc-500" />
+            <span><strong className="text-slate-800 dark:text-zinc-200">1-4</strong> Panes</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span><strong className="text-slate-800 dark:text-zinc-200">Ctrl+↵</strong> Transmit</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span><strong className="text-rose-600 dark:text-rose-400">Esc</strong> Trip</span>
+          </div>
 
           {/* Theme Switcher Toggle */}
           <button
@@ -203,35 +335,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {theme === 'dark' ? (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs text-amber-300">Light Mode</span>
+                <span className="text-xs text-amber-300">Light</span>
               </>
             ) : (
               <>
                 <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="text-xs text-indigo-700">Dark Mode</span>
-              </>
-            )}
-          </button>
-
-          {/* Sovereign Audio Annunciator Toggle */}
-          <button
-            onClick={() => {
-              const next = toggleSound();
-              setSoundOn(next);
-              if (next) playSuccessChirp();
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer font-medium text-xs shadow-2xs"
-            title={soundOn ? 'Sovereign Audio Annunciator: ON (Click to Mute)' : 'Sovereign Audio Annunciator: MUTED (Click to Enable)'}
-          >
-            {soundOn ? (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden sm:inline text-xs text-emerald-700 dark:text-emerald-400 font-mono">Audio ON</span>
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
-                <span className="hidden sm:inline text-xs text-slate-400 dark:text-zinc-500 font-mono">Muted</span>
+                <span className="text-xs text-indigo-700">Dark</span>
               </>
             )}
           </button>
@@ -239,10 +348,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Voice Command Mic Button */}
           <VoiceCommandButton />
 
-          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300">
+          {/* Security & Settings Trigger */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-850 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 cursor-pointer transition-colors"
+            title="Inspect Air-Gap Telemetry & Diagnostics"
+          >
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span className="font-medium text-xs text-slate-800 dark:text-zinc-200">On-Premise</span>
-          </div>
+          </button>
 
           {isNative && (
             <Badge variant="violet" className="py-1 px-2.5">
@@ -252,82 +366,101 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* 2. Secondary Navigation Toolbar */}
-      <div className="h-10 bg-white/75 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200/70 dark:border-zinc-800/70 flex items-center justify-between px-4 text-xs">
-        {/* Left: Sidebar toggle & Active View Label */}
-        <div className="flex items-center gap-2">
-          <button
+      {/* 2. Secondary DCS Navigation & Air-Gap Telemetry Toolbar */}
+      <div className="h-11 bg-white/85 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between px-3 sm:px-4 text-xs overflow-x-auto no-scrollbar">
+        {/* Left: Sidebar Toggle & Ergonomic Quick Navigation Bar */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button 
             onClick={toggleSidebar}
             className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-lg text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-            title="Toggle Left Sidebar"
+            title="Toggle Left Navigation Sidebar"
           >
             <PanelLeft className="w-4 h-4" />
           </button>
-          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800" />
-          <nav className="flex items-center gap-1">
-            <Link
-              href="/workbench"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
-                activeNav === 'workbench'
-                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shadow-2xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <Bot className="w-3.5 h-3.5" />
-              <span>Workbench</span>
-            </Link>
-            <Link
-              href="/canvas"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
-                activeNav === 'canvas'
-                  ? 'bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 shadow-2xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <Network className="w-3.5 h-3.5" />
-              <span>P&ID Spatial Canvas</span>
-            </Link>
-            <Link
-              href="/kb"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
-                activeNav === 'kb'
-                  ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shadow-2xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>RAG Knowledge Base</span>
-            </Link>
-            <Link
-              href="/audit"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all ${
-                activeNav === 'audit'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Merkle Audit</span>
-              {pendingApprovals.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] flex items-center justify-center font-bold font-sans">
-                  {pendingApprovals.length}
-                </span>
-              )}
-            </Link>
-          </nav>
+
+          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-0.5" />
+
+          {/* Live Amber HITL Pending Approvals Badge */}
+          <button
+            onClick={() => setApprovalsModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer border font-mono text-[11px] ${
+              pendingApprovals.length > 0
+                ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-bold shadow-xs'
+                : 'bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-medium'
+            }`}
+            title="Human-In-The-Loop Cryptographic Tool Sign-Off"
+          >
+            <AlertTriangle className={`w-3.5 h-3.5 ${pendingApprovals.length > 0 ? 'text-amber-600 dark:text-amber-400 animate-pulse' : 'text-slate-400 dark:text-zinc-500'}`} />
+            <span>HITL:</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+              pendingApprovals.length > 0
+                ? 'bg-amber-500 text-white'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+            }`}>
+              {pendingApprovals.length}
+            </span>
+            {pendingApprovals.length > 0 && (
+              <span className="text-[9px] uppercase tracking-wider font-extrabold text-amber-600 dark:text-amber-400">
+                PENDING
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Right: Quick Pitch Deck Download */}
-        <div className="flex items-center gap-2">
+        {/* Right: Air-Gap Telemetry Badges & Pitch Deck Action */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Telemetry 1: LOCAL LOOP (127.0.0.1) */}
+          <div 
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold shadow-2xs"
+            title="Local loopback binding (127.0.0.1) - Zero WAN egress confirmed"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="hidden sm:inline">LOCAL LOOP (127.0.0.1)</span>
+            <span className="sm:hidden">127.0.0.1</span>
+          </div>
+
+          {/* Telemetry 2: API ENGINE (Port 8000) Latency */}
+          <div 
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
+            title="FastAPI Local Server Port 8000 Healthcheck Roundtrip Latency"
+          >
+            <Server className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+            <span>API ENGINE (Port 8000):</span>
+            <span className={isApiAlive ? 'text-cyan-600 dark:text-cyan-400 font-bold' : 'text-amber-500 font-bold'}>
+              {apiLatencyMs}ms
+            </span>
+          </div>
+
+          {/* Telemetry 3: AUDIT LEDGER Merkle Root Preview */}
+          <div 
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
+            title={`Merkle Chain Integrity Root: ${merkleRootRaw}`}
+          >
+            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            <span>AUDIT LEDGER:</span>
+            <span className="text-slate-900 dark:text-zinc-100 font-bold">{merkleRootPreview}</span>
+          </div>
+
+          {/* Telemetry 4: GPU / INFERENCE Load */}
+          <div 
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-semibold"
+            title="Local Tensor Runner & WebGPU Resident Core Load"
+          >
+            <Cpu className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
+            <span>GPU / INFERENCE:</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{gpuLoad}%</span>
+          </div>
+
+          {/* SIH 6-Slide Pitch Deck Download */}
           <a
             href="http://localhost:8000/api/sih/pitch-deck"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer"
             title="Export official 6-slide Smart India Hackathon 2026 Presentation (.pptx)"
           >
             <Presentation className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>Export SIH Pitch Deck (6 Slides)</span>
+            <span className="hidden sm:inline">Export SIH Pitch Deck</span>
           </a>
         </div>
       </div>
@@ -350,7 +483,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <img src="/logo.png" alt="INDRA" className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(124,58,237,0.2)]" />
               </div>
               <DialogTitle className="text-base">
-                INDRA Sovereign Architecture &amp; Security Telemetry
+                INDRA Sovereign Architecture & Security Telemetry
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -452,7 +585,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button
+            <Button 
               onClick={() => setSettingsOpen(false)}
               size="sm"
             >
@@ -461,6 +594,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 7. Universal Asset Search Modal (Ctrl + K) */}
+      <UniversalAssetSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Global Connection Alerts & Status Toasts */}
       <ToastContainer />

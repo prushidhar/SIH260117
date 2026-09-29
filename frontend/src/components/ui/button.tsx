@@ -4,14 +4,14 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-zinc-600 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
   {
     variants: {
       variant: {
         default:
-          'bg-slate-900 text-white hover:bg-slate-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 shadow-xs',
+          'bg-slate-900 text-white hover:bg-slate-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 shadow-xs border border-slate-800 dark:border-zinc-700',
         gradient:
-          'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-xs font-mono font-semibold active:scale-[0.98]',
+          'bg-slate-900 text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 border border-slate-700 dark:border-zinc-300 shadow-xs font-mono font-semibold active:scale-[0.98]',
         destructive:
           'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 shadow-xs',
         outline:
@@ -21,7 +21,7 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-slate-100 dark:hover:bg-zinc-800/80 text-slate-700 dark:text-zinc-300',
         link:
-          'text-violet-600 underline-offset-4 hover:underline dark:text-violet-400',
+          'text-slate-900 dark:text-zinc-100 underline-offset-4 hover:underline font-medium',
         success:
           'bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-xs font-semibold',
         warning:
@@ -31,7 +31,7 @@ const buttonVariants = cva(
         default: 'h-9 px-4 py-2',
         sm: 'h-8 rounded-lg px-3 text-xs',
         xs: 'h-7 rounded-md px-2 text-[11px]',
-        lg: 'h-10 rounded-xl px-6 text-sm',
+        lg: 'h-10 rounded-lg px-6 text-sm',
         icon: 'h-8 w-8 p-0 flex items-center justify-center rounded-lg',
         'icon-sm': 'h-7 w-7 p-0 flex items-center justify-center rounded-md',
       },

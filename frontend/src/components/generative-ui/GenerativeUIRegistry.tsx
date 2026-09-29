@@ -9,19 +9,39 @@ import ASMEComplianceCard from './components/ASMEComplianceCard';
 import DynamicSandboxWidget from './components/DynamicSandboxWidget';
 import InteractivePIDWidget from './components/InteractivePIDWidget';
 import ExecutivePresentationWidget from './components/ExecutivePresentationWidget';
-import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
-import MultiAgentConsensusWidget from './components/MultiAgentConsensusWidget';
-import AlarmRationalizationWidget from './components/AlarmRationalizationWidget';
-import { PlantDigitalTwinWidget } from './components/PlantDigitalTwinWidget';
-import { HazopLopaWorkbench } from './components/HazopLopaWorkbench';
-import { FlareNetworkEmissionWidget } from './components/FlareNetworkEmissionWidget';
-import { TurnaroundSchedulerWidget } from './components/TurnaroundSchedulerWidget';
-import { CompressorAntiSurgeWidget } from './components/CompressorAntiSurgeWidget';
-import { SteamTurbineCogenWidget } from './components/SteamTurbineCogenWidget';
-import { CathodicProtectionCuiWidget } from './components/CathodicProtectionCuiWidget';
-import { CoolingTowerPsychrometricWidget } from './components/CoolingTowerPsychrometricWidget';
+import WeibullRulCard from './components/WeibullRulCard';
+import PinchNetworkCard from './components/PinchNetworkCard';
+import FatigueMinerCard from './components/FatigueMinerCard';
+import WaterHammerCard from './components/WaterHammerCard';
+import OrificeFlowmeterCard from './components/OrificeFlowmeterCard';
+import RbiRiskMatrixCard from './components/RbiRiskMatrixCard';
+import CryogenicBlowdownCard from './components/CryogenicBlowdownCard';
+import RotorDynamicsCard from './components/RotorDynamicsCard';
+import HazardousAreaExCard from './components/HazardousAreaExCard';
+import AlarmTriageWidget from './components/AlarmTriageWidget';
+import CompressorAntiSurgeWidget from './components/CompressorAntiSurgeWidget';
+import SteamTurbineCogenWidget from './components/SteamTurbineCogenWidget';
+import CathodicProtectionCuiWidget from './components/CathodicProtectionCuiWidget';
+import CoolingTowerPsychrometricWidget from './components/CoolingTowerPsychrometricWidget';
 import TegDehydrationWidget from './components/TegDehydrationWidget';
 import ReliefValveSizingWidget from './components/ReliefValveSizingWidget';
+import RootCauseAnalysisWidget from './components/RootCauseAnalysisWidget';
+import SensorDriftFddCard from './components/SensorDriftFddCard';
+import HazopMatrixWidget from './components/HazopMatrixWidget';
+import ArcFlashHazardCard from './components/ArcFlashHazardCard';
+import AcidDewPointMeter from './components/AcidDewPointMeter';
+import CompressorTrainCard from './components/CompressorTrainCard';
+import FunctionalSafetyCard from './components/FunctionalSafetyCard';
+import FlareAivCard from './components/FlareAivCard';
+import ProximityProbeCard from './components/ProximityProbeCard';
+import PipingFlexibilityCard from './components/PipingFlexibilityCard';
+import FinFanCoolerCard from './components/FinFanCoolerCard';
+import HazardousAreaCard from './components/HazardousAreaCard';
+import RgdSealCard from './components/RgdSealCard';
+import Api618ReciprocatingCompressorCard from './components/Api618ReciprocatingCompressorCard';
+import AsmeSec1BoilerCirculationCard from './components/AsmeSec1BoilerCirculationCard';
+import Api530HeaterTubeCreepCard from './components/Api530HeaterTubeCreepCard';
+import Api676ScrewPumpCard from './components/Api676ScrewPumpCard';
 
 interface RegistryProps {
   component: string;
@@ -36,7 +56,7 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
     return <IndustrialGauge {...props} value={props.value ?? 78.4} />;
   }
 
-  // 2. Telemetry Line/Area Chart
+  // 2. Telemetry Line/Area Chart & 30Hz FFT Spectrum
   if (compKey.includes('chart') || compKey.includes('telemetry') || compKey.includes('vibration') || compKey === 'telemetrychart') {
     return <TelemetryChart {...props} />;
   }
@@ -52,7 +72,7 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
   }
 
   // 5. ASME B31.3 / Compliance Calculator
-  if (compKey.includes('asme') || compKey.includes('compliance') || compKey.includes('calculator') || compKey === 'asmecompliancecard') {
+  if (compKey.includes('asme') || compKey.includes('compliance') || compKey.includes('thickness') || compKey === 'asmecompliancecard') {
     return <ASMEComplianceCard {...props} />;
   }
 
@@ -71,69 +91,169 @@ export default function GenerativeUIRegistry({ component, props }: RegistryProps
     return <ExecutivePresentationWidget {...props} />;
   }
 
-  // 9. Root Cause Analysis (RCA) & Fault Tree Synthesis
-  if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('faulttree') || compKey.includes('fishbone') || compKey === 'rootcauseanalysiswidget') {
-    return <RootCauseAnalysisWidget {...props} />;
+  // 9. Weibull Fault Prognostics & RUL Widget
+  if (compKey.includes('weibull') || compKey.includes('rul') || compKey === 'weibullrulcard') {
+    return <WeibullRulCard {...props} />;
   }
 
-  // 10. Tri-Model Autonomous Multi-Agent Consensus Debate
-  if (compKey.includes('consensus') || compKey.includes('debate') || compKey.includes('tri-model') || compKey.includes('triagent') || compKey === 'multiagentconsensuswidget') {
-    return <MultiAgentConsensusWidget {...props} />;
+  // 10. Linnhoff Pinch & Exergy Network Widget
+  if (compKey.includes('pinch') || compKey.includes('exergy') || compKey.includes('hen') || compKey === 'pinchnetworkcard') {
+    return <PinchNetworkCard {...props} />;
   }
 
-  // 11. ISA-18.2 / EEMUA 191 Intelligent Alarm Flood Rationalization
-  if (compKey.includes('alarm') || compKey.includes('flood') || compKey.includes('firstout') || compKey.includes('rationalization') || compKey === 'alarmrationalizationwidget') {
-    return <AlarmRationalizationWidget {...props} />;
+  // 11. Palmgren-Miner Cumulative Fatigue Integrity Widget
+  if (compKey.includes('fatigue') || compKey.includes('miner') || compKey.includes('palmgren') || compKey === 'fatigueminercard') {
+    return <FatigueMinerCard {...props} />;
   }
 
-  // 12. Plant Digital Twin (Refinery Mass-Energy Balance & Process Flow)
-  if (compKey.includes('digitaltwin') || compKey.includes('refinery') || compKey.includes('plant') || compKey.includes('distillation') || compKey === 'plantdigitaltwinwidget') {
-    return <PlantDigitalTwinWidget {...props} />;
+  // 12. Joukowsky Water Hammer & Transient Acoustic Surge Card
+  if (compKey.includes('hammer') || compKey.includes('surge') || compKey === 'waterhammercard') {
+    return <WaterHammerCard {...props} />;
   }
 
-  // 13. HAZOP & LOPA SIL Functional Safety Workbench (IEC 61508 / 61511)
-  if (compKey.includes('hazop') || compKey.includes('lopa') || compKey.includes('sil') || compKey.includes('protectionlayer') || compKey === 'hazoplopaworkbench') {
-    return <HazopLopaWorkbench {...props} />;
+  // 13. ISO 5167 Orifice Differential Pressure Metrology Card
+  if (compKey.includes('orifice') || compKey.includes('iso5167') || compKey === 'orificeflowmetercard') {
+    return <OrificeFlowmeterCard {...props} />;
   }
 
-  // 14. API 521 Flare Network & Atmospheric Emission Dispersion
-  if (compKey.includes('flare') || compKey.includes('emission') || compKey.includes('dispersion') || compKey.includes('radiation') || compKey === 'flarenetworkemissionwidget') {
-    return <FlareNetworkEmissionWidget {...props} />;
+  // 14. API 580 / API 581 Quantitative RBI 5x5 Risk Matrix Card
+  if (compKey.includes('rbi') || compKey.includes('risk_matrix') || compKey.includes('riskmatrix') || compKey === 'rbiriskmatrixcard') {
+    return <RbiRiskMatrixCard {...props} />;
   }
 
-  // 15. Refinery Turnaround (TAR) & CPM Schedule Optimization
-  if (compKey.includes('turnaround') || compKey.includes('cpm') || compKey.includes('shutdown') || compKey.includes('gantt') || compKey === 'turnaroundschedulerwidget') {
-    return <TurnaroundSchedulerWidget {...props} />;
+  // 15. API 521 Cryogenic Blowdown & MDMT Brittle Fracture Card
+  if (compKey.includes('blowdown') || compKey.includes('depressur') || compKey === 'cryogenicblowdowncard') {
+    return <CryogenicBlowdownCard {...props} />;
   }
 
-  // 16. API 617 / ASME PTC 10 Compressor Anti-Surge & Aerodynamic Performance
-  if (compKey.includes('compressor') || compKey.includes('surge') || compKey.includes('antisurge') || compKey === 'compressorantisurgewidget') {
+  // 16. API 684 Rotordynamics & Campbell Diagram Card
+  if (compKey.includes('rotordynamic') || compKey.includes('critical_speed') || compKey === 'rotordynamicscard') {
+    return <RotorDynamicsCard {...props} />;
+  }
+
+  // 17. IEC 60079-10-1 & API RP 505 Hazardous Area Classification & Gas Dispersion Card
+  if (compKey === 'hazardousareacard' || compKey === 'hazardous_area_card' || compKey.includes('hac') || compKey.includes('dispersion') || compKey.includes('api505') || compKey.includes('60079-10') || compKey === 'hazardous_area') {
+    return <HazardousAreaCard {...props} />;
+  }
+
+  // 17b. IEC 60079 Hazardous Area Explosion Proof (Flameproof Ex d) Card
+  if (compKey.includes('flameproof') || compKey === 'hazardousareaexcard') {
+    return <HazardousAreaExCard {...props} />;
+  }
+
+  // 18. ISA 18.2 / EEMUA 191 Control Room Alarm Flood & Triage Widget
+  if (compKey.includes('triage') || compKey.includes('alarm') || compKey === 'alarmtriagewidget') {
+    return <AlarmTriageWidget {...props} />;
+  }
+
+  // 19. API 617 Centrifugal Compressor Anti-Surge Map
+  if (compKey.includes('antisurge') || compKey.includes('anti-surge') || compKey.includes('compressor_map') || compKey === 'compressorantisurgewidget') {
     return <CompressorAntiSurgeWidget {...props} />;
   }
 
-  // 17. ASME PTC 6 & IAPWS-IF97 Steam Turbine Cogeneration & Enthalpy-Entropy Engine
-  if (compKey.includes('steamturbine') || compKey.includes('turbine') || compKey.includes('cogen') || compKey.includes('mollier') || compKey === 'steamturbinecogenwidget') {
+  // 20. ASME PTC 6 Steam Turbine Extraction-Condensing Cogeneration Balance
+  if (compKey.includes('cogen') || compKey.includes('steamturbine') || compKey.includes('steam_turbine') || compKey.includes('ptc6') || compKey === 'steamturbinecogenwidget') {
     return <SteamTurbineCogenWidget {...props} />;
   }
 
-  // 18. NACE SP0169 & API 581 Cathodic Protection & CUI Risk Matrix
-  if (compKey.includes('cathodic') || compKey.includes('cui') || compKey.includes('rbi') || compKey.includes('anode') || compKey === 'cathodicprotectioncuiwidget') {
+  // 21. NACE SP0169 & API 581 Cathodic Protection & CUI Tracker
+  if (compKey.includes('cathodic') || compKey.includes('cui') || compKey.includes('nace') || compKey === 'cathodicprotectioncuiwidget') {
     return <CathodicProtectionCuiWidget {...props} />;
   }
 
-  // 19. CTI ATC-105 / ASHRAE Cooling Tower Psychrometrics & Water Balance
-  if (compKey.includes('coolingtower') || compKey.includes('psychrometric') || compKey.includes('wetbulb') || compKey.includes('blowdown') || compKey === 'coolingtowerpsychrometricwidget') {
+  // 22. CTI ATC-105 Cooling Tower Psychrometric Calculator
+  if (compKey.includes('coolingtower') || compKey.includes('cooling_tower') || compKey.includes('psychrometric') || compKey.includes('atc105') || compKey === 'coolingtowerpsychrometricwidget') {
     return <CoolingTowerPsychrometricWidget {...props} />;
   }
 
-  // 20. GPSA Sec 20 TEG Glycol Dehydration Unit
-  if (compKey.includes('teg') || compKey.includes('glycol') || compKey.includes('dehydrat')) {
+  // 23. GPSA Sec 20 Glycol (TEG) Dehydration System
+  if (compKey.includes('glycol') || compKey.includes('dehydration') || compKey.includes('teg') || compKey === 'tegdehydrationwidget') {
     return <TegDehydrationWidget {...props} />;
   }
 
-  // 21. API 520/526 Pressure Relief Valve Sizing
-  if (compKey.includes('relief') || compKey.includes('prv') || compKey.includes('psv') || compKey.includes('api520')) {
+  // 24. API 520 / API 526 Pressure Relief Valve (PSV) Sizing
+  if (compKey.includes('psv') || compKey.includes('relief') || compKey.includes('api520') || compKey.includes('api526') || compKey === 'reliefvalvesizingwidget') {
     return <ReliefValveSizingWidget {...props} />;
+  }
+
+  // 25. Industrial Root Cause Analysis (RCA) Multi-Tab Suite
+  if (compKey.includes('rca') || compKey.includes('rootcause') || compKey.includes('root_cause') || compKey.includes('fishbone') || compKey.includes('faulttree') || compKey.includes('fault_tree') || compKey.includes('bowtie') || compKey === 'rootcauseanalysiswidget') {
+    return <RootCauseAnalysisWidget {...props} />;
+  }
+
+  // 26. ISO 13374 Condition Monitoring, Sensor Drift & Fault Diagnostics
+  if (compKey.includes('sensor_drift') || compKey.includes('sensordrift') || compKey.includes('fdd') || compKey.includes('calibration') || compKey.includes('iso13374') || compKey === 'sensordriftfddcard') {
+    return <SensorDriftFddCard {...props} />;
+  }
+
+  // 27. Autonomous IEC 61882 HAZOP Deviation Matrix
+  if (compKey.includes('hazop') || compKey.includes('hazop_matrix') || compKey.includes('pha_study') || compKey === 'hazopmatrixwidget') {
+    return <HazopMatrixWidget {...props} />;
+  }
+
+  // 28. IEEE 1584-2018 Arc Flash & NFPA 70E Electrical Safety
+  if (compKey.includes('arc_flash') || compKey.includes('arcflash') || compKey.includes('ieee1584') || compKey.includes('nfpa70e') || compKey === 'arcflashhazardcard') {
+    return <ArcFlashHazardCard {...props} />;
+  }
+
+  // 29. ASME PTC 4.3 Flue Gas Acid Dew Point & Cold-End Integrity
+  if (compKey.includes('acid_dew_point') || compKey.includes('aciddewpoint') || compKey.includes('ptc43') || compKey.includes('ptc_4_3') || compKey.includes('air_preheater') || compKey.includes('cold_end') || compKey === 'aciddewpointmeter') {
+    return <AcidDewPointMeter {...props} />;
+  }
+
+  // 30. API 617 Multi-Stage Centrifugal Compressor Train Performance
+  if (compKey.includes('multistage_compressor') || compKey.includes('compressor_train') || compKey.includes('api617_train') || compKey.includes('compressortrain') || compKey === 'compressortraincard') {
+    return <CompressorTrainCard {...props} />;
+  }
+
+  // 31. ISO 13849-1 Machinery Functional Safety Integrity
+  if (compKey.includes('iso13849') || compKey.includes('functional_safety_pl') || compKey.includes('functional_safety') || compKey.includes('iec62061') || compKey.includes('functionalsafety') || compKey === 'functionalsafetycard') {
+    return <FunctionalSafetyCard {...props} />;
+  }
+
+  // 32. API 520 Part II & EEMUA 158 Flare Acoustical Vibration (AIV)
+  if (compKey.includes('flare_aiv') || compKey.includes('api520_aiv') || compKey.includes('acoustic_vibration') || compKey.includes('flareaiv') || compKey.includes('aiv') || compKey === 'flareaivcard') {
+    return <FlareAivCard {...props} />;
+  }
+
+  // 33. API Standard 670 Machinery Protection & Proximity Probes
+  if (compKey.includes('api670') || compKey.includes('proximity_probe') || compKey.includes('bently_nevada') || compKey.includes('shaft_orbit') || compKey.includes('proximityprobe') || compKey === 'proximityprobecard') {
+    return <ProximityProbeCard {...props} />;
+  }
+
+  // 34. ASME B31.3 § 319 / Appendix X Piping Flexibility & Thermal Expansion Loop
+  if (compKey.includes('piping_flexibility') || compKey.includes('expansion_loop') || compKey.includes('asme_b313') || compKey.includes('flexibility') || compKey.includes('thermal_expansion') || compKey === 'pipingflexibilitycard') {
+    return <PipingFlexibilityCard {...props} />;
+  }
+
+  // 35. API Standard 661 / ISO 13706 Air-Cooled Heat Exchanger (Fin-Fan Cooler)
+  if (compKey.includes('fin_fan') || compKey.includes('finfan') || compKey.includes('air_cooler') || compKey.includes('air_cooled_exchanger') || compKey.includes('api661') || compKey === 'finfancoolercard') {
+    return <FinFanCoolerCard {...props} />;
+  }
+
+  // 37. NORSOK M-710 Rev 3 & ISO 23936-2 Rapid Gas Decompression (RGD) Elastomer Seal Integrity
+  if (compKey.includes('rgd') || compKey.includes('norsok_m710') || compKey.includes('iso23936') || compKey.includes('explosive_decompression') || compKey === 'rgdsealcard') {
+    return <RgdSealCard {...props} />;
+  }
+
+  // 38. API Standard 618 (5th Edition) / ISO 13707 Reciprocating Compressor Performance & Pulsation Dampener
+  if (compKey.includes('api618') || compKey.includes('reciprocating') || compKey.includes('recip_compressor') || compKey.includes('piston_compressor') || compKey.includes('pulsation_dampener') || compKey === 'api618reciprocatingcompressorcard') {
+    return <Api618ReciprocatingCompressorCard {...props} />;
+  }
+
+  // 39. ASME Section I / EN 12952-4 Natural Circulation Boiler & DNB Margin
+  if (compKey.includes('asme_sec1') || compKey.includes('boiler_circulation') || compKey.includes('boiler') || compKey.includes('thermosiphon') || compKey.includes('dnbr') || compKey === 'asmesec1boilercirculationcard') {
+    return <AsmeSec1BoilerCirculationCard {...props} />;
+  }
+
+  // 40. API Standard 530 (7th Edition) / ISO 13704 Heater-Tube Creep & Rupture Life
+  if (compKey.includes('api530') || compKey.includes('heater_tube') || compKey.includes('tube_creep') || compKey.includes('larson_miller') || compKey.includes('creep_rupture') || compKey === 'api530heatertubecreepcard') {
+    return <Api530HeaterTubeCreepCard {...props} />;
+  }
+
+  // 41. API Standard 676 (3rd Edition) / ISO 14847 Twin-Screw Positive Displacement Pump
+  if (compKey.includes('api676') || compKey.includes('screw_pump') || compKey.includes('twin_screw') || compKey.includes('rotary_pump') || compKey.includes('positive_displacement') || compKey === 'api676screwpumpcard') {
+    return <Api676ScrewPumpCard {...props} />;
   }
 
   // Fallback: If unknown, render a clean parameter card
