@@ -9200,5 +9200,91 @@
     },
     "previous_hash": "ced35132cb0cd7e9d5c97cbcce58e52943b8653309e9da0ef5e9a2d00c66f74b",
     "hash": "7129f260b0ee78b3b20a68a29245349d3384ffe7dc74cc7b530952e8140ee770"
+  },
+  {
+    "timestamp": 1790694314.7450535,
+    "event_type": "dag_started",
+    "payload": {
+      "task_id": "task-7cbfbd4b",
+      "prompt": "what is the time"
+    },
+    "previous_hash": "7129f260b0ee78b3b20a68a29245349d3384ffe7dc74cc7b530952e8140ee770",
+    "hash": "aa2360ad4ce98726026c6d2b13c46cf9fbb51200b19033876bc1364425295744"
+  },
+  {
+    "timestamp": 1790694315.4315693,
+    "event_type": "tool_execution",
+    "payload": {
+      "tool": "kb_search",
+      "args": {
+        "query": "what is the time"
+      },
+      "result": {
+        "results": [
+          {
+            "id": "std-asme-thermal-shock_chunk_0",
+            "title": "ASME Section VIII Div 2 Part 5 & Section III NB-3200 Pressurized Thermal Shock (PTS)",
+            "snippet": "ASME Boiler & Pressure Vessel Code Section VIII Div 2 Part 5 (Design by Analysis) & Section III Subsection NB-3200: Pressurized Thermal Shock (PTS) and Elastic Shakedown Boundary Assessment: - Biot Number: Bi = (h * t_w) / k_m Where h is the inner quench film coefficient (W/m\u00b2K), t_w is wall thickne...",
+            "relevance_score": 0.7,
+            "code_reference": "ASME Section VIII Div 2 Part 5 & Section III NB-3200 Pressurized Thermal Shock (PTS)"
+          },
+          {
+            "id": "std-api-510_chunk_0",
+            "title": "API 510 Pressure Vessel Inspection Code \u2014 Remaining Life & Corrosion Rate",
+            "snippet": "API Standard 510 (10th Edition) Pressure Vessel Inspection Code: In-service Inspection, Rating, Repair, and Alteration: Corrosion Rate Determination: - Short-Term Corrosion Rate: C_st = (t_previous - t_current) / (years_between_inspections) - Long-Term Corrosion Rate: C_lt = (t_initial - t_current) ...",
+            "relevance_score": 0.589,
+            "code_reference": "API 510 Pressure Vessel Inspection Code \u2014 Remaining Life & Corrosion Rate"
+          },
+          {
+            "id": "std-api-579_chunk_0",
+            "title": "API 579-1 / ASME FFS-1 Fitness-For-Service \u2014 Local Thin Areas (LTA)",
+            "snippet": "API 579-1 / ASME FFS-1 Fitness-For-Service (3rd Edition, 2021) Part 5: Assessment of Local Metal Loss (LTAs): Evaluation Methodology: - Level 1 Assessment: Screening criteria based on maximum pit depth and longitudinal extent: Normalized shell parameter lambda = 1.285 * s / sqrt(D * t_min) Where s i...",
+            "relevance_score": 0.558,
+            "code_reference": "API 579-1 / ASME FFS-1 Fitness-For-Service \u2014 Local Thin Areas (LTA)"
+          },
+          {
+            "id": "std-asme-sec8-app2_chunk_0",
+            "title": "ASME Section VIII Div 1 Appendix 2 & ASME PCC-1 Bolted Flange Joint Assembly",
+            "snippet": "ASME Boiler & Pressure Vessel Code Section VIII Division 1 Mandatory Appendix 2 & ASME PCC-1 Guidelines for Bolted Flanged Joint Assembly: Flange Bolt Load Calculations (Taylor-Forge Method): 1. Operating Condition Bolt Load (W_m1): W_m1 = H + H_p = 0.785 * G^2 * P + 2 * b * 3.14159 * G * m * P Wher...",
+            "relevance_score": 0.531,
+            "code_reference": "ASME Section VIII Div 1 Appendix 2 & ASME PCC-1 Bolted Flange Joint Assembly"
+          },
+          {
+            "id": "std-api-521-depressure_chunk_0",
+            "title": "API 521 \u00a7 5.7 Emergency Vapor Depressuring & Cryogenic Blowdown Systems",
+            "snippet": "API Standard 521 (7th Edition, 2020) Section 5.7: Vapor Depressuring Systems and Emergency Blowdown: Depressuring Criterion: - Depressuring systems shall be designed to reduce the vessel internal pressure to 50% of the design pressure or 6.9 bar gauge (100 psig), whichever is lower, within 15 minute...",
+            "relevance_score": 0.526,
+            "code_reference": "API 521 \u00a7 5.7 Emergency Vapor Depressuring & Cryogenic Blowdown Systems"
+          }
+        ]
+      },
+      "execution_time_ms": 3.08
+    },
+    "previous_hash": "aa2360ad4ce98726026c6d2b13c46cf9fbb51200b19033876bc1364425295744",
+    "hash": "73fccc0eab954cc2dd0b4efaead8263b0a3685782eed49fdf2bf6272c3125abb"
+  },
+  {
+    "timestamp": 1790694315.4920526,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-7cbfbd4b",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 2
+    },
+    "previous_hash": "73fccc0eab954cc2dd0b4efaead8263b0a3685782eed49fdf2bf6272c3125abb",
+    "hash": "79a8333d6f987d93325d4ef896b43a7cf3a71a7c957ace52d9b3cbe231383093"
+  },
+  {
+    "timestamp": 1790694315.5250738,
+    "event_type": "evidence_lock_verified",
+    "payload": {
+      "task_id": "task-7cbfbd4b",
+      "grounding_score": 1.0,
+      "status": "VERIFIED_SOVEREIGN",
+      "sources_count": 2
+    },
+    "previous_hash": "79a8333d6f987d93325d4ef896b43a7cf3a71a7c957ace52d9b3cbe231383093",
+    "hash": "47e32e0cbd120907c8cd60db2f36ab254a3957bcc70827c3b62251ab2dee0946"
   }
 ]
